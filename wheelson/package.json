@@ -1,0 +1,15 @@
+{
+  "name": "wheelson",
+  "version": "1.0.0",
+  "description": "WheelsOn - Red profesional basada en base de datos de grafos",
+  "scripts": {
+    "tailwind:watch": "npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
+    "tailwind:build": "npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4",
+    "daisyui": "^4.0",
+    "postcss": "^8.4",
+    "autoprefixer": "^10.4"
+  }
+}

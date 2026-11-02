@@ -1,0 +1,8 @@
+django>=5.0
+django-ninja>=1.0
+neomodel>=5.3
+python-dotenv>=1.0
+Pillow>=10.0
+django-htmx>=1.17
+whitenoise>=6.5
+fpdf2>=2.7

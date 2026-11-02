@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in-up">
+
+    <!-- Welcome Banner -->
+    <div class="hero bg-gradient-to-r from-primary/20 via-base-200 to-secondary/20 rounded-2xl border border-base-300">
+        <div class="hero-content text-center py-10">
+            <div>
+                <div class="inline-block p-2 px-4 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
+                    Red Profesional Orientada a Grafos
+                </div>
+                <h1 class="text-4xl font-bold text-base-content mb-2">
+                    Bienvenido a <span class="text-primary">WheelsOn</span>
+                </h1>
+                <p class="text-base-content/70 text-lg max-w-2xl mx-auto">
+                    Plataforma inteligente para la gestion y analisis de relaciones profesionales,
+                    optimizada mediante base de datos de grafos Neo4j.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Total Usuarios -->
+        <div class="card bg-base-200 shadow-md hover:shadow-lg transition-shadow border border-base-300">
+            <div class="card-body p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-base-content/60 font-semibold">Usuarios</p>
+                        <p class="text-3xl font-extrabold text-base-content mt-1">--</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="badge badge-ghost badge-sm text-xs">Nodo: :Usuario</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Empresas -->
+        <div class="card bg-base-200 shadow-md hover:shadow-lg transition-shadow border border-base-300">
+            <div class="card-body p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-base-content/60 font-semibold">Empresas</p>
+                        <p class="text-3xl font-extrabold text-base-content mt-1">--</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="badge badge-ghost badge-sm text-xs">Nodo: :Empresa</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ofertas Activas -->
+        <div class="card bg-base-200 shadow-md hover:shadow-lg transition-shadow border border-base-300">
+            <div class="card-body p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-base-content/60 font-semibold">Ofertas Activas</p>
+                        <p class="text-3xl font-extrabold text-base-content mt-1">--</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="badge badge-ghost badge-sm text-xs">Nodo: :Oferta</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Conexiones -->
+        <div class="card bg-base-200 shadow-md hover:shadow-lg transition-shadow border border-base-300">
+            <div class="card-body p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-base-content/60 font-semibold">Conexiones</p>
+                        <p class="text-3xl font-extrabold text-base-content mt-1">--</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-info/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="badge badge-ghost badge-sm text-xs">Relacion: [:CONECTA_CON]</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Estado y Resumen del Stack -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Acciones Rapidas -->
+        <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-1">
+            <div class="card-body">
+                <h2 class="card-title text-base-content text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Acciones de la Red
+                </h2>
+                <p class="text-xs text-base-content/60">Gestion interactiva de nodos y relaciones</p>
+                <div class="space-y-2 mt-4">
+                    <button class="btn btn-primary btn-sm w-full justify-start gap-2" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        Registrar Usuario (Fase 3)
+                    </button>
+                    <button class="btn btn-secondary btn-sm w-full justify-start gap-2" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Registrar Empresa (Fase 3)
+                    </button>
+                    <button class="btn btn-accent btn-sm w-full justify-start gap-2" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                        </svg>
+                        Explorador de Grafos (Fase 9)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado del Stack -->
+        <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-2">
+            <div class="card-body">
+                <h2 class="card-title text-base-content text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Componentes del Sistema (Fase 1: Setup)
+                </h2>
+                <div class="overflow-x-auto mt-2">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr class="text-base-content/70">
+                                <th>Componente</th>
+                                <th>Estado</th>
+                                <th>Tecnologia</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-bold">Servidor Backend</td>
+                                <td><span class="badge badge-success badge-sm gap-1">Listo</span></td>
+                                <td>Django 6.1</td>
+                                <td class="text-xs text-base-content/70">Routing, middleware, templates y auth</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">OGM de Grafos</td>
+                                <td><span class="badge badge-success badge-sm gap-1">Listo</span></td>
+                                <td>Neomodel 7.0</td>
+                                <td class="text-xs text-base-content/70">Driver oficial Neo4j Bolt integrado</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">Estilos y UI</td>
+                                <td><span class="badge badge-success badge-sm gap-1">Listo</span></td>
+                                <td>Tailwind CSS + DaisyUI</td>
+                                <td class="text-xs text-base-content/70">Temas oscuro/claro con transiciones</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">Motor Reactivo</td>
+                                <td><span class="badge badge-success badge-sm gap-1">Listo</span></td>
+                                <td>HTMX 2.0 + Alpine.js</td>
+                                <td class="text-xs text-base-content/70">Peticiones AJAX declarativas sin recargas</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">Librerias Visuales</td>
+                                <td><span class="badge badge-success badge-sm gap-1">Listo</span></td>
+                                <td>vis.js + Chart.js</td>
+                                <td class="text-xs text-base-content/70">Renderizado de grafos de red y KPIs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
