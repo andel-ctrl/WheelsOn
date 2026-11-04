@@ -4,12 +4,18 @@
 {% block page_title %}Perfil Profesional{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'sobre_mi', copied: false }">
+<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'sobre_mi', copied: false, showSkillModal: false, showJobModal: false }">
 
     <!-- Profile Banner & Hero Card -->
     <div class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl">
         <div class="h-32 sm:h-40 bg-gradient-to-r from-primary/30 via-secondary/20 to-accent/30 relative">
             <div class="absolute top-4 right-4 flex gap-2">
+                <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="btn btn-xs btn-accent shadow rounded-lg gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Ver en Red de Grafos
+                </a>
                 <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-xs btn-secondary shadow rounded-lg gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -55,8 +61,6 @@
                             </svg>
                             {{ usuario.email }}
                         </span>
-                        <span>&bull;</span>
-                        <span>Registrado: {{ usuario.fecha_registro|default:"Reciente" }}</span>
                     </div>
                 </div>
             </div>
@@ -64,84 +68,188 @@
             <!-- Profile Nav Tabs -->
             <div class="tabs tabs-bordered mt-6 border-b border-base-300">
                 <button type="button" @click="activeTab = 'sobre_mi'" :class="activeTab === 'sobre_mi' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Sobre Mi
+                    Sobre Mí
                 </button>
                 <button type="button" @click="activeTab = 'habilidades'" :class="activeTab === 'habilidades' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Habilidades
+                    Habilidades ({{ habilidades_rel|length }})
                 </button>
                 <button type="button" @click="activeTab = 'empleo'" :class="activeTab === 'empleo' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Trayectoria
+                    Trayectoria ({{ empleos_rel|length }})
                 </button>
                 <button type="button" @click="activeTab = 'proyectos'" :class="activeTab === 'proyectos' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Proyectos
+                    Proyectos ({{ proyectos_rel|length }})
                 </button>
                 <button type="button" @click="activeTab = 'red'" :class="activeTab === 'red' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Conexiones
+                    Conexiones ({{ conexiones_rel|length }})
                 </button>
             </div>
 
             <!-- Tab Content -->
             <div class="py-6">
-                <!-- Sobre Mi Tab -->
+                <!-- 1. Sobre Mi Tab -->
                 <div x-show="activeTab === 'sobre_mi'" class="space-y-4">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Biografia Profesional</h3>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Biografía Profesional</h3>
                     {% if usuario.biografia %}
                     <p class="text-sm leading-relaxed text-base-content/80 whitespace-pre-line bg-base-300/30 p-5 rounded-2xl border border-base-300">
                         {{ usuario.biografia }}
                     </p>
                     {% else %}
                     <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/50">Este profesional aun no ha agregado su biografia profesional.</p>
-                        <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-xs btn-primary btn-outline mt-3">Completar Biografia</a>
+                        <p class="text-xs text-base-content/50">Este profesional aún no ha agregado su biografía profesional.</p>
+                        <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-xs btn-primary btn-outline mt-3">Completar Biografía</a>
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- Habilidades Tab -->
+                <!-- 2. Habilidades Tab -->
                 <div x-show="activeTab === 'habilidades'" style="display: none;" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Competencias Tecnicas (:Habilidad)</h3>
-                        <span class="badge badge-primary badge-outline text-xs">Arista [:TIENE_HABILIDAD]</span>
+                        <div>
+                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Competencias del Perfil (:Habilidad)</h3>
+                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-primary font-mono">[:TIENE_HABILIDAD]</code> con nivel y años de experiencia.</p>
+                        </div>
+                        <button type="button" @click="showSkillModal = true" class="btn btn-xs btn-primary rounded-xl font-bold">+ Vincular Habilidad</button>
                     </div>
-                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">Las conexiones de habilidades con niveles y anos de experiencia se activaran en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
-                        <a href="{% url 'core:habilidades_lista' %}" class="btn btn-xs btn-primary mt-3">Explorar Catalogo de Habilidades</a>
+
+                    {% if habilidades_rel %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {% for item in habilidades_rel %}
+                        <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center justify-between">
+                            <div class="space-y-1">
+                                <span class="font-bold text-sm text-base-content">{{ item.habilidad.nombre }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="badge badge-xs uppercase font-bold
+                                        {% if item.nivel == 'experto' %}badge-accent
+                                        {% elif item.nivel == 'avanzado' %}badge-primary
+                                        {% elif item.nivel == 'intermedio' %}badge-secondary
+                                        {% else %}badge-ghost{% endif %}">
+                                        {{ item.nivel }}
+                                    </span>
+                                    <span class="text-[10px] text-base-content/60">{{ item.anios_experiencia }} año(s) exp.</span>
+                                </div>
+                            </div>
+                            <form method="POST" action="{% url 'core:usuario_habilidad_eliminar' uid=usuario.uid hid=item.habilidad.hid %}"
+                                  onsubmit="return confirm('¿Quitar habilidad {{ item.habilidad.nombre }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg" title="Quitar">✕</button>
+                            </form>
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
+                        <p class="text-xs text-base-content/60">Aún no se han vinculado habilidades a este perfil.</p>
+                        <button type="button" @click="showSkillModal = true" class="btn btn-xs btn-primary font-bold">Añadir Primera Habilidad</button>
+                    </div>
+                    {% endif %}
                 </div>
 
-                <!-- Empleo Tab -->
+                <!-- 3. Empleo Tab -->
                 <div x-show="activeTab === 'empleo'" style="display: none;" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Trayectoria Laboral (:Empresa)</h3>
-                        <span class="badge badge-secondary badge-outline text-xs">Arista [:TRABAJA_EN]</span>
+                        <div>
+                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Trayectoria Laboral (:Empresa)</h3>
+                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-secondary font-mono">[:TRABAJA_EN]</code> con cargo y vigencia.</p>
+                        </div>
+                        <button type="button" @click="showJobModal = true" class="btn btn-xs btn-secondary rounded-xl font-bold">+ Agregar Experiencia</button>
                     </div>
-                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">La vinculacion con empresas y cargos se habilitara en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
-                        <a href="{% url 'core:empresas_lista' %}" class="btn btn-xs btn-secondary mt-3">Ver Directorio de Empresas</a>
+
+                    {% if empleos_rel %}
+                    <div class="space-y-3">
+                        {% for emp in empleos_rel %}
+                        <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-base text-base-content">{{ emp.cargo }}</span>
+                                    {% if emp.actual %}
+                                    <span class="badge badge-xs badge-success text-success-content font-bold">Actual</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'core:empresa_detalle' eid=emp.empresa.eid %}" class="text-xs font-semibold text-secondary hover:underline">
+                                    🏢 {{ emp.empresa.nombre }} ({{ emp.empresa.industria }})
+                                </a>
+                                <p class="text-[11px] text-base-content/50">
+                                    {{ emp.fecha_inicio|default:"Inicio N/A" }} &rarr; {% if emp.actual %}Presente{% else %}{{ emp.fecha_fin|default:"Fin N/A" }}{% endif %}
+                                </p>
+                            </div>
+                            <form method="POST" action="{% url 'core:usuario_experiencia_eliminar' uid=usuario.uid eid=emp.empresa.eid %}"
+                                  onsubmit="return confirm('¿Eliminar experiencia laboral en {{ emp.empresa.nombre }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-xs btn-error btn-outline rounded-lg">Eliminar</button>
+                            </form>
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
+                        <p class="text-xs text-base-content/60">No hay experiencia laboral registrada aún en el grafo.</p>
+                        <button type="button" @click="showJobModal = true" class="btn btn-xs btn-secondary font-bold">Registrar Empleo</button>
+                    </div>
+                    {% endif %}
                 </div>
 
-                <!-- Proyectos Tab -->
+                <!-- 4. Proyectos Tab -->
                 <div x-show="activeTab === 'proyectos'" style="display: none;" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Iniciativas Desarrolladas (:Proyecto)</h3>
+                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Iniciativas y Proyectos (:Proyecto)</h3>
                         <span class="badge badge-info badge-outline text-xs">Arista [:PARTICIPA_EN]</span>
                     </div>
-                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">La participacion en proyectos con roles especificos se gestionara en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
-                        <a href="{% url 'core:proyectos_lista' %}" class="btn btn-xs btn-info mt-3">Ver Proyectos Disponibles</a>
+
+                    {% if proyectos_rel %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {% for proy in proyectos_rel %}
+                        <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm space-y-2">
+                            <div class="flex justify-between items-start">
+                                <a href="{% url 'core:proyecto_detalle' pid=proy.proyecto.pid %}" class="font-bold text-sm text-base-content hover:text-info">
+                                    {{ proy.proyecto.nombre }}
+                                </a>
+                                <span class="badge badge-xs badge-info font-bold">{{ proy.rol }}</span>
+                            </div>
+                            <p class="text-xs text-base-content/60 line-clamp-2">{{ proy.proyecto.descripcion|default:"Sin descripción" }}</p>
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300">
+                        <p class="text-xs text-base-content/60">Este usuario aún no figura como participante en proyectos.</p>
+                    </div>
+                    {% endif %}
                 </div>
 
-                <!-- Red Tab -->
+                <!-- 5. Red Tab -->
                 <div x-show="activeTab === 'red'" style="display: none;" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Contactos Directos (:Usuario)</h3>
-                        <span class="badge badge-accent badge-outline text-xs">Arista [:CONECTA_CON]</span>
+                        <div>
+                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Contactos Directos (:Usuario)</h3>
+                            <p class="text-xs text-base-content/50">Arista simétrica <code class="text-accent font-mono">[:CONECTA_CON]</code>.</p>
+                        </div>
+                        <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="btn btn-xs btn-accent rounded-xl font-bold">Explorar Red Completa &rarr;</a>
                     </div>
-                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">Las solicitudes de conexion y analisis de vecinos mutuos se habilitaran en la <strong>Fase 5 (Gestion de Relaciones)</strong> y <strong>Fase 6 (Consultas de Grafo)</strong>.</p>
+
+                    {% if conexiones_rel %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {% for c in conexiones_rel %}
+                        <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center gap-3">
+                            <div class="avatar placeholder">
+                                <div class="bg-accent/20 text-accent font-bold rounded-xl w-10 h-10 text-xs">
+                                    {{ c.usuario.nombre|slice:":1" }}{{ c.usuario.apellido|slice:":1" }}
+                                </div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <a href="{% url 'core:usuario_detalle' uid=c.usuario.uid %}" class="font-bold text-xs text-base-content hover:text-accent truncate block">
+                                    {{ c.usuario.nombre_completo }}
+                                </a>
+                                <span class="text-[10px] text-base-content/60 truncate block">{{ c.usuario.titulo_profesional|default:"Profesional" }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
+                        <p class="text-xs text-base-content/60">No hay conexiones registradas para este perfil.</p>
+                        <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="btn btn-xs btn-accent font-bold">Conectar Contactos</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -150,6 +258,93 @@
                     &larr; Volver al Directorio
                 </a>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Vincular Habilidad -->
+    <div x-show="showSkillModal" class="modal modal-open" style="display: none;">
+        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
+            <h3 class="font-black text-lg text-base-content">Vincular Habilidad a {{ usuario.nombre_completo }}</h3>
+            <p class="text-xs text-base-content/70">Crea la relación orientada <code class="text-primary font-mono">(:Usuario)-[:TIENE_HABILIDAD]->(:Habilidad)</code>.</p>
+
+            <form method="POST" action="{% url 'core:usuario_habilidad_agregar' uid=usuario.uid %}" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Seleccionar Habilidad:</span></label>
+                    <select name="hid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
+                        <option value="">-- Elige una habilidad --</option>
+                        {% for h in todas_habilidades %}
+                        <option value="{{ h.hid }}">{{ h.nombre }} ({{ h.categoria }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Nivel de Dominio:</span></label>
+                        <select name="nivel" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                            <option value="basico">Básico</option>
+                            <option value="intermedio" selected>Intermedio</option>
+                            <option value="avanzado">Avanzado</option>
+                            <option value="experto">Experto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Años de Exp.:</span></label>
+                        <input type="number" name="anios_experiencia" value="1" min="0" max="40" class="input input-sm input-bordered w-full rounded-xl bg-base-100" />
+                    </div>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" @click="showSkillModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-xl font-bold">Guardar Habilidad</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Experiencia Laboral -->
+    <div x-show="showJobModal" class="modal modal-open" style="display: none;">
+        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
+            <h3 class="font-black text-lg text-base-content">Añadir Experiencia Laboral</h3>
+            <p class="text-xs text-base-content/70">Crea la relación orientada <code class="text-secondary font-mono">(:Usuario)-[:TRABAJA_EN]->(:Empresa)</code>.</p>
+
+            <form method="POST" action="{% url 'core:usuario_experiencia_agregar' uid=usuario.uid %}" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Empresa:</span></label>
+                    <select name="eid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
+                        <option value="">-- Elige una empresa --</option>
+                        {% for emp in todas_empresas %}
+                        <option value="{{ emp.eid }}">{{ emp.nombre }} ({{ emp.industria }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Cargo / Rol Ocupado:</span></label>
+                    <input type="text" name="cargo" placeholder="Ej. Senior Backend Developer" class="input input-sm input-bordered w-full rounded-xl bg-base-100" required />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Fecha Inicio:</span></label>
+                        <input type="date" name="fecha_inicio" class="input input-sm input-bordered w-full rounded-xl bg-base-100" />
+                    </div>
+                    <div>
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Fecha Fin:</span></label>
+                        <input type="date" name="fecha_fin" class="input input-sm input-bordered w-full rounded-xl bg-base-100" />
+                    </div>
+                </div>
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-2">
+                        <input type="checkbox" name="actual" checked class="checkbox checkbox-sm checkbox-secondary rounded-lg" />
+                        <span class="label-text text-xs font-semibold">Es mi empleo actual</span>
+                    </label>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" @click="showJobModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-secondary rounded-xl font-bold">Vincular Trayectoria</button>
+                </div>
+            </form>
         </div>
     </div>
 

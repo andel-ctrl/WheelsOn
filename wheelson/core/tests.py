@@ -20,6 +20,13 @@ from core.services import (
     HabilidadService,
     ProyectoService,
     OfertaService,
+    ConexionService,
+    EmpleoService,
+    HabilidadUsuarioService,
+    ParticipacionProyectoService,
+    PublicacionOfertaService,
+    RequisitoOfertaService,
+    PostulacionService,
 )
 from core.forms import (
     UsuarioForm,
@@ -27,6 +34,13 @@ from core.forms import (
     HabilidadForm,
     ProyectoForm,
     OfertaForm,
+    ConectarUsuarioForm,
+    VincularHabilidadUsuarioForm,
+    ExperienciaLaboralForm,
+    ParticipacionProyectoForm,
+    PublicarOfertaEmpresaForm,
+    RequisitoOfertaForm,
+    PostulacionForm,
 )
 
 
@@ -363,4 +377,135 @@ class TemplateUiEnhancementsTest(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "Skills Cloud")
         self.assertContains(res, "Kubernetes")
+
+
+class RelationshipsManagementTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.u1 = UsuarioService.create(nombre="Ana", apellido="Perez", email="ana@example.com")
+        self.u2 = UsuarioService.create(nombre="Beto", apellido="Lopez", email="beto@example.com")
+        self.emp = EmpresaService.create(nombre="DevCorp", industria="IT", tamano="grande")
+        self.hab = HabilidadService.create(nombre="Docker", categoria="tecnica")
+        self.proy = ProyectoService.create(nombre="Microservices Migration", estado="activo")
+        self.ofr = OfertaService.create(titulo="DevOps Specialist", modalidad="remoto")
+
+    def test_conexion_service_lifecycle(self):
+        self.assertFalse(ConexionService.estan_conectados(self.u1.uid, self.u2.uid))
+        ConexionService.conectar(self.u1.uid, self.u2.uid, mensaje="Hola Beto!")
+        self.assertTrue(ConexionService.estan_conectados(self.u1.uid, self.u2.uid))
+        conexiones = ConexionService.listar(self.u1.uid)
+        self.assertEqual(len(conexiones), 1)
+        self.assertEqual(conexiones[0]["usuario"].uid, self.u2.uid)
+        self.assertEqual(conexiones[0]["mensaje"], "Hola Beto!")
+
+        ConexionService.desconectar(self.u1.uid, self.u2.uid)
+        self.assertFalse(ConexionService.estan_conectados(self.u1.uid, self.u2.uid))
+
+    def test_empleo_service_lifecycle(self):
+        EmpleoService.vincular(self.u1.uid, self.emp.eid, cargo="Backend Dev", actual=True)
+        empleos = EmpleoService.listar_por_usuario(self.u1.uid)
+        self.assertEqual(len(empleos), 1)
+        self.assertEqual(empleos[0]["cargo"], "Backend Dev")
+        self.assertEqual(empleos[0]["empresa"].eid, self.emp.eid)
+
+        empleados = EmpleoService.listar_por_empresa(self.emp.eid)
+        self.assertEqual(len(empleados), 1)
+        self.assertEqual(empleados[0]["usuario"].uid, self.u1.uid)
+
+        EmpleoService.desvincular(self.u1.uid, self.emp.eid)
+        self.assertEqual(len(EmpleoService.listar_por_usuario(self.u1.uid)), 0)
+
+    def test_habilidad_usuario_service_lifecycle(self):
+        HabilidadUsuarioService.vincular(self.u1.uid, self.hab.hid, nivel="avanzado", anios_experiencia=3)
+        habilidades = HabilidadUsuarioService.listar_por_usuario(self.u1.uid)
+        self.assertEqual(len(habilidades), 1)
+        self.assertEqual(habilidades[0]["habilidad"].hid, self.hab.hid)
+        self.assertEqual(habilidades[0]["nivel"], "avanzado")
+        self.assertEqual(habilidades[0]["anios_experiencia"], 3)
+
+        HabilidadUsuarioService.desvincular(self.u1.uid, self.hab.hid)
+        self.assertEqual(len(HabilidadUsuarioService.listar_por_usuario(self.u1.uid)), 0)
+
+    def test_participacion_proyecto_service_lifecycle(self):
+        ParticipacionProyectoService.vincular(self.u1.uid, self.proy.pid, rol="Tech Lead")
+        proyectos = ParticipacionProyectoService.listar_por_usuario(self.u1.uid)
+        self.assertEqual(len(proyectos), 1)
+        self.assertEqual(proyectos[0]["rol"], "Tech Lead")
+
+        miembros = ParticipacionProyectoService.listar_por_proyecto(self.proy.pid)
+        self.assertEqual(len(miembros), 1)
+        self.assertEqual(miembros[0]["usuario"].uid, self.u1.uid)
+
+        ParticipacionProyectoService.desvincular(self.u1.uid, self.proy.pid)
+        self.assertEqual(len(ParticipacionProyectoService.listar_por_proyecto(self.proy.pid)), 0)
+
+    def test_publicacion_oferta_service_lifecycle(self):
+        PublicacionOfertaService.vincular(self.emp.eid, self.ofr.oid)
+        empresa = PublicacionOfertaService.obtener_empresa(self.ofr.oid)
+        self.assertIsNotNone(empresa)
+        self.assertEqual(empresa.eid, self.emp.eid)
+
+        ofertas = PublicacionOfertaService.listar_por_empresa(self.emp.eid)
+        self.assertEqual(len(ofertas), 1)
+        self.assertEqual(ofertas[0].oid, self.ofr.oid)
+
+    def test_requisito_oferta_service_lifecycle(self):
+        RequisitoOfertaService.vincular(self.ofr.oid, self.hab.hid, nivel_minimo="intermedio", prioridad="obligatoria")
+        requisitos = RequisitoOfertaService.listar_por_oferta(self.ofr.oid)
+        self.assertEqual(len(requisitos), 1)
+        self.assertEqual(requisitos[0]["habilidad"].hid, self.hab.hid)
+        self.assertEqual(requisitos[0]["prioridad"], "obligatoria")
+
+        RequisitoOfertaService.desvincular(self.ofr.oid, self.hab.hid)
+        self.assertEqual(len(RequisitoOfertaService.listar_por_oferta(self.ofr.oid)), 0)
+
+    def test_postulacion_service_lifecycle(self):
+        self.assertFalse(PostulacionService.ha_postulado(self.u1.uid, self.ofr.oid))
+        PostulacionService.postular(self.u1.uid, self.ofr.oid, carta_presentacion="Mi postulacion")
+        self.assertTrue(PostulacionService.ha_postulado(self.u1.uid, self.ofr.oid))
+
+        candidatos = PostulacionService.listar_por_oferta(self.ofr.oid)
+        self.assertEqual(len(candidatos), 1)
+        self.assertEqual(candidatos[0]["usuario"].uid, self.u1.uid)
+
+        PostulacionService.desvincular(self.u1.uid, self.ofr.oid)
+        self.assertFalse(PostulacionService.ha_postulado(self.u1.uid, self.ofr.oid))
+
+    def test_relaciones_views_and_flow(self):
+        res_conectar = self.client.post(reverse("core:conexion_conectar"), {
+            "uid_origen": self.u1.uid,
+            "uid_destino": self.u2.uid,
+            "mensaje": "Conectemos por favor",
+        })
+        self.assertEqual(res_conectar.status_code, 302)
+        self.assertTrue(ConexionService.estan_conectados(self.u1.uid, self.u2.uid))
+
+        res_hab = self.client.post(reverse("core:usuario_habilidad_agregar", kwargs={"uid": self.u1.uid}), {
+            "hid": self.hab.hid,
+            "nivel": "experto",
+            "anios_experiencia": 5,
+        })
+        self.assertEqual(res_hab.status_code, 302)
+        self.assertEqual(len(HabilidadUsuarioService.listar_por_usuario(self.u1.uid)), 1)
+
+        res_emp = self.client.post(reverse("core:usuario_experiencia_agregar", kwargs={"uid": self.u1.uid}), {
+            "eid": self.emp.eid,
+            "cargo": "Tech Director",
+            "actual": "on",
+        })
+        self.assertEqual(res_emp.status_code, 302)
+        self.assertEqual(len(EmpleoService.listar_por_usuario(self.u1.uid)), 1)
+
+        res_postular = self.client.post(reverse("core:oferta_postular", kwargs={"oid": self.ofr.oid}), {
+            "uid": self.u1.uid,
+            "carta_presentacion": "Carta motivacional",
+        })
+        self.assertEqual(res_postular.status_code, 302)
+        self.assertTrue(PostulacionService.ha_postulado(self.u1.uid, self.ofr.oid))
+
+        res_red = self.client.get(reverse("core:conexiones_red") + f"?uid={self.u1.uid}")
+        self.assertEqual(res_red.status_code, 200)
+        self.assertContains(res_red, "Red de Conexiones")
+        self.assertContains(res_red, self.u2.nombre)
+
 

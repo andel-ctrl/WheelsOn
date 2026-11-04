@@ -165,3 +165,106 @@ class OfertaForm(BaseTailwindForm):
         label="Estado",
         initial="abierta",
     )
+
+
+# ==============================================================================
+# FORMULARIOS DE GESTION DE RELACIONES (FASE 5)
+# ==============================================================================
+
+class ConectarUsuarioForm(BaseTailwindForm):
+    usuario_destino = forms.CharField(max_length=64, label="Usuario a Conectar")
+    mensaje = forms.CharField(
+        max_length=250,
+        required=False,
+        label="Mensaje de Invitacion",
+        widget=forms.TextInput(attrs={"placeholder": "Hola, me gustaria conectar contigo en WheelsOn..."}),
+    )
+
+
+class VincularHabilidadUsuarioForm(BaseTailwindForm):
+    hid = forms.CharField(max_length=64, label="Habilidad")
+    nivel = forms.ChoiceField(
+        choices=[
+            ("basico", "Basico"),
+            ("intermedio", "Intermedio"),
+            ("avanzado", "Avanzado"),
+            ("experto", "Experto"),
+        ],
+        initial="intermedio",
+        label="Nivel de Dominio",
+    )
+    anios_experiencia = forms.IntegerField(
+        min_value=0,
+        initial=1,
+        label="Anos de Experiencia",
+    )
+
+
+class ExperienciaLaboralForm(BaseTailwindForm):
+    eid = forms.CharField(max_length=64, label="Empresa")
+    cargo = forms.CharField(max_length=150, label="Cargo / Posicion")
+    fecha_inicio = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}),
+        required=False,
+        label="Fecha de Inicio",
+    )
+    fecha_fin = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}),
+        required=False,
+        label="Fecha de Finalizacion",
+    )
+    actual = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Es mi empleo actual",
+    )
+
+
+class ParticipacionProyectoForm(BaseTailwindForm):
+    uid = forms.CharField(max_length=64, required=False, label="Colaborador")
+    pid = forms.CharField(max_length=64, required=False, label="Proyecto")
+    rol = forms.CharField(
+        max_length=100,
+        initial="Colaborador",
+        label="Rol / Responsabilidad",
+    )
+    fecha_inicio = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}),
+        required=False,
+        label="Fecha de Ingreso",
+    )
+
+
+class PublicarOfertaEmpresaForm(BaseTailwindForm):
+    eid = forms.CharField(max_length=64, label="Empresa Emisora")
+
+
+class RequisitoOfertaForm(BaseTailwindForm):
+    hid = forms.CharField(max_length=64, label="Habilidad Requerida")
+    nivel_minimo = forms.ChoiceField(
+        choices=[
+            ("basico", "Basico"),
+            ("intermedio", "Intermedio"),
+            ("avanzado", "Avanzado"),
+            ("experto", "Experto"),
+        ],
+        initial="basico",
+        label="Nivel Minimo Exigido",
+    )
+    prioridad = forms.ChoiceField(
+        choices=[
+            ("obligatoria", "Obligatoria"),
+            ("deseable", "Deseable"),
+        ],
+        initial="obligatoria",
+        label="Prioridad del Requisito",
+    )
+
+
+class PostulacionForm(BaseTailwindForm):
+    uid = forms.CharField(max_length=64, required=False, label="Usuario Candidato")
+    carta_presentacion = forms.CharField(
+        widget=forms.Textarea(attrs={"placeholder": "Describe tu interes en el rol y aportes clave..."}),
+        required=False,
+        label="Carta de Presentacion",
+    )

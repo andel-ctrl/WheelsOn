@@ -4,7 +4,7 @@
 {% block page_title %}Detalle de Vacante{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'descripcion', showApplyModal: false, copied: false }">
+<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'descripcion', showApplyModal: false, showReqModal: false, showEmpresaModal: false, copied: false }">
 
     <!-- Top Action Bar -->
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -47,7 +47,19 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="space-y-1">
                     <h1 class="text-2xl sm:text-3xl font-black text-base-content tracking-tight">{{ oferta.titulo }}</h1>
-                    <p class="text-sm font-medium text-accent">Oferta de Empleo Registrada en el Grafo</p>
+                    {% if empresa_rel %}
+                    <p class="text-sm font-semibold text-accent flex items-center gap-1.5">
+                        <span>🏢 Publicado por:</span>
+                        <a href="{% url 'core:empresa_detalle' eid=empresa_rel.eid %}" class="hover:underline text-accent font-bold">
+                            {{ empresa_rel.nombre }} ({{ empresa_rel.industria }})
+                        </a>
+                    </p>
+                    {% else %}
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-base-content/50 italic">Sin empresa emisora asociada</span>
+                        <button type="button" @click="showEmpresaModal = true" class="btn btn-xs btn-outline btn-accent rounded-lg">+ Asignar Empresa</button>
+                    </div>
+                    {% endif %}
                 </div>
                 <div>
                     <button type="button" @click="showApplyModal = true" class="btn btn-accent rounded-2xl shadow-lg hover:shadow-accent/40 font-bold px-6 gap-2">
@@ -104,7 +116,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Habilidades Requeridas
+                    Habilidades Requeridas ({{ requisitos_rel|length }})
                 </button>
                 <button type="button" @click="activeTab = 'postulaciones'"
                         :class="activeTab === 'postulaciones' ? 'border-b-2 border-accent text-accent font-bold' : 'text-base-content/60 hover:text-base-content'"
@@ -112,7 +124,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    Candidatos
+                    Candidatos ({{ candidatos_rel|length }})
                 </button>
             </div>
 
@@ -132,40 +144,100 @@
             <div x-show="activeTab === 'habilidades'" class="space-y-4" style="display: none;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-bold text-base text-base-content">Competencias del Grafo [:REQUIERE]</h3>
-                        <p class="text-xs text-base-content/60">Habilidades evaluadas automáticamente por el motor de compatibilidad.</p>
+                        <h3 class="font-bold text-base text-base-content">Competencias Exigidas (:Habilidad)</h3>
+                        <p class="text-xs text-base-content/60">Arista semántica <code class="text-accent font-mono">[:REQUIERE]</code> con nivel mínimo y prioridad.</p>
                     </div>
-                    <a href="{% url 'core:habilidades_lista' %}" class="btn btn-xs btn-outline btn-accent rounded-lg">+ Añadir Habilidades</a>
+                    <button type="button" @click="showReqModal = true" class="btn btn-xs btn-accent rounded-lg font-bold">+ Añadir Requisito</button>
                 </div>
 
-                <div class="p-6 rounded-2xl bg-base-100/40 border border-base-300 text-center space-y-3">
-                    <p class="text-xs text-base-content/60">Las relaciones semánticas de requerimientos se gestionan en la fase de Grafo y Relaciones.</p>
-                    <a href="{% url 'core:habilidades_lista' %}" class="btn btn-sm btn-ghost border border-base-300 rounded-xl">Explorar Catálogo de Skills</a>
+                {% if requisitos_rel %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {% for req in requisitos_rel %}
+                    <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center justify-between">
+                        <div class="space-y-1">
+                            <span class="font-bold text-sm text-base-content">{{ req.habilidad.nombre }}</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="badge badge-xs uppercase font-bold {% if req.prioridad == 'obligatoria' %}badge-error text-white{% else %}badge-ghost{% endif %}">
+                                    {{ req.prioridad }}
+                                </span>
+                                <span class="badge badge-xs badge-outline uppercase">{{ req.nivel_minimo }}</span>
+                            </div>
+                        </div>
+                        <form method="POST" action="{% url 'core:oferta_requisito_eliminar' oid=oferta.oid hid=req.habilidad.hid %}"
+                              onsubmit="return confirm('¿Quitar requisito {{ req.habilidad.nombre }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg">✕</button>
+                        </form>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="p-8 text-center rounded-2xl bg-base-100/40 border border-base-300 space-y-2">
+                    <p class="text-xs text-base-content/60">Esta oferta aún no tiene habilidades requeridas vinculadas en el grafo.</p>
+                    <button type="button" @click="showReqModal = true" class="btn btn-xs btn-accent font-bold">Añadir Primer Requisito</button>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Tab 3: Postulaciones -->
             <div x-show="activeTab === 'postulaciones'" class="space-y-4" style="display: none;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-bold text-base text-base-content">Postulaciones Registradas [:POSTULA_A]</h3>
-                        <p class="text-xs text-base-content/60">Candidatos del grafo profesional postulados a este rol.</p>
+                        <h3 class="font-bold text-base text-base-content">Postulaciones Registradas (:Usuario)</h3>
+                        <p class="text-xs text-base-content/60">Arista semántica <code class="text-accent font-mono">[:POSTULA_A]</code> con fecha y carta.</p>
                     </div>
+                    <button type="button" @click="showApplyModal = true" class="btn btn-xs btn-accent rounded-lg font-bold">+ Registrar Candidato</button>
                 </div>
 
-                <div class="p-8 rounded-2xl bg-base-100/40 border border-base-300 text-center space-y-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <p class="text-sm font-semibold">Módulo de Postulaciones y Match</p>
-                    <p class="text-xs text-base-content/60 max-w-sm mx-auto">La vinculación de usuarios y cálculo de score se activará en la Fase 5 (Gestión de Relaciones) y Fase 7 (Recomendador).</p>
+                {% if candidatos_rel %}
+                <div class="space-y-3">
+                    {% for cand in candidatos_rel %}
+                    <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-accent/20 text-accent font-bold rounded-xl w-10 h-10 text-xs">
+                                        {{ cand.usuario.nombre|slice:":1" }}{{ cand.usuario.apellido|slice:":1" }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="{% url 'core:usuario_detalle' uid=cand.usuario.uid %}" class="font-bold text-sm text-base-content hover:text-accent">
+                                        {{ cand.usuario.nombre_completo }}
+                                    </a>
+                                    <p class="text-xs text-base-content/60">{{ cand.usuario.titulo_profesional|default:"Profesional" }} &bull; {{ cand.usuario.ubicacion }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-sm badge-accent badge-outline uppercase font-mono text-[10px]">{{ cand.estado }}</span>
+                                <form method="POST" action="{% url 'core:oferta_postulacion_eliminar' oid=oferta.oid uid=cand.usuario.uid %}"
+                                      onsubmit="return confirm('¿Cancelar postulación de {{ cand.usuario.nombre_completo }}?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-xs btn-error btn-outline rounded-lg">Retirar</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {% if cand.carta_presentacion %}
+                        <div class="p-3 rounded-xl bg-base-200/50 text-xs text-base-content/70 italic border border-base-300/40">
+                            "{{ cand.carta_presentacion }}"
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="p-8 rounded-2xl bg-base-100/40 border border-base-300 text-center space-y-3">
+                    <p class="text-xs text-base-content/60">Aún no se han registrado postulaciones para este rol.</p>
+                    <button type="button" @click="showApplyModal = true" class="btn btn-sm btn-accent rounded-xl font-bold">Postular un Candidato</button>
+                </div>
+                {% endif %}
             </div>
 
         </div>
     </div>
 
-    <!-- Apply Modal -->
+    <!-- Modal Postularse -->
     <div x-show="showApplyModal" class="modal modal-open" style="display: none;">
         <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
             <h3 class="font-black text-lg text-base-content flex items-center gap-2">
@@ -173,17 +245,100 @@
                 Postular a {{ oferta.titulo }}
             </h3>
             <p class="text-xs text-base-content/70">
-                Al postularte, el algoritmo de WheelsOn cruzará tus nodos de <strong class="text-primary">Habilidad</strong> con los requerimientos de la oferta para calcular tu compatibilidad.
+                Se registrará la arista <code class="font-mono text-accent">(:Usuario)-[:POSTULA_A]->(:Oferta)</code> en el grafo.
             </p>
-            <div class="p-3 bg-base-200 rounded-xl text-xs space-y-1">
-                <p><strong>Vacante:</strong> {{ oferta.titulo }}</p>
-                <p><strong>Ubicación:</strong> {{ oferta.ubicacion|default:"Remoto" }}</p>
-                <p><strong>Modalidad:</strong> <span class="capitalize">{{ oferta.modalidad }}</span></p>
-            </div>
-            <div class="modal-action">
-                <button type="button" @click="showApplyModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
-                <button type="button" @click="showApplyModal = false; alert('¡Postulación simulada con éxito! La persistencia en grafo se vinculará en la Fase 5.');" class="btn btn-sm btn-accent rounded-xl font-bold">Confirmar Postulación</button>
-            </div>
+
+            <form method="POST" action="{% url 'core:oferta_postular' oid=oferta.oid %}" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Candidato a Postular:</span></label>
+                    <select name="uid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
+                        <option value="">-- Selecciona el candidato --</option>
+                        {% for u in todos_usuarios %}
+                        <option value="{{ u.uid }}">{{ u.nombre_completo }} ({{ u.titulo_profesional|default:"Profesional" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Carta de Presentación / Mensaje:</span></label>
+                    <textarea name="carta_presentacion" rows="3" placeholder="Explica brevemente tu experiencia y motivación..." class="textarea textarea-bordered w-full rounded-xl text-xs"></textarea>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" @click="showApplyModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-accent rounded-xl font-bold">Confirmar Postulación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Añadir Requisito -->
+    <div x-show="showReqModal" class="modal modal-open" style="display: none;">
+        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
+            <h3 class="font-black text-lg text-base-content">Añadir Requisito de Habilidad</h3>
+            <p class="text-xs text-base-content/70">Crea la relación <code class="font-mono text-accent">(:Oferta)-[:REQUIERE]->(:Habilidad)</code>.</p>
+
+            <form method="POST" action="{% url 'core:oferta_requisito_agregar' oid=oferta.oid %}" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Habilidad:</span></label>
+                    <select name="hid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
+                        <option value="">-- Elige una habilidad --</option>
+                        {% for h in todas_habilidades %}
+                        <option value="{{ h.hid }}">{{ h.nombre }} ({{ h.categoria }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Nivel Mínimo:</span></label>
+                        <select name="nivel_minimo" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                            <option value="basico">Básico</option>
+                            <option value="intermedio" selected>Intermedio</option>
+                            <option value="avanzado">Avanzado</option>
+                            <option value="experto">Experto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Prioridad:</span></label>
+                        <select name="prioridad" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                            <option value="obligatoria" selected>Obligatoria</option>
+                            <option value="deseable">Deseable</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" @click="showReqModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-accent rounded-xl font-bold">Añadir Requisito</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Asignar Empresa -->
+    <div x-show="showEmpresaModal" class="modal modal-open" style="display: none;">
+        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
+            <h3 class="font-black text-lg text-base-content">Asignar Empresa Emisora</h3>
+            <p class="text-xs text-base-content/70">Vincula la relación <code class="font-mono text-accent">(:Empresa)-[:PUBLICA]->(:Oferta)</code>.</p>
+
+            <form method="POST" action="{% url 'core:oferta_empresa_asignar' oid=oferta.oid %}" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Empresa:</span></label>
+                    <select name="eid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
+                        <option value="">-- Selecciona una empresa --</option>
+                        {% for emp in todas_empresas %}
+                        <option value="{{ emp.eid }}">{{ emp.nombre }} ({{ emp.industria }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" @click="showEmpresaModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-accent rounded-xl font-bold">Vincular Empresa</button>
+                </div>
+            </form>
         </div>
     </div>
 

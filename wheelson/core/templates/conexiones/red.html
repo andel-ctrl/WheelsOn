@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Red de Conexiones | WheelsOn{% endblock %}
+{% block page_title %}Red de Conexiones (:CONECTA_CON){% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in-up" x-data="{ showConnectModal: false, targetUid: '', targetNombre: '' }">
+
+    <!-- Active User Selector Bar -->
+    <div class="card bg-base-200 border border-base-300 p-4 rounded-2xl shadow-sm">
+        <form method="GET" class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-base-content">Perspectiva del Usuario en la Red</h3>
+                    <p class="text-xs text-base-content/60">Selecciona el perfil para explorar su subgrafo de 1er grado:</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <select name="uid" onchange="this.form.submit()" class="select select-sm select-bordered w-full sm:w-64 rounded-xl bg-base-100 font-semibold text-xs">
+                    {% for u in usuarios %}
+                    <option value="{{ u.uid }}" {% if usuario_activo and usuario_activo.uid == u.uid %}selected{% endif %}>
+                        {{ u.nombre_completo }} ({{ u.titulo_profesional|default:"Profesional" }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <noscript><button type="submit" class="btn btn-sm btn-primary">Ver</button></noscript>
+            </div>
+        </form>
+    </div>
+
+    {% if usuario_activo %}
+    <!-- Active User Hero Banner -->
+    <div class="p-6 rounded-3xl bg-gradient-to-r from-accent/15 via-base-200 to-primary/15 border border-base-300 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+        <div class="flex items-center gap-4 text-center sm:text-left">
+            <div class="avatar placeholder">
+                <div class="bg-gradient-to-tr from-accent to-primary text-primary-content font-black rounded-2xl w-14 h-14 text-xl">
+                    {{ usuario_activo.nombre|slice:":1" }}{{ usuario_activo.apellido|slice:":1" }}
+                </div>
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-base-content">{{ usuario_activo.nombre_completo }}</h2>
+                <p class="text-xs text-accent font-semibold">{{ usuario_activo.titulo_profesional|default:"Profesional" }} &bull; {{ usuario_activo.ubicacion }}</p>
+                <span class="badge badge-accent badge-outline font-mono text-[10px] mt-1">UID: {{ usuario_activo.uid|slice:":12" }}</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6 text-center">
+            <div class="space-y-0.5">
+                <span class="text-xs font-semibold text-base-content/60">Conexiones Directas</span>
+                <p class="text-2xl font-black text-accent">{{ conexiones|length }}</p>
+            </div>
+            <div class="space-y-0.5">
+                <span class="text-xs font-semibold text-base-content/60">Grado de Red</span>
+                <p class="text-2xl font-black text-primary">1°</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid: Conexiones Directas & Sugerencias -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- 1. Columna Conexiones (7 cols) -->
+        <div class="lg:col-span-7 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-black text-base text-base-content flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-accent"></span>
+                    Contactos Conectados ({{ conexiones|length }})
+                </h3>
+                <span class="text-xs text-base-content/50 font-mono">Arista: [:CONECTA_CON]</span>
+            </div>
+
+            {% if conexiones %}
+            <div class="space-y-3">
+                {% for item in conexiones %}
+                <div class="card bg-base-200 border border-base-300 p-4 rounded-2xl shadow-sm hover:border-accent/40 transition">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="avatar placeholder">
+                                <div class="bg-base-300 text-base-content font-bold rounded-xl w-11 h-11 text-sm">
+                                    {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
+                                </div>
+                            </div>
+                            <div class="min-w-0">
+                                <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-sm text-base-content hover:text-accent transition truncate block">
+                                    {{ item.usuario.nombre_completo }}
+                                </a>
+                                <p class="text-xs text-base-content/60 truncate">{{ item.usuario.titulo_profesional|default:"Profesional" }}</p>
+                                <span class="text-[10px] text-base-content/40 font-mono">Desde: {{ item.fecha|default:"Reciente" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="btn btn-xs btn-ghost rounded-lg">Ver Perfil</a>
+                            <form method="POST" action="{% url 'core:conexion_desconectar' uid_origen=usuario_activo.uid uid_destino=item.usuario.uid %}"
+                                  onsubmit="return confirm('¿Desconectar a {{ item.usuario.nombre_completo }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-xs btn-error btn-outline rounded-lg" title="Eliminar Conexión">
+                                    Desconectar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {% if item.mensaje %}
+                    <div class="mt-2.5 pt-2 border-t border-base-300/50 text-xs text-base-content/70 italic bg-base-100/50 p-2 rounded-xl">
+                        "{{ item.mensaje }}"
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card bg-base-200 border border-base-300 p-8 text-center rounded-2xl space-y-3">
+                <div class="w-12 h-12 rounded-full bg-accent/10 text-accent mx-auto flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                </div>
+                <h4 class="font-bold text-sm text-base-content">Sin conexiones registradas</h4>
+                <p class="text-xs text-base-content/60 max-w-xs mx-auto">
+                    Este usuario no tiene conexiones en su red de 1er grado. Explora las sugerencias de la derecha para vincular profesionales.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. Columna Sugerencias para Conectar (5 cols) -->
+        <div class="lg:col-span-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-black text-base text-base-content flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+                    Sugerencias para Conectar
+                </h3>
+                <span class="badge badge-sm badge-ghost text-[10px]">{{ sugerencias|length }}</span>
+            </div>
+
+            {% if sugerencias %}
+            <div class="space-y-3">
+                {% for sug in sugerencias %}
+                <div class="card bg-base-200 border border-base-300 p-4 rounded-2xl shadow-sm flex flex-col justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="avatar placeholder">
+                            <div class="bg-primary/20 text-primary font-bold rounded-xl w-10 h-10 text-xs">
+                                {{ sug.nombre|slice:":1" }}{{ sug.apellido|slice:":1" }}
+                            </div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <a href="{% url 'core:usuario_detalle' uid=sug.uid %}" class="font-bold text-sm text-base-content hover:text-primary transition truncate block">
+                                {{ sug.nombre_completo }}
+                            </a>
+                            <p class="text-xs text-base-content/60 truncate">{{ sug.titulo_profesional|default:"Profesional" }}</p>
+                            <span class="text-[10px] text-base-content/40">{{ sug.ubicacion|default:"No especificada" }}</span>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="showConnectModal = true; targetUid = '{{ sug.uid }}'; targetNombre = '{{ sug.nombre_completo }}'"
+                            class="btn btn-xs btn-primary rounded-xl font-bold gap-1 w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Conectar en el Grafo
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card bg-base-200 border border-base-300 p-6 text-center rounded-2xl">
+                <p class="text-xs text-base-content/60">¡Excelente! Ya estás conectado con todos los usuarios registrados en la red.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Connect Modal -->
+    <div x-show="showConnectModal" class="modal modal-open" style="display: none;">
+        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
+            <h3 class="font-black text-lg text-base-content flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-accent animate-pulse"></span>
+                Conectar con <span class="text-accent" x-text="targetNombre"></span>
+            </h3>
+            <p class="text-xs text-base-content/70">
+                Se creará una arista orientada <code class="font-mono text-accent">(:Usuario)-[:CONECTA_CON]->(:Usuario)</code> en la base de datos de grafos.
+            </p>
+
+            <form method="POST" action="{% url 'core:conexion_conectar' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="uid_origen" value="{{ usuario_activo.uid }}">
+                <input type="hidden" name="uid_destino" :value="targetUid">
+
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Mensaje de Conexión (Opcional):</span></label>
+                    <textarea name="mensaje" rows="2" placeholder="Hola, me gustaría conectar contigo en WheelsOn..." class="textarea textarea-bordered w-full rounded-xl text-xs"></textarea>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" @click="showConnectModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-accent rounded-xl font-bold">Crear Vínculo en Grafo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="card bg-base-200 border border-base-300 p-12 text-center rounded-3xl">
+        <p class="text-sm text-base-content/60">No hay usuarios registrados para visualizar conexiones. Registra los primeros usuarios en el sistema.</p>
+        <a href="{% url 'core:usuario_crear' %}" class="btn btn-sm btn-primary mx-auto mt-4 rounded-xl">Registrar Usuario</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block title %}{{ empresa.nombre }} | WheelsOn{% endblock %}
-{% block page_title %}Perfil Corporativo{% endblock %}
+{% block page_title %}Ficha Empresarial{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'info' }">
 
-    <!-- Corporate Header Card -->
+    <!-- Company Hero Card -->
     <div class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl">
-        <div class="h-32 sm:h-40 bg-gradient-to-r from-secondary/30 via-primary/20 to-accent/30 relative">
+        <div class="h-32 sm:h-40 bg-gradient-to-r from-secondary/30 via-accent/20 to-primary/30 relative">
             <div class="absolute top-4 right-4 flex gap-2">
                 <a href="{% url 'core:empresa_editar' eid=empresa.eid %}" class="btn btn-xs btn-secondary shadow rounded-lg gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -23,7 +23,7 @@
         <div class="card-body p-6 sm:p-8 pt-0 relative">
             <div class="flex flex-col sm:flex-row items-center sm:items-end gap-5 -mt-16 sm:-mt-20 mb-4">
                 <div class="avatar placeholder ring ring-base-100 ring-offset-4 ring-offset-base-200 rounded-3xl shadow-2xl">
-                    <div class="bg-gradient-to-tr from-secondary to-primary text-secondary-content font-black rounded-3xl w-24 h-24 sm:w-28 sm:h-28 text-3xl flex items-center justify-center">
+                    <div class="bg-gradient-to-tr from-secondary to-accent text-secondary-content font-black rounded-3xl w-24 h-24 sm:w-28 sm:h-28 text-3xl flex items-center justify-center">
                         {{ empresa.nombre|slice:":2"|upper }}
                     </div>
                 </div>
@@ -34,11 +34,7 @@
                         <span class="badge badge-secondary badge-outline text-xs self-center sm:self-auto font-mono">ID: {{ empresa.eid|slice:":10" }}...</span>
                     </div>
 
-                    <p class="text-sm sm:text-base font-semibold text-secondary flex items-center justify-center sm:justify-start gap-2">
-                        <span>{{ empresa.industria }}</span>
-                        <span>&bull;</span>
-                        <span class="badge badge-sm badge-ghost capitalize font-medium text-xs">{{ empresa.tamano }}</span>
-                    </p>
+                    <p class="text-sm sm:text-base font-semibold text-secondary">{{ empresa.industria }}</p>
 
                     <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 text-xs text-base-content/70 pt-1">
                         <span class="flex items-center gap-1">
@@ -48,13 +44,15 @@
                             </svg>
                             {{ empresa.ubicacion|default:"No especificada" }}
                         </span>
+                        <span>&bull;</span>
+                        <span class="capitalize">Tamaño: {{ empresa.tamano }}</span>
                         {% if empresa.sitio_web %}
                         <span>&bull;</span>
-                        <a href="{{ empresa.sitio_web }}" target="_blank" class="flex items-center gap-1 text-primary hover:underline font-medium">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <a href="{{ empresa.sitio_web }}" target="_blank" class="text-secondary hover:underline flex items-center gap-1">
+                            {{ empresa.sitio_web }}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
-                            Sitio Web Oficial
                         </a>
                         {% endif %}
                     </div>
@@ -67,10 +65,10 @@
                     Acerca de la Empresa
                 </button>
                 <button type="button" @click="activeTab = 'vacantes'" :class="activeTab === 'vacantes' ? 'tab-active font-bold text-secondary border-secondary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Ofertas Publicadas
+                    Ofertas Publicadas ({{ ofertas_rel|length }})
                 </button>
                 <button type="button" @click="activeTab = 'empleados'" :class="activeTab === 'empleados' ? 'tab-active font-bold text-secondary border-secondary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Equipo de Trabajo
+                    Equipo de Trabajo ({{ empleados_rel|length }})
                 </button>
             </div>
 
@@ -78,15 +76,15 @@
             <div class="py-6">
                 <!-- Info Tab -->
                 <div x-show="activeTab === 'info'" class="space-y-4">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Resumen y Mision</h3>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Resumen y Misión</h3>
                     {% if empresa.descripcion %}
                     <p class="text-sm leading-relaxed text-base-content/80 whitespace-pre-line bg-base-300/30 p-5 rounded-2xl border border-base-300">
                         {{ empresa.descripcion }}
                     </p>
                     {% else %}
                     <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/50">Esta empresa aun no tiene una descripcion registrada.</p>
-                        <a href="{% url 'core:empresa_editar' eid=empresa.eid %}" class="btn btn-xs btn-secondary btn-outline mt-3">Completar Informacion</a>
+                        <p class="text-xs text-base-content/50">Esta empresa aún no tiene una descripción registrada.</p>
+                        <a href="{% url 'core:empresa_editar' eid=empresa.eid %}" class="btn btn-xs btn-secondary btn-outline mt-3">Completar Información</a>
                     </div>
                     {% endif %}
                 </div>
@@ -94,24 +92,76 @@
                 <!-- Vacantes Tab -->
                 <div x-show="activeTab === 'vacantes'" style="display: none;" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Vacantes (:Oferta)</h3>
-                        <span class="badge badge-accent badge-outline text-xs">Arista [:PUBLICA]</span>
+                        <div>
+                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Vacantes Publicadas (:Oferta)</h3>
+                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-accent font-mono">[:PUBLICA]</code>.</p>
+                        </div>
+                        <a href="{% url 'core:oferta_crear' %}" class="btn btn-xs btn-accent rounded-xl font-bold">+ Publicar Nueva Oferta</a>
                     </div>
-                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">La publicacion y vinculacion directa de ofertas a la empresa se gestionara en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
-                        <a href="{% url 'core:oferta_crear' %}" class="btn btn-xs btn-accent mt-3">Publicar Nueva Oferta</a>
+
+                    {% if ofertas_rel %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for ofr in ofertas_rel %}
+                        <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm space-y-2 hover:border-accent/40 transition">
+                            <div class="flex justify-between items-start gap-2">
+                                <a href="{% url 'core:oferta_detalle' oid=ofr.oid %}" class="font-bold text-sm text-base-content hover:text-accent">
+                                    {{ ofr.titulo }}
+                                </a>
+                                <span class="badge badge-xs uppercase font-bold {% if ofr.estado == 'abierta' %}badge-success{% else %}badge-ghost{% endif %}">
+                                    {{ ofr.estado }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-base-content/60 line-clamp-2">{{ ofr.descripcion|default:"Sin descripción" }}</p>
+                            <div class="flex justify-between items-center pt-2 border-t border-base-300/60 text-[11px] text-base-content/50">
+                                <span class="capitalize">{{ ofr.modalidad }}</span>
+                                <a href="{% url 'core:oferta_detalle' oid=ofr.oid %}" class="text-accent font-semibold hover:underline">Ver Vacante &rarr;</a>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
+                        <p class="text-xs text-base-content/60">No hay ofertas vinculadas actualmente a esta empresa.</p>
+                        <a href="{% url 'core:oferta_crear' %}" class="btn btn-xs btn-accent font-bold">Publicar Primera Vacante</a>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Empleados Tab -->
                 <div x-show="activeTab === 'empleados'" style="display: none;" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Profesionales Vinculados (:Usuario)</h3>
-                        <span class="badge badge-secondary badge-outline text-xs">Arista [:TRABAJA_EN]</span>
+                        <div>
+                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Equipo de Trabajo (:Usuario)</h3>
+                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-secondary font-mono">[:TRABAJA_EN]</code>.</p>
+                        </div>
                     </div>
-                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">La gestion de empleados vigentes y pasados se habilitara en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
+
+                    {% if empleados_rel %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {% for emp in empleados_rel %}
+                        <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center gap-3">
+                            <div class="avatar placeholder">
+                                <div class="bg-secondary/20 text-secondary font-bold rounded-xl w-10 h-10 text-xs">
+                                    {{ emp.usuario.nombre|slice:":1" }}{{ emp.usuario.apellido|slice:":1" }}
+                                </div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <a href="{% url 'core:usuario_detalle' uid=emp.usuario.uid %}" class="font-bold text-xs text-base-content hover:text-secondary truncate block">
+                                    {{ emp.usuario.nombre_completo }}
+                                </a>
+                                <p class="text-[11px] text-secondary font-semibold truncate">{{ emp.cargo }}</p>
+                                <span class="text-[10px] text-base-content/40">
+                                    {% if emp.actual %}Empleado Actual{% else %}Histórico{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300">
+                        <p class="text-xs text-base-content/60">No hay colaboradores vinculados a esta empresa aún en el grafo.</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

@@ -4,7 +4,7 @@
 {% block page_title %}Detalle de Proyecto{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'overview', copied: false }">
+<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'overview', showMemberModal: false, copied: false }">
 
     <!-- Top Action Bar -->
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -92,7 +92,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
-                    Equipo & Participantes
+                    Equipo & Participantes ({{ miembros_rel|length }})
                 </button>
             </div>
 
@@ -136,21 +136,80 @@
             <div x-show="activeTab === 'equipo'" class="space-y-4" style="display: none;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-bold text-base text-base-content">Colaboradores en el Grafo [:PARTICIPA_EN]</h3>
-                        <p class="text-xs text-base-content/60">Integrantes del proyecto con sus respectivos roles y responsabilidades.</p>
+                        <h3 class="font-bold text-base text-base-content">Colaboradores en el Grafo (:Usuario)</h3>
+                        <p class="text-xs text-base-content/60">Arista semántica <code class="text-info font-mono">[:PARTICIPA_EN]</code> con rol y vigencia.</p>
                     </div>
-                    <a href="{% url 'core:usuarios_lista' %}" class="btn btn-xs btn-outline btn-info rounded-lg">+ Añadir Colaborador</a>
+                    <button type="button" @click="showMemberModal = true" class="btn btn-xs btn-info rounded-lg font-bold">+ Añadir Colaborador</button>
                 </div>
 
-                <div class="p-8 rounded-2xl bg-base-100/40 border border-base-300 text-center space-y-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <p class="text-sm font-semibold">Vínculos de Participación</p>
-                    <p class="text-xs text-base-content/60 max-w-sm mx-auto">La asignación directa de miembros mediante relaciones de grafo se activará en la Fase 5 (Gestión de Relaciones).</p>
+                {% if miembros_rel %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {% for m in miembros_rel %}
+                    <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center justify-between">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="avatar placeholder">
+                                <div class="bg-info/20 text-info font-bold rounded-xl w-10 h-10 text-xs">
+                                    {{ m.usuario.nombre|slice:":1" }}{{ m.usuario.apellido|slice:":1" }}
+                                </div>
+                            </div>
+                            <div class="min-w-0">
+                                <a href="{% url 'core:usuario_detalle' uid=m.usuario.uid %}" class="font-bold text-xs text-base-content hover:text-info truncate block">
+                                    {{ m.usuario.nombre_completo }}
+                                </a>
+                                <span class="badge badge-xs badge-info font-bold uppercase text-[9px]">{{ m.rol }}</span>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{% url 'core:proyecto_colaborador_eliminar' pid=proyecto.pid uid=m.usuario.uid %}"
+                              onsubmit="return confirm('¿Quitar a {{ m.usuario.nombre_completo }} del proyecto?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg">✕</button>
+                        </form>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="p-8 rounded-2xl bg-base-100/40 border border-base-300 text-center space-y-3">
+                    <p class="text-xs text-base-content/60">No hay colaboradores vinculados a esta iniciativa aún.</p>
+                    <button type="button" @click="showMemberModal = true" class="btn btn-sm btn-info rounded-xl font-bold">Sumar Primer Miembro</button>
+                </div>
+                {% endif %}
             </div>
 
+        </div>
+    </div>
+
+    <!-- Modal Añadir Colaborador -->
+    <div x-show="showMemberModal" class="modal modal-open" style="display: none;">
+        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
+            <h3 class="font-black text-lg text-base-content">Incorporar Colaborador al Proyecto</h3>
+            <p class="text-xs text-base-content/70">Crea la relación <code class="font-mono text-info">(:Usuario)-[:PARTICIPA_EN]->(:Proyecto)</code>.</p>
+
+            <form method="POST" action="{% url 'core:proyecto_colaborador_agregar' pid=proyecto.pid %}" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Colaborador:</span></label>
+                    <select name="uid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
+                        <option value="">-- Selecciona un profesional --</option>
+                        {% for u in todos_usuarios %}
+                        <option value="{{ u.uid }}">{{ u.nombre_completo }} ({{ u.titulo_profesional|default:"Profesional" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Rol en el Proyecto:</span></label>
+                    <input type="text" name="rol" value="Colaborador" placeholder="Ej. Tech Lead, Backend Developer, QA Engineer..." class="input input-sm input-bordered w-full rounded-xl bg-base-100" required />
+                </div>
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Fecha de Ingreso:</span></label>
+                    <input type="date" name="fecha_inicio" class="input input-sm input-bordered w-full rounded-xl bg-base-100" />
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" @click="showMemberModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-info rounded-xl font-bold">Vincular al Equipo</button>
+                </div>
+            </form>
         </div>
     </div>
 

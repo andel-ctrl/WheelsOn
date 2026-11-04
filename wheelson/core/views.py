@@ -1,12 +1,32 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from core.forms import UsuarioForm, EmpresaForm, HabilidadForm, ProyectoForm, OfertaForm
+from core.forms import (
+    UsuarioForm,
+    EmpresaForm,
+    HabilidadForm,
+    ProyectoForm,
+    OfertaForm,
+    ConectarUsuarioForm,
+    VincularHabilidadUsuarioForm,
+    ExperienciaLaboralForm,
+    ParticipacionProyectoForm,
+    PublicarOfertaEmpresaForm,
+    RequisitoOfertaForm,
+    PostulacionForm,
+)
 from core.services import (
     UsuarioService,
     EmpresaService,
     HabilidadService,
     ProyectoService,
     OfertaService,
+    ConexionService,
+    EmpleoService,
+    HabilidadUsuarioService,
+    ParticipacionProyectoService,
+    PublicacionOfertaService,
+    RequisitoOfertaService,
+    PostulacionService,
 )
 
 
@@ -66,7 +86,20 @@ def usuario_detalle(request, uid):
     if not usuario:
         messages.error(request, "Usuario no encontrado.")
         return redirect("core:usuarios_lista")
-    return render(request, "usuarios/detalle.html", {"usuario": usuario})
+
+    context = {
+        "usuario": usuario,
+        "habilidades_rel": HabilidadUsuarioService.listar_por_usuario(uid),
+        "empleos_rel": EmpleoService.listar_por_usuario(uid),
+        "proyectos_rel": ParticipacionProyectoService.listar_por_usuario(uid),
+        "conexiones_rel": ConexionService.listar(uid),
+        "postulaciones_rel": PostulacionService.listar_por_usuario(uid),
+        "todas_habilidades": HabilidadService.all(),
+        "todas_empresas": EmpresaService.all(),
+        "todos_proyectos": ProyectoService.all(),
+        "todos_usuarios": [u for u in UsuarioService.all() if u.uid != uid],
+    }
+    return render(request, "usuarios/detalle.html", context)
 
 
 def usuario_editar(request, uid):
@@ -145,7 +178,14 @@ def empresa_detalle(request, eid):
     if not empresa:
         messages.error(request, "Empresa no encontrada.")
         return redirect("core:empresas_lista")
-    return render(request, "empresas/detalle.html", {"empresa": empresa})
+
+    context = {
+        "empresa": empresa,
+        "ofertas_rel": PublicacionOfertaService.listar_por_empresa(eid),
+        "empleados_rel": EmpleoService.listar_por_empresa(eid),
+        "todos_usuarios": UsuarioService.all(),
+    }
+    return render(request, "empresas/detalle.html", context)
 
 
 def empresa_editar(request, eid):
@@ -257,7 +297,13 @@ def proyecto_detalle(request, pid):
     if not proyecto:
         messages.error(request, "Proyecto no encontrado.")
         return redirect("core:proyectos_lista")
-    return render(request, "proyectos/detalle.html", {"proyecto": proyecto})
+
+    context = {
+        "proyecto": proyecto,
+        "miembros_rel": ParticipacionProyectoService.listar_por_proyecto(pid),
+        "todos_usuarios": UsuarioService.all(),
+    }
+    return render(request, "proyectos/detalle.html", context)
 
 
 def proyecto_editar(request, pid):
@@ -338,7 +384,17 @@ def oferta_detalle(request, oid):
     if not oferta:
         messages.error(request, "Oferta no encontrada.")
         return redirect("core:ofertas_lista")
-    return render(request, "ofertas/detalle.html", {"oferta": oferta})
+
+    context = {
+        "oferta": oferta,
+        "empresa_rel": PublicacionOfertaService.obtener_empresa(oid),
+        "requisitos_rel": RequisitoOfertaService.listar_por_oferta(oid),
+        "candidatos_rel": PostulacionService.listar_por_oferta(oid),
+        "todas_habilidades": HabilidadService.all(),
+        "todas_empresas": EmpresaService.all(),
+        "todos_usuarios": UsuarioService.all(),
+    }
+    return render(request, "ofertas/detalle.html", context)
 
 
 def oferta_editar(request, oid):
@@ -379,3 +435,158 @@ def oferta_eliminar(request, oid):
         return redirect("core:ofertas_lista")
 
     return render(request, "ofertas/confirmar_eliminar.html", {"objeto": oferta, "tipo": "Oferta"})
+
+
+# ==============================================================================
+# VISTAS DE GESTION DE RELACIONES (FASE 5)
+# ==============================================================================
+
+def conexiones_red(request):
+    usuarios = UsuarioService.all()
+    uid_seleccionado = request.GET.get("uid") or (usuarios[0].uid if usuarios else None)
+    usuario_activo = UsuarioService.get(uid_seleccionado) if uid_seleccionado else None
+
+    conexiones = ConexionService.listar(usuario_activo.uid) if usuario_activo else []
+    uids_conectados = {c["usuario"].uid for c in conexiones} | ({usuario_activo.uid} if usuario_activo else set())
+    sugerencias = [u for u in usuarios if u.uid not in uids_conectados]
+
+    context = {
+        "usuarios": usuarios,
+        "usuario_activo": usuario_activo,
+        "conexiones": conexiones,
+        "sugerencias": sugerencias,
+    }
+    return render(request, "conexiones/red.html", context)
+
+
+def conexion_conectar(request):
+    if request.method == "POST":
+        uid_origen = request.POST.get("uid_origen")
+        uid_destino = request.POST.get("uid_destino")
+        mensaje = request.POST.get("mensaje", "")
+        if uid_origen and uid_destino:
+            ConexionService.conectar(uid_origen, uid_destino, mensaje=mensaje)
+            messages.success(request, "Conexion establecida exitosamente en el grafo.")
+        else:
+            messages.error(request, "Parametros invalidos para la conexion.")
+    return redirect(request.META.get("HTTP_REFERER", "core:conexiones_red"))
+
+
+def conexion_desconectar(request, uid_origen, uid_destino):
+    if request.method == "POST":
+        ConexionService.desconectar(uid_origen, uid_destino)
+        messages.success(request, "Conexion eliminada del grafo.")
+    return redirect(request.META.get("HTTP_REFERER", "core:conexiones_red"))
+
+
+def usuario_habilidad_agregar(request, uid):
+    if request.method == "POST":
+        hid = request.POST.get("hid")
+        nivel = request.POST.get("nivel", "intermedio")
+        anios = request.POST.get("anios_experiencia", 1)
+        if hid:
+            HabilidadUsuarioService.vincular(uid, hid, nivel=nivel, anios_experiencia=anios)
+            messages.success(request, "Habilidad vinculada al perfil.")
+        else:
+            messages.error(request, "Debe seleccionar una habilidad valida.")
+    return redirect("core:usuario_detalle", uid=uid)
+
+
+def usuario_habilidad_eliminar(request, uid, hid):
+    if request.method == "POST":
+        HabilidadUsuarioService.desvincular(uid, hid)
+        messages.success(request, "Habilidad desvinculada del perfil.")
+    return redirect("core:usuario_detalle", uid=uid)
+
+
+def usuario_experiencia_agregar(request, uid):
+    if request.method == "POST":
+        eid = request.POST.get("eid")
+        cargo = request.POST.get("cargo", "").strip()
+        fecha_inicio = request.POST.get("fecha_inicio") or None
+        fecha_fin = request.POST.get("fecha_fin") or None
+        actual = request.POST.get("actual") == "on" or request.POST.get("actual") == "true"
+        if eid and cargo:
+            EmpleoService.vincular(uid, eid, cargo=cargo, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, actual=actual)
+            messages.success(request, "Experiencia laboral anadida al perfil.")
+        else:
+            messages.error(request, "Debe indicar empresa y cargo obligatoriamente.")
+    return redirect("core:usuario_detalle", uid=uid)
+
+
+def usuario_experiencia_eliminar(request, uid, eid):
+    if request.method == "POST":
+        EmpleoService.desvincular(uid, eid)
+        messages.success(request, "Experiencia laboral eliminada del perfil.")
+    return redirect("core:usuario_detalle", uid=uid)
+
+
+def proyecto_colaborador_agregar(request, pid):
+    if request.method == "POST":
+        uid = request.POST.get("uid")
+        rol = request.POST.get("rol", "Colaborador").strip()
+        fecha_inicio = request.POST.get("fecha_inicio") or None
+        if uid:
+            ParticipacionProyectoService.vincular(uid, pid, rol=rol, fecha_inicio=fecha_inicio)
+            messages.success(request, "Colaborador incorporado al proyecto.")
+        else:
+            messages.error(request, "Debe seleccionar un usuario para vincularlo.")
+    return redirect("core:proyecto_detalle", pid=pid)
+
+
+def proyecto_colaborador_eliminar(request, pid, uid):
+    if request.method == "POST":
+        ParticipacionProyectoService.desvincular(uid, pid)
+        messages.success(request, "Colaborador desvinculado del proyecto.")
+    return redirect("core:proyecto_detalle", pid=pid)
+
+
+def oferta_requisito_agregar(request, oid):
+    if request.method == "POST":
+        hid = request.POST.get("hid")
+        nivel_minimo = request.POST.get("nivel_minimo", "basico")
+        prioridad = request.POST.get("prioridad", "obligatoria")
+        if hid:
+            RequisitoOfertaService.vincular(oid, hid, nivel_minimo=nivel_minimo, prioridad=prioridad)
+            messages.success(request, "Requisito de habilidad agregado a la oferta.")
+        else:
+            messages.error(request, "Debe seleccionar una habilidad.")
+    return redirect("core:oferta_detalle", oid=oid)
+
+
+def oferta_requisito_eliminar(request, oid, hid):
+    if request.method == "POST":
+        RequisitoOfertaService.desvincular(oid, hid)
+        messages.success(request, "Requisito eliminado de la oferta.")
+    return redirect("core:oferta_detalle", oid=oid)
+
+
+def oferta_empresa_asignar(request, oid):
+    if request.method == "POST":
+        eid = request.POST.get("eid")
+        if eid:
+            PublicacionOfertaService.vincular(eid, oid)
+            messages.success(request, "Empresa emisora vinculada a la vacante.")
+        else:
+            messages.error(request, "Debe seleccionar una empresa.")
+    return redirect("core:oferta_detalle", oid=oid)
+
+
+def oferta_postular(request, oid):
+    if request.method == "POST":
+        uid = request.POST.get("uid")
+        carta = request.POST.get("carta_presentacion", "").strip()
+        if uid:
+            PostulacionService.postular(uid, oid, carta_presentacion=carta)
+            messages.success(request, "Postulacion registrada con exito en el grafo.")
+        else:
+            messages.error(request, "Debe seleccionar un usuario para postularse.")
+    return redirect("core:oferta_detalle", oid=oid)
+
+
+def oferta_postulacion_eliminar(request, oid, uid):
+    if request.method == "POST":
+        PostulacionService.desvincular(uid, oid)
+        messages.success(request, "Postulacion cancelada.")
+    return redirect("core:oferta_detalle", oid=oid)
+

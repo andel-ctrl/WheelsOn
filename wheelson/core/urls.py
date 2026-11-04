@@ -39,4 +39,32 @@ urlpatterns = [
     path("ofertas/<str:oid>/", views.oferta_detalle, name="oferta_detalle"),
     path("ofertas/<str:oid>/editar/", views.oferta_editar, name="oferta_editar"),
     path("ofertas/<str:oid>/eliminar/", views.oferta_eliminar, name="oferta_eliminar"),
+
+    # Relaciones - Conexiones (:CONECTA_CON)
+    path("conexiones/", views.conexiones_red, name="conexiones_red"),
+    path("conexiones/conectar/", views.conexion_conectar, name="conexion_conectar"),
+    path("conexiones/desconectar/<str:uid_origen>/<str:uid_destino>/", views.conexion_desconectar, name="conexion_desconectar"),
+
+    # Relaciones - Usuario <-> Habilidad (:TIENE_HABILIDAD)
+    path("usuarios/<str:uid>/habilidades/agregar/", views.usuario_habilidad_agregar, name="usuario_habilidad_agregar"),
+    path("usuarios/<str:uid>/habilidades/<str:hid>/eliminar/", views.usuario_habilidad_eliminar, name="usuario_habilidad_eliminar"),
+
+    # Relaciones - Usuario <-> Empresa (:TRABAJA_EN)
+    path("usuarios/<str:uid>/experiencia/agregar/", views.usuario_experiencia_agregar, name="usuario_experiencia_agregar"),
+    path("usuarios/<str:uid>/experiencia/<str:eid>/eliminar/", views.usuario_experiencia_eliminar, name="usuario_experiencia_eliminar"),
+
+    # Relaciones - Usuario <-> Proyecto (:PARTICIPA_EN)
+    path("proyectos/<str:pid>/colaboradores/agregar/", views.proyecto_colaborador_agregar, name="proyecto_colaborador_agregar"),
+    path("proyectos/<str:pid>/colaboradores/<str:uid>/eliminar/", views.proyecto_colaborador_eliminar, name="proyecto_colaborador_eliminar"),
+
+    # Relaciones - Oferta <-> Empresa (:PUBLICA)
+    path("ofertas/<str:oid>/empresa/asignar/", views.oferta_empresa_asignar, name="oferta_empresa_asignar"),
+
+    # Relaciones - Oferta <-> Habilidad (:REQUIERE)
+    path("ofertas/<str:oid>/requisitos/agregar/", views.oferta_requisito_agregar, name="oferta_requisito_agregar"),
+    path("ofertas/<str:oid>/requisitos/<str:hid>/eliminar/", views.oferta_requisito_eliminar, name="oferta_requisito_eliminar"),
+
+    # Relaciones - Usuario <-> Oferta (:POSTULA_A)
+    path("ofertas/<str:oid>/postular/", views.oferta_postular, name="oferta_postular"),
+    path("ofertas/<str:oid>/postulaciones/<str:uid>/eliminar/", views.oferta_postulacion_eliminar, name="oferta_postulacion_eliminar"),
 ]
