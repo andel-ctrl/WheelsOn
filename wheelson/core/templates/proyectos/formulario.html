@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{{ accion }} Proyecto | WheelsOn{% endblock %}
+{% block page_title %}{{ accion }} Proyecto{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
+
+    <div class="card bg-base-200 shadow border border-base-300">
+        <div class="card-body p-6 sm:p-8">
+            <h2 class="card-title text-xl mb-4 border-b border-base-300 pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Datos del Proyecto
+            </h2>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label class="label"><span class="label-text font-semibold">Nombre del Proyecto *</span></label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}<span class="text-error text-xs">{{ form.nombre.errors.0 }}</span>{% endif %}
+                </div>
+
+                <div>
+                    <label class="label"><span class="label-text font-semibold">Descripcion</span></label>
+                    {{ form.descripcion }}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Fecha de Inicio</span></label>
+                        {{ form.fecha_inicio }}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Fecha de Fin</span></label>
+                        {{ form.fecha_fin }}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Estado</span></label>
+                        {{ form.estado }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label"><span class="label-text font-semibold">Tecnologias Utilizadas</span></label>
+                    {{ form.tecnologias }}
+                    <span class="label-text-alt text-base-content/50">Separadas por comas. Ejemplo: Python, Neo4j, Tailwind</span>
+                </div>
+
+                <div class="card-actions justify-end gap-2 pt-4 border-t border-base-300">
+                    <a href="{% url 'core:proyectos_lista' %}" class="btn btn-ghost btn-sm">Cancelar</a>
+                    <button type="submit" class="btn btn-info btn-sm">Guardar Proyecto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

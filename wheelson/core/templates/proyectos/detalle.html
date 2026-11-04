@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}{{ proyecto.nombre }} | Proyecto WheelsOn{% endblock %}
+{% block page_title %}Detalle de Proyecto{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'overview', copied: false }">
+
+    <!-- Top Action Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <a href="{% url 'core:proyectos_lista' %}" class="btn btn-sm btn-ghost gap-2 rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver a Proyectos
+        </a>
+        <div class="flex items-center gap-2">
+            <button type="button" @click="navigator.clipboard.writeText('{{ proyecto.pid }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                    class="btn btn-sm btn-ghost border border-base-300 rounded-xl gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                <span x-text="copied ? '¡PID Copiado!' : 'Copiar ID'"></span>
+            </button>
+            <a href="{% url 'core:proyecto_editar' pid=proyecto.pid %}" class="btn btn-sm btn-info rounded-xl gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Editar
+            </a>
+            <a href="{% url 'core:proyecto_eliminar' pid=proyecto.pid %}" class="btn btn-sm btn-error btn-outline rounded-xl">
+                Eliminar
+            </a>
+        </div>
+    </div>
+
+    <!-- Project Hero Card -->
+    <div class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl">
+        <div class="h-28 bg-gradient-to-r from-info/25 via-primary/20 to-accent/20 relative p-6 flex justify-between items-start">
+            <span class="badge badge-info badge-outline font-mono text-xs shadow-sm bg-base-100/80">PID: {{ proyecto.pid|slice:":12" }}</span>
+            <span class="badge font-bold uppercase tracking-wider text-xs px-3 py-2 {% if proyecto.estado == 'activo' %}badge-success text-success-content{% elif proyecto.estado == 'completado' %}badge-info text-info-content{% else %}badge-warning text-warning-content{% endif %}">
+                {{ proyecto.estado|default:"activo" }}
+            </span>
+        </div>
+
+        <div class="card-body p-6 sm:p-8 pt-0 -mt-8 relative space-y-6">
+            <div class="space-y-1">
+                <h1 class="text-2xl sm:text-3xl font-black text-base-content tracking-tight">{{ proyecto.nombre }}</h1>
+                <p class="text-xs sm:text-sm font-medium text-info">Proyecto Colaborativo &bull; Ecosistema WheelsOn</p>
+            </div>
+
+            <!-- Specs Bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-base-100/60 border border-base-300">
+                <div class="space-y-1">
+                    <span class="text-[11px] uppercase tracking-wider font-bold text-base-content/50">Estado</span>
+                    <p class="text-sm font-semibold capitalize flex items-center gap-1.5 text-base-content">
+                        <span class="w-2 h-2 rounded-full {% if proyecto.estado == 'activo' %}bg-success{% elif proyecto.estado == 'completado' %}bg-info{% else %}bg-warning{% endif %}"></span>
+                        {{ proyecto.estado }}
+                    </p>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[11px] uppercase tracking-wider font-bold text-base-content/50">Fecha de Inicio</span>
+                    <p class="text-sm font-semibold text-base-content">{{ proyecto.fecha_inicio|default:"No registrada" }}</p>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[11px] uppercase tracking-wider font-bold text-base-content/50">Fecha de Finalización</span>
+                    <p class="text-sm font-semibold text-base-content">{{ proyecto.fecha_fin|default:"En desarrollo activo" }}</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="border-b border-base-300 flex gap-2">
+                <button type="button" @click="activeTab = 'overview'"
+                        :class="activeTab === 'overview' ? 'border-b-2 border-info text-info font-bold' : 'text-base-content/60 hover:text-base-content'"
+                        class="pb-3 px-4 text-sm transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                    </svg>
+                    Visión General
+                </button>
+                <button type="button" @click="activeTab = 'stack'"
+                        :class="activeTab === 'stack' ? 'border-b-2 border-info text-info font-bold' : 'text-base-content/60 hover:text-base-content'"
+                        class="pb-3 px-4 text-sm transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    Stack Tecnológico
+                </button>
+                <button type="button" @click="activeTab = 'equipo'"
+                        :class="activeTab === 'equipo' ? 'border-b-2 border-info text-info font-bold' : 'text-base-content/60 hover:text-base-content'"
+                        class="pb-3 px-4 text-sm transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Equipo & Participantes
+                </button>
+            </div>
+
+            <!-- Tab 1: Visión General -->
+            <div x-show="activeTab === 'overview'" class="space-y-4">
+                <h3 class="font-bold text-base text-base-content">Descripción del Proyecto</h3>
+                {% if proyecto.descripcion %}
+                <div class="prose prose-sm max-w-none text-base-content/80 whitespace-pre-line leading-relaxed bg-base-100/40 p-5 rounded-2xl border border-base-300">
+                    {{ proyecto.descripcion }}
+                </div>
+                {% else %}
+                <p class="text-sm text-base-content/50 italic py-6 text-center">No hay descripción registrada para este proyecto.</p>
+                {% endif %}
+            </div>
+
+            <!-- Tab 2: Stack Tecnológico -->
+            <div x-show="activeTab === 'stack'" class="space-y-4" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-base text-base-content">Tecnologías Utilizadas</h3>
+                        <p class="text-xs text-base-content/60">Herramientas, frameworks y lenguajes empleados en este proyecto.</p>
+                    </div>
+                </div>
+
+                <div class="p-6 rounded-2xl bg-base-100/40 border border-base-300">
+                    {% if proyecto.tecnologias %}
+                    <div class="flex flex-wrap gap-2">
+                        {% for tech in proyecto.tecnologias %}
+                        <span class="badge badge-lg badge-outline border-info/50 text-info font-bold px-3 py-2 bg-info/5">
+                            {{ tech }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-base-content/50 italic text-center">No se han registrado tecnologías específicas.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tab 3: Equipo & Participantes -->
+            <div x-show="activeTab === 'equipo'" class="space-y-4" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-base text-base-content">Colaboradores en el Grafo [:PARTICIPA_EN]</h3>
+                        <p class="text-xs text-base-content/60">Integrantes del proyecto con sus respectivos roles y responsabilidades.</p>
+                    </div>
+                    <a href="{% url 'core:usuarios_lista' %}" class="btn btn-xs btn-outline btn-info rounded-lg">+ Añadir Colaborador</a>
+                </div>
+
+                <div class="p-8 rounded-2xl bg-base-100/40 border border-base-300 text-center space-y-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p class="text-sm font-semibold">Vínculos de Participación</p>
+                    <p class="text-xs text-base-content/60 max-w-sm mx-auto">La asignación directa de miembros mediante relaciones de grafo se activará en la Fase 5 (Gestión de Relaciones).</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

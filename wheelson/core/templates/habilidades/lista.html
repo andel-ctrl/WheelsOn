@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Habilidades | WheelsOn{% endblock %}
+{% block page_title %}Catálogo de Habilidades (Skills){% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in-up" x-data="{ filterCategory: 'todas', showAddModal: false }">
+
+    <!-- KPI Header Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-primary/50 transition"
+             @click="filterCategory = 'todas'">
+            <div class="stat-figure text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">Total Habilidades</div>
+            <div class="stat-value text-xl font-black text-primary">{{ habilidades|length }}</div>
+            <div class="stat-desc text-[11px] text-base-content/50">Nodos en el Grafo</div>
+        </div>
+
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-primary/50 transition"
+             @click="filterCategory = 'tecnica'">
+            <div class="stat-figure text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">Técnicas</div>
+            <div class="stat-value text-xl font-black text-primary">
+                {% for h in habilidades %}{% if h.categoria == 'tecnica' %}x{% endif %}{% endfor %}
+            </div>
+            <div class="stat-desc text-[11px] text-base-content/50">Hard Skills</div>
+        </div>
+
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-secondary/50 transition"
+             @click="filterCategory = 'blanda'">
+            <div class="stat-figure text-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">Blandas</div>
+            <div class="stat-value text-xl font-black text-secondary">
+                {% for h in habilidades %}{% if h.categoria == 'blanda' %}x{% endif %}{% endfor %}
+            </div>
+            <div class="stat-desc text-[11px] text-base-content/50">Soft Skills & Liderazgo</div>
+        </div>
+
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-accent/50 transition"
+             @click="filterCategory = 'idioma'">
+            <div class="stat-figure text-accent">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">Idiomas</div>
+            <div class="stat-value text-xl font-black text-accent">
+                {% for h in habilidades %}{% if h.categoria == 'idioma' %}x{% endif %}{% endfor %}
+            </div>
+            <div class="stat-desc text-[11px] text-base-content/50">Lenguas & Dialectos</div>
+        </div>
+    </div>
+
+    <!-- Quick Skill Registration Form Card -->
+    <div class="card bg-base-200 border border-base-300 shadow-md rounded-3xl overflow-hidden">
+        <div class="card-body p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="card-title text-base flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+                    Registrar Nueva Habilidad en el Grafo
+                </h2>
+                <span class="text-xs text-base-content/50 font-mono">Nodo: (:Habilidad)</span>
+            </div>
+
+            <form method="POST" action="{% url 'core:habilidad_crear' %}" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                {% csrf_token %}
+                <div class="md:col-span-5">
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Nombre de la Habilidad *</span></label>
+                    {{ form.nombre }}
+                </div>
+                <div class="md:col-span-3">
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Categoría *</span></label>
+                    {{ form.categoria }}
+                </div>
+                <div class="md:col-span-4">
+                    <button type="submit" class="btn btn-primary btn-sm w-full rounded-xl font-bold shadow-md gap-1.5 h-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Añadir al Grafo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-base-200 p-4 rounded-2xl border border-base-300">
+        <!-- Category Filter Tabs -->
+        <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            <button type="button" @click="filterCategory = 'todas'"
+                    :class="filterCategory === 'todas' ? 'btn-neutral' : 'btn-ghost'"
+                    class="btn btn-xs rounded-xl font-semibold">
+                Todas
+            </button>
+            <button type="button" @click="filterCategory = 'tecnica'"
+                    :class="filterCategory === 'tecnica' ? 'btn-primary' : 'btn-ghost'"
+                    class="btn btn-xs rounded-xl font-semibold">
+                Técnicas
+            </button>
+            <button type="button" @click="filterCategory = 'blanda'"
+                    :class="filterCategory === 'blanda' ? 'btn-secondary' : 'btn-ghost'"
+                    class="btn btn-xs rounded-xl font-semibold">
+                Blandas
+            </button>
+            <button type="button" @click="filterCategory = 'idioma'"
+                    :class="filterCategory === 'idioma' ? 'btn-accent' : 'btn-ghost'"
+                    class="btn btn-xs rounded-xl font-semibold">
+                Idiomas
+            </button>
+        </div>
+
+        <!-- Search Form -->
+        <form method="GET" class="flex gap-2">
+            <div class="relative">
+                <input type="text" name="q" value="{{ query|default:'' }}"
+                       placeholder="Filtrar por texto..."
+                       class="input input-xs input-bordered w-44 sm:w-56 rounded-xl bg-base-100" />
+            </div>
+            <button type="submit" class="btn btn-xs btn-primary rounded-xl">Buscar</button>
+            {% if query %}
+            <a href="{% url 'core:habilidades_lista' %}" class="btn btn-xs btn-ghost rounded-xl">Limpiar</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Skills Interactive Cloud -->
+    <div class="card bg-base-200 border border-base-300 shadow-md rounded-3xl p-6 sm:p-8 space-y-4">
+        <div class="flex justify-between items-center pb-2 border-b border-base-300">
+            <h3 class="font-black text-sm uppercase tracking-wider text-base-content/70">
+                Skills Cloud (<span x-text="filterCategory === 'todas' ? 'Todas' : filterCategory"></span>)
+            </h3>
+            <span class="text-xs text-base-content/50 font-mono">{{ habilidades|length }} registradas</span>
+        </div>
+
+        {% if habilidades %}
+        <div class="flex flex-wrap gap-2.5">
+            {% for h in habilidades %}
+            <div x-show="filterCategory === 'todas' || filterCategory === '{{ h.categoria }}'"
+                 class="group inline-flex items-center gap-2 px-3 py-1.5 rounded-2xl border transition-all duration-200 shadow-sm
+                        {% if h.categoria == 'tecnica' %}bg-primary/10 border-primary/30 text-primary hover:border-primary hover:bg-primary/20
+                        {% elif h.categoria == 'blanda' %}bg-secondary/10 border-secondary/30 text-secondary hover:border-secondary hover:bg-secondary/20
+                        {% else %}bg-accent/10 border-accent/30 text-accent hover:border-accent hover:bg-accent/20{% endif %}">
+
+                <!-- Category Icon -->
+                {% if h.categoria == 'tecnica' %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                {% elif h.categoria == 'blanda' %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+                {% endif %}
+
+                <span class="font-bold text-xs">{{ h.nombre }}</span>
+                <span class="text-[10px] font-mono opacity-60 uppercase">({{ h.categoria }})</span>
+
+                <!-- Delete Action -->
+                <form method="POST" action="{% url 'core:habilidad_eliminar' hid=h.hid %}" class="inline-flex items-center"
+                      onsubmit="return confirm('¿Seguro que deseas eliminar la habilidad \'{{ h.nombre }}\' del catálogo?');">
+                    {% csrf_token %}
+                    <button type="submit" class="opacity-0 group-hover:opacity-100 transition-opacity ml-1 p-0.5 rounded-full hover:bg-error hover:text-white" title="Eliminar habilidad">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-12 text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-primary/10 text-primary mx-auto flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+            <h4 class="font-bold text-base">No hay habilidades registradas</h4>
+            <p class="text-xs text-base-content/60 max-w-sm mx-auto">
+                Registra habilidades técnicas (Python, Neo4j, Docker), blandas (Liderazgo, Trabajo en Equipo) o idiomas arriba para alimentar el grafo de conocimiento.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

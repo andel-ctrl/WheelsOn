@@ -1,243 +1,241 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es" data-theme="business">
+<html lang="es" data-theme="business" x-data="themeManager()" :data-theme="currentTheme">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ page_title|default:"Dashboard" }}{% endblock %} | WheelsOn</title>
 
-    <!-- Tailwind CSS + DaisyUI (CDN para desarrollo rapido y diseno moderno) -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- HTMX para reactividad sin SPA -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-
-    <!-- Alpine.js para interactividad liviana -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-
-    <!-- Chart.js para analitica -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-
-    <!-- vis.js Network para visualizacion interactiva de grafos -->
     <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
     <link href="https://unpkg.com/vis-network@9.1.9/styles/vis-network.min.css" rel="stylesheet" type="text/css" />
 
-    <!-- Estilos personalizados -->
     <style>
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator { display: inline-block; }
         .htmx-request.htmx-indicator { display: inline-block; }
         .htmx-swapping { opacity: 0; transition: opacity 0.2s ease-out; }
 
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
         ::-webkit-scrollbar-track { background: oklch(var(--b2)); }
-        ::-webkit-scrollbar-thumb { background: oklch(var(--p)); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: oklch(var(--pf)); }
+        ::-webkit-scrollbar-thumb { background: oklch(var(--p) / 0.4); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: oklch(var(--p)); }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in-up {
-            animation: fadeInUp 0.4s ease-out forwards;
+            animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .glass-panel {
+            background: oklch(var(--b2) / 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid oklch(var(--bc) / 0.1);
         }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="min-h-screen bg-base-100" x-data="{ sidebarOpen: true, theme: 'business' }">
+<body class="min-h-screen bg-base-100 text-base-content antialiased" x-data="{ sidebarOpen: true, mobileMenuOpen: false }">
 
     <div class="flex h-screen overflow-hidden">
 
-        <!-- ============================================================== -->
-        <!-- SIDEBAR -->
-        <!-- ============================================================== -->
-        <aside class="flex flex-col bg-base-200 border-r border-base-300 transition-all duration-300 z-30"
-               :class="sidebarOpen ? 'w-64' : 'w-20'">
+        <!-- Mobile Drawer Backdrop -->
+        <div x-show="mobileMenuOpen"
+             x-transition.opacity
+             @click="mobileMenuOpen = false"
+             class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+             style="display: none;"></div>
 
-            <!-- Logo -->
-            <div class="flex items-center gap-3 px-4 py-5 border-b border-base-300">
-                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-content" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                </div>
-                <span class="text-xl font-bold text-base-content transition-opacity duration-300"
-                      :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">
-                    WheelsOn
-                </span>
+        <!-- Sidebar -->
+        <aside class="fixed inset-y-0 left-0 z-50 flex flex-col bg-base-200 border-r border-base-300 transition-all duration-300 lg:static"
+               :class="{
+                   'translate-x-0': mobileMenuOpen,
+                   '-translate-x-full lg:translate-x-0': !mobileMenuOpen,
+                   'w-64': sidebarOpen,
+                   'w-20': !sidebarOpen
+               }">
+
+            <div class="flex items-center justify-between px-4 py-4 border-b border-base-300">
+                <a href="{% url 'core:dashboard' %}" class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-content" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                    </div>
+                    <div class="flex flex-col transition-opacity duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">
+                        <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">WheelsOn</span>
+                        <span class="text-[10px] uppercase font-bold tracking-widest opacity-50">Graph Network</span>
+                    </div>
+                </a>
+                <button @click="mobileMenuOpen = false" class="btn btn-ghost btn-xs btn-square lg:hidden">✕</button>
             </div>
 
-            <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto py-4 px-3">
-                <ul class="menu gap-1">
-                    <!-- Dashboard -->
-                    <li>
-                        <a href="{% url 'core:dashboard' %}"
-                           class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %} flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Dashboard</span>
-                        </a>
-                    </li>
+            <!-- Nav Links -->
+            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+                <div>
+                    <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-base-content/40" x-show="sidebarOpen">Principal</span>
+                    <ul class="menu gap-1 mt-1 p-0">
+                        <li>
+                            <a href="{% url 'core:dashboard' %}"
+                               class="{% if request.resolver_match.url_name == 'dashboard' %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-                    <li class="menu-title" x-show="sidebarOpen">
-                        <span class="text-xs uppercase tracking-wider opacity-60">Red Profesional</span>
-                    </li>
+                <div>
+                    <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-base-content/40" x-show="sidebarOpen">Nodos de la Red</span>
+                    <ul class="menu gap-1 mt-1 p-0">
+                        <li>
+                            <a href="{% url 'core:usuarios_lista' %}"
+                               class="{% if 'usuarios' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Usuarios</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'core:empresas_lista' %}"
+                               class="{% if 'empresas' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Empresas</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'core:ofertas_lista' %}"
+                               class="{% if 'ofertas' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Ofertas Laborales</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'core:proyectos_lista' %}"
+                               class="{% if 'proyectos' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Proyectos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'core:habilidades_lista' %}"
+                               class="{% if 'habilidades' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Habilidades</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-                    <!-- Usuarios -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Usuarios</span>
-                        </a>
-                    </li>
-
-                    <!-- Empresas -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Empresas</span>
-                        </a>
-                    </li>
-
-                    <!-- Ofertas -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Ofertas</span>
-                        </a>
-                    </li>
-
-                    <!-- Proyectos -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Proyectos</span>
-                        </a>
-                    </li>
-
-                    <!-- Habilidades -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Habilidades</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title" x-show="sidebarOpen">
-                        <span class="text-xs uppercase tracking-wider opacity-60">Analitica y Grafos</span>
-                    </li>
-
-                    <!-- Conexiones -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Conexiones</span>
-                        </a>
-                    </li>
-
-                    <!-- Recomendaciones -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Recomendaciones</span>
-                        </a>
-                    </li>
-
-                    <!-- Analitica -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Panel Analitico</span>
-                        </a>
-                    </li>
-
-                    <!-- Explorar Grafo -->
-                    <li>
-                        <a href="#" class="flex items-center gap-3 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                            </svg>
-                            <span :class="sidebarOpen ? '' : 'hidden'">Explorador de Grafo</span>
-                        </a>
-                    </li>
-                </ul>
+                <div>
+                    <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-base-content/40" x-show="sidebarOpen">Inteligencia de Grafo</span>
+                    <ul class="menu gap-1 mt-1 p-0 opacity-80">
+                        <li>
+                            <a href="#" class="flex items-center gap-3 rounded-lg py-2.5 cursor-not-allowed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Conexiones (Fase 5)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center gap-3 rounded-lg py-2.5 cursor-not-allowed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Recomendaciones (Fase 7)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center gap-3 rounded-lg py-2.5 cursor-not-allowed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Analitica (Fase 8)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center gap-3 rounded-lg py-2.5 cursor-not-allowed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                                </svg>
+                                <span :class="sidebarOpen ? '' : 'hidden'">Explorador Grafo (Fase 9)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </nav>
 
-            <!-- Theme Toggle -->
+            <!-- Bottom Theme Switcher -->
             <div class="p-3 border-t border-base-300">
-                <label class="swap swap-rotate btn btn-ghost btn-sm w-full"
-                       x-data="{ dark: true }"
-                       @click="dark = !dark; document.documentElement.setAttribute('data-theme', dark ? 'business' : 'corporate')">
-                    <input type="checkbox" />
-                    <!-- Sol -->
-                    <svg class="swap-on fill-current w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
-                    </svg>
-                    <!-- Luna -->
-                    <svg class="swap-off fill-current w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/>
-                    </svg>
-                </label>
+                <button @click="toggleTheme()"
+                        class="btn btn-ghost btn-sm w-full justify-between items-center rounded-lg">
+                    <span class="flex items-center gap-2 text-xs" :class="sidebarOpen ? '' : 'hidden'">
+                        <span class="w-2 h-2 rounded-full" :class="isDark ? 'bg-primary' : 'bg-warning'"></span>
+                        <span x-text="isDark ? 'Tema Oscuro' : 'Tema Claro'"></span>
+                    </span>
+                    <span x-show="!sidebarOpen" class="text-xs">🌓</span>
+                    <span class="badge badge-sm badge-outline text-[10px]" :class="sidebarOpen ? '' : 'hidden'" x-text="currentTheme"></span>
+                </button>
             </div>
         </aside>
 
-        <!-- ============================================================== -->
-        <!-- MAIN CONTENT -->
-        <!-- ============================================================== -->
+        <!-- Main Wrapper -->
         <div class="flex-1 flex flex-col overflow-hidden">
 
-            <!-- Top Navbar -->
-            <header class="bg-base-200 border-b border-base-300 px-6 py-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <button @click="sidebarOpen = !sidebarOpen"
-                                class="btn btn-ghost btn-sm btn-square">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            <!-- Navbar -->
+            <header class="glass-panel sticky top-0 z-30 px-4 sm:px-6 py-3 border-b border-base-300">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <button @click="mobileMenuOpen = true" class="btn btn-ghost btn-sm btn-square lg:hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
-                        <h1 class="text-lg font-bold text-base-content">
-                            {% block page_title %}{{ page_title|default:"Dashboard" }}{% endblock %}
-                        </h1>
+
+                        <button @click="sidebarOpen = !sidebarOpen" class="btn btn-ghost btn-sm btn-square hidden lg:flex">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                            </svg>
+                        </button>
+
+                        <div class="flex flex-col">
+                            <h1 class="text-base sm:text-lg font-bold text-base-content leading-tight">
+                                {% block page_title %}{{ page_title|default:"Dashboard" }}{% endblock %}
+                            </h1>
+                            <span class="text-[10px] text-base-content/50 uppercase tracking-widest hidden sm:inline">WheelsOn Platform</span>
+                        </div>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <input type="text" placeholder="Buscar en la red..." class="input input-sm input-bordered w-48 lg:w-64" />
-                        <button class="btn btn-ghost btn-sm btn-square indicator">
-                            <span class="indicator-item badge badge-primary badge-xs"></span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <a href="{% url 'core:usuario_crear' %}" class="btn btn-primary btn-sm gap-1 text-xs hidden sm:inline-flex">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                        </button>
+                            <span>Nuevo</span>
+                        </a>
+
                         <div class="avatar placeholder">
-                            <div class="bg-primary text-primary-content rounded-full w-8">
+                            <div class="bg-gradient-to-tr from-primary to-secondary text-primary-content rounded-xl w-8 h-8 shadow">
                                 <span class="text-xs font-bold">WO</span>
                             </div>
                         </div>
@@ -246,14 +244,17 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                <!-- Messages Container -->
                 {% if messages %}
-                <div class="space-y-2 mb-4">
+                <div class="space-y-2 mb-6">
                     {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} shadow-sm animate-fade-in-up"
+                    <div class="alert alert-{{ message.tags|default:'info' }} shadow-sm animate-fade-in-up flex justify-between items-center rounded-xl border border-base-content/10"
                          x-data="{ show: true }" x-show="show" x-transition>
-                        <span>{{ message }}</span>
-                        <button @click="show = false" class="btn btn-ghost btn-xs">✕</button>
+                        <div class="flex items-center gap-2 text-xs sm:text-sm">
+                            <span>{{ message }}</span>
+                        </div>
+                        <button @click="show = false" class="btn btn-ghost btn-xs btn-circle">✕</button>
                     </div>
                     {% endfor %}
                 </div>
@@ -261,7 +262,7 @@
 
                 <!-- HTMX Loading Indicator -->
                 <div class="htmx-indicator fixed top-0 left-0 right-0 z-50">
-                    <div class="h-1 bg-primary animate-pulse"></div>
+                    <div class="h-1 bg-gradient-to-r from-primary via-secondary to-accent animate-pulse"></div>
                 </div>
 
                 <div id="main-content">
@@ -270,6 +271,26 @@
             </main>
         </div>
     </div>
+
+    <!-- Alpine Theme Manager -->
+    <script>
+        function themeManager() {
+            return {
+                currentTheme: localStorage.getItem('wheelson-theme') || 'business',
+                get isDark() {
+                    return this.currentTheme === 'business';
+                },
+                toggleTheme() {
+                    this.currentTheme = this.currentTheme === 'business' ? 'corporate' : 'business';
+                    localStorage.setItem('wheelson-theme', this.currentTheme);
+                    document.documentElement.setAttribute('data-theme', this.currentTheme);
+                },
+                init() {
+                    document.documentElement.setAttribute('data-theme', this.currentTheme);
+                }
+            }
+        }
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

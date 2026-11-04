@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ usuario.nombre_completo }} | Perfil WheelsOn{% endblock %}
+{% block page_title %}Perfil Profesional{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'sobre_mi', copied: false }">
+
+    <!-- Profile Banner & Hero Card -->
+    <div class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl">
+        <div class="h-32 sm:h-40 bg-gradient-to-r from-primary/30 via-secondary/20 to-accent/30 relative">
+            <div class="absolute top-4 right-4 flex gap-2">
+                <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-xs btn-secondary shadow rounded-lg gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Editar
+                </a>
+                <a href="{% url 'core:usuario_eliminar' uid=usuario.uid %}" class="btn btn-xs btn-error btn-outline shadow rounded-lg">Eliminar</a>
+            </div>
+        </div>
+
+        <div class="card-body p-6 sm:p-8 pt-0 relative">
+            <div class="flex flex-col sm:flex-row items-center sm:items-end gap-5 -mt-16 sm:-mt-20 mb-4">
+                <div class="avatar placeholder ring ring-base-100 ring-offset-4 ring-offset-base-200 rounded-3xl shadow-2xl">
+                    <div class="bg-gradient-to-tr from-primary to-secondary text-primary-content font-black rounded-3xl w-24 h-24 sm:w-28 sm:h-28 text-3xl flex items-center justify-center">
+                        {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
+                    </div>
+                </div>
+
+                <div class="flex-1 text-center sm:text-left space-y-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <h2 class="text-2xl sm:text-3xl font-black text-base-content">{{ usuario.nombre_completo }}</h2>
+                        <button type="button" @click="navigator.clipboard.writeText('{{ usuario.uid }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                class="btn btn-xs btn-ghost gap-1 font-mono text-[11px] self-center sm:self-auto border border-base-300 rounded-lg">
+                            <span x-show="!copied">UID: {{ usuario.uid|slice:":10" }}...</span>
+                            <span x-show="copied" style="display: none;">¡Copiado!</span>
+                        </button>
+                    </div>
+
+                    <p class="text-sm sm:text-base font-semibold text-primary">{{ usuario.titulo_profesional|default:"Profesional" }}</p>
+
+                    <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 text-xs text-base-content/70 pt-1">
+                        <span class="flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {{ usuario.ubicacion|default:"No especificada" }}
+                        </span>
+                        <span>&bull;</span>
+                        <span class="flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            {{ usuario.email }}
+                        </span>
+                        <span>&bull;</span>
+                        <span>Registrado: {{ usuario.fecha_registro|default:"Reciente" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Nav Tabs -->
+            <div class="tabs tabs-bordered mt-6 border-b border-base-300">
+                <button type="button" @click="activeTab = 'sobre_mi'" :class="activeTab === 'sobre_mi' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
+                    Sobre Mi
+                </button>
+                <button type="button" @click="activeTab = 'habilidades'" :class="activeTab === 'habilidades' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
+                    Habilidades
+                </button>
+                <button type="button" @click="activeTab = 'empleo'" :class="activeTab === 'empleo' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
+                    Trayectoria
+                </button>
+                <button type="button" @click="activeTab = 'proyectos'" :class="activeTab === 'proyectos' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
+                    Proyectos
+                </button>
+                <button type="button" @click="activeTab = 'red'" :class="activeTab === 'red' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
+                    Conexiones
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="py-6">
+                <!-- Sobre Mi Tab -->
+                <div x-show="activeTab === 'sobre_mi'" class="space-y-4">
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Biografia Profesional</h3>
+                    {% if usuario.biografia %}
+                    <p class="text-sm leading-relaxed text-base-content/80 whitespace-pre-line bg-base-300/30 p-5 rounded-2xl border border-base-300">
+                        {{ usuario.biografia }}
+                    </p>
+                    {% else %}
+                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
+                        <p class="text-xs text-base-content/50">Este profesional aun no ha agregado su biografia profesional.</p>
+                        <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-xs btn-primary btn-outline mt-3">Completar Biografia</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Habilidades Tab -->
+                <div x-show="activeTab === 'habilidades'" style="display: none;" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Competencias Tecnicas (:Habilidad)</h3>
+                        <span class="badge badge-primary badge-outline text-xs">Arista [:TIENE_HABILIDAD]</span>
+                    </div>
+                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
+                        <p class="text-xs text-base-content/60">Las conexiones de habilidades con niveles y anos de experiencia se activaran en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
+                        <a href="{% url 'core:habilidades_lista' %}" class="btn btn-xs btn-primary mt-3">Explorar Catalogo de Habilidades</a>
+                    </div>
+                </div>
+
+                <!-- Empleo Tab -->
+                <div x-show="activeTab === 'empleo'" style="display: none;" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Trayectoria Laboral (:Empresa)</h3>
+                        <span class="badge badge-secondary badge-outline text-xs">Arista [:TRABAJA_EN]</span>
+                    </div>
+                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
+                        <p class="text-xs text-base-content/60">La vinculacion con empresas y cargos se habilitara en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
+                        <a href="{% url 'core:empresas_lista' %}" class="btn btn-xs btn-secondary mt-3">Ver Directorio de Empresas</a>
+                    </div>
+                </div>
+
+                <!-- Proyectos Tab -->
+                <div x-show="activeTab === 'proyectos'" style="display: none;" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Iniciativas Desarrolladas (:Proyecto)</h3>
+                        <span class="badge badge-info badge-outline text-xs">Arista [:PARTICIPA_EN]</span>
+                    </div>
+                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
+                        <p class="text-xs text-base-content/60">La participacion en proyectos con roles especificos se gestionara en la <strong>Fase 5 (Gestion de Relaciones)</strong>.</p>
+                        <a href="{% url 'core:proyectos_lista' %}" class="btn btn-xs btn-info mt-3">Ver Proyectos Disponibles</a>
+                    </div>
+                </div>
+
+                <!-- Red Tab -->
+                <div x-show="activeTab === 'red'" style="display: none;" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Contactos Directos (:Usuario)</h3>
+                        <span class="badge badge-accent badge-outline text-xs">Arista [:CONECTA_CON]</span>
+                    </div>
+                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
+                        <p class="text-xs text-base-content/60">Las solicitudes de conexion y analisis de vecinos mutuos se habilitaran en la <strong>Fase 5 (Gestion de Relaciones)</strong> y <strong>Fase 6 (Consultas de Grafo)</strong>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-actions justify-start pt-4 border-t border-base-300">
+                <a href="{% url 'core:usuarios_lista' %}" class="btn btn-sm btn-ghost gap-2">
+                    &larr; Volver al Directorio
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

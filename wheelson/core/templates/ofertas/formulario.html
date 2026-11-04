@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ accion }} Oferta Laboral | WheelsOn{% endblock %}
+{% block page_title %}{{ accion }} Oferta Laboral{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
+
+    <div class="card bg-base-200 shadow border border-base-300">
+        <div class="card-body p-6 sm:p-8">
+            <h2 class="card-title text-xl mb-4 border-b border-base-300 pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Datos de la Oferta Laboral
+            </h2>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label class="label"><span class="label-text font-semibold">Titulo de la Vacante *</span></label>
+                    {{ form.titulo }}
+                    {% if form.titulo.errors %}<span class="text-error text-xs">{{ form.titulo.errors.0 }}</span>{% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Modalidad</span></label>
+                        {{ form.modalidad }}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Ubicacion</span></label>
+                        {{ form.ubicacion }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Salario Minimo</span></label>
+                        {{ form.salario_min }}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Salario Maximo</span></label>
+                        {{ form.salario_max }}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Estado</span></label>
+                        {{ form.estado }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label"><span class="label-text font-semibold">Descripcion del Puesto y Requerimientos</span></label>
+                    {{ form.descripcion }}
+                </div>
+
+                <div class="card-actions justify-end gap-2 pt-4 border-t border-base-300">
+                    <a href="{% url 'core:ofertas_lista' %}" class="btn btn-ghost btn-sm">Cancelar</a>
+                    <button type="submit" class="btn btn-accent btn-sm">Guardar Vacante</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

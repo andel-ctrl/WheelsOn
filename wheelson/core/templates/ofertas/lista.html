@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Ofertas Laborales | WheelsOn{% endblock %}
+{% block page_title %}Bolsa de Empleo y Vacantes{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in-up" x-data="{ viewMode: 'grid' }">
+
+    <!-- Header Actions, Search & Modality Filter -->
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-base-200 p-4 rounded-2xl border border-base-300 shadow-sm">
+        <form method="GET" class="flex-1 flex flex-wrap gap-2">
+            <div class="relative flex-1 min-w-[200px]">
+                <input type="text" name="q" value="{{ query|default:'' }}"
+                       placeholder="Buscar por cargo, palabra clave o ciudad..."
+                       class="input input-sm input-bordered w-full pr-8" />
+                {% if query %}
+                <a href="{% url 'core:ofertas_lista' %}" class="absolute right-2.5 top-2 text-xs opacity-50 hover:opacity-100">✕</a>
+                {% endif %}
+            </div>
+
+            <select name="modalidad" class="select select-sm select-bordered">
+                <option value="">Todas las modalidades</option>
+                <option value="remoto" {% if modalidad_filtro == 'remoto' %}selected{% endif %}>Remoto</option>
+                <option value="presencial" {% if modalidad_filtro == 'presencial' %}selected{% endif %}>Presencial</option>
+                <option value="hibrido" {% if modalidad_filtro == 'hibrido' %}selected{% endif %}>Hibrido</option>
+            </select>
+
+            <button type="submit" class="btn btn-sm btn-accent">Filtrar</button>
+            {% if query or modalidad_filtro %}
+            <a href="{% url 'core:ofertas_lista' %}" class="btn btn-sm btn-ghost">Limpiar</a>
+            {% endif %}
+        </form>
+
+        <div class="flex items-center gap-2 justify-end">
+            <div class="join bg-base-300 p-0.5 rounded-xl border border-base-content/10">
+                <button type="button" @click="viewMode = 'grid'"
+                        :class="viewMode === 'grid' ? 'btn-active btn-accent' : 'btn-ghost'"
+                        class="btn btn-xs join-item rounded-lg" title="Vista en Cuadricula">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                </button>
+                <button type="button" @click="viewMode = 'table'"
+                        :class="viewMode === 'table' ? 'btn-active btn-accent' : 'btn-ghost'"
+                        class="btn btn-xs join-item rounded-lg" title="Vista en Tabla">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+            <a href="{% url 'core:oferta_crear' %}" class="btn btn-sm btn-accent rounded-xl gap-2 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Publicar Oferta</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Count Indicator -->
+    <div class="flex justify-between items-center text-xs text-base-content/60 px-1">
+        <span>Mostrando <strong>{{ ofertas|length }}</strong> oportunidades laborales</span>
+        {% if query or modalidad_filtro %}
+        <span>Filtro activo</span>
+        {% endif %}
+    </div>
+
+    {% if ofertas %}
+    <!-- Grid View Mode -->
+    <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for o in ofertas %}
+        <div class="card bg-base-200 border border-base-300 shadow hover:shadow-xl hover:border-accent/40 transition-all duration-200 flex flex-col justify-between group">
+            <div class="card-body p-5">
+                <div class="flex justify-between items-start gap-2">
+                    <a href="{% url 'core:oferta_detalle' oid=o.oid %}" class="font-bold text-base hover:text-accent transition block flex-1 text-base-content line-clamp-1">
+                        {{ o.titulo }}
+                    </a>
+                    <span class="badge badge-sm text-[10px] font-bold uppercase tracking-wider {% if o.estado == 'abierta' %}badge-success{% else %}badge-ghost{% endif %}">
+                        {{ o.estado }}
+                    </span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <span class="badge badge-xs text-[10px] capitalize font-semibold {% if o.modalidad == 'remoto' %}badge-accent badge-outline{% elif o.modalidad == 'hibrido' %}badge-info badge-outline{% else %}badge-warning badge-outline{% endif %}">
+                        {{ o.modalidad }}
+                    </span>
+                    <span class="text-xs text-base-content/60 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        {{ o.ubicacion|default:"No especificada" }}
+                    </span>
+                </div>
+
+                <div class="my-3 p-3 rounded-xl bg-base-300/40 border border-base-300">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-base-content/50 block">Rango Salarial</span>
+                    <p class="text-sm font-extrabold text-primary mt-0.5">
+                        {% if o.salario_min or o.salario_max %}
+                        ${{ o.salario_min|floatformat:0 }} - ${{ o.salario_max|floatformat:0 }}
+                        {% else %}
+                        A convenir
+                        {% endif %}
+                    </p>
+                </div>
+
+                {% if o.descripcion %}
+                <p class="text-xs text-base-content/70 line-clamp-2">{{ o.descripcion }}</p>
+                {% else %}
+                <p class="text-xs text-base-content/40 italic">Sin descripcion anadida</p>
+                {% endif %}
+            </div>
+
+            <div class="px-5 pb-4 pt-3 border-t border-base-300 flex justify-between items-center bg-base-200/50">
+                <span class="text-[10px] text-base-content/50">Publicado: {{ o.fecha_publicacion|default:"Hoy" }}</span>
+                <div class="flex gap-1.5">
+                    <a href="{% url 'core:oferta_detalle' oid=o.oid %}" class="btn btn-xs btn-ghost rounded-lg">Ver Vacante</a>
+                    <a href="{% url 'core:oferta_editar' oid=o.oid %}" class="btn btn-xs btn-outline btn-accent rounded-lg">Editar</a>
+                    <a href="{% url 'core:oferta_eliminar' oid=o.oid %}" class="btn btn-xs btn-outline btn-error rounded-lg">Eliminar</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Table View Mode -->
+    <div x-show="viewMode === 'table'" style="display: none;" class="card bg-base-200 border border-base-300 shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="table table-sm">
+                <thead class="bg-base-300/60 text-base-content/70">
+                    <tr>
+                        <th>Vacante</th>
+                        <th>Modalidad</th>
+                        <th>Salario</th>
+                        <th>Ubicacion</th>
+                        <th>Estado</th>
+                        <th class="text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in ofertas %}
+                    <tr class="hover:bg-base-300/30 transition">
+                        <td>
+                            <a href="{% url 'core:oferta_detalle' oid=o.oid %}" class="font-bold hover:text-accent transition">
+                                {{ o.titulo }}
+                            </a>
+                        </td>
+                        <td class="text-xs capitalize">{{ o.modalidad }}</td>
+                        <td class="text-xs font-semibold text-primary">
+                            {% if o.salario_min or o.salario_max %}
+                            ${{ o.salario_min|floatformat:0 }} - ${{ o.salario_max|floatformat:0 }}
+                            {% else %}A convenir{% endif %}
+                        </td>
+                        <td class="text-xs">{{ o.ubicacion }}</td>
+                        <td>
+                            <span class="badge badge-xs uppercase text-[9px] {% if o.estado == 'abierta' %}badge-success{% else %}badge-ghost{% endif %}">
+                                {{ o.estado }}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            <div class="flex gap-1 justify-end">
+                                <a href="{% url 'core:oferta_detalle' oid=o.oid %}" class="btn btn-xs btn-ghost">Detalle</a>
+                                <a href="{% url 'core:oferta_editar' oid=o.oid %}" class="btn btn-xs btn-outline btn-accent">Editar</a>
+                                <a href="{% url 'core:oferta_eliminar' oid=o.oid %}" class="btn btn-xs btn-outline btn-error">Eliminar</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="card bg-base-200 p-12 text-center border border-base-300 rounded-3xl">
+        <div class="max-w-md mx-auto space-y-4">
+            <div class="w-16 h-16 rounded-full bg-accent/10 text-accent mx-auto flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h3 class="font-bold text-xl">Sin ofertas laborales</h3>
+            <p class="text-xs text-base-content/60">No se encontraron vacantes que coincidan con los filtros actuales.</p>
+            <a href="{% url 'core:oferta_crear' %}" class="btn btn-sm btn-accent">Publicar Oferta</a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Oferta | WheelsOn{% endblock %}
+{% block page_title %}Confirmar Eliminacion{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto space-y-6 animate-fade-in-up">
+
+    <div class="card bg-base-200 shadow border border-error/30">
+        <div class="card-body p-6 text-center">
+            <div class="w-12 h-12 rounded-full bg-error/20 text-error mx-auto flex items-center justify-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+
+            <h3 class="font-bold text-lg text-base-content">¿Eliminar esta Oferta Laboral?</h3>
+            <p class="text-xs text-base-content/70 mt-1">
+                Esta accion eliminara el nodo de la vacante y las postulaciones asociadas del grafo.
+            </p>
+
+            <div class="bg-base-300 p-3 rounded-lg my-4 text-xs font-semibold">
+                {{ objeto.titulo }}
+            </div>
+
+            <form method="POST" class="flex justify-center gap-2">
+                {% csrf_token %}
+                <a href="javascript:history.back()" class="btn btn-sm btn-ghost">Cancelar</a>
+                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminacion</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

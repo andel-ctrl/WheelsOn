@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Proyectos | WheelsOn{% endblock %}
+{% block page_title %}Directorio de Proyectos{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in-up" x-data="{ viewMode: 'grid', filterStatus: 'todos' }">
+
+    <!-- KPI & Header Stats Banner -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
+            <div class="stat-figure text-info">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">Total Proyectos</div>
+            <div class="stat-value text-xl font-black text-info">{{ proyectos|length }}</div>
+            <div class="stat-desc text-[11px] text-base-content/50">En el ecosistema WheelsOn</div>
+        </div>
+
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
+            <div class="stat-figure text-success">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">En Curso</div>
+            <div class="stat-value text-xl font-black text-success">
+                {% for p in proyectos %}{% if p.estado == 'activo' %}x{% endif %}{% endfor %}
+            </div>
+            <div class="stat-desc text-[11px] text-base-content/50">Iniciativas abiertas</div>
+        </div>
+
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
+            <div class="stat-figure text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">Completados</div>
+            <div class="stat-value text-xl font-black text-primary">
+                {% for p in proyectos %}{% if p.estado == 'completado' %}x{% endif %}{% endfor %}
+            </div>
+            <div class="stat-desc text-[11px] text-base-content/50">Éxito en producción</div>
+        </div>
+
+        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
+            <div class="stat-figure text-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+            </div>
+            <div class="stat-title text-xs font-semibold text-base-content/60">Tecnologías</div>
+            <div class="stat-value text-xl font-black text-warning">Multi</div>
+            <div class="stat-desc text-[11px] text-base-content/50">Stack tecnológico</div>
+        </div>
+    </div>
+
+    <!-- Search, Filters and Layout Toolbar -->
+    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 bg-base-200 p-4 rounded-2xl border border-base-300 shadow-sm">
+        <form method="GET" class="flex-1 flex gap-2 max-w-lg">
+            <div class="relative w-full">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-base-content/40">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </span>
+                <input type="text" name="q" value="{{ query|default:'' }}"
+                       placeholder="Buscar por título, tecnología o descripción..."
+                       class="input input-sm input-bordered w-full pl-9 rounded-xl bg-base-100" />
+            </div>
+            <button type="submit" class="btn btn-sm btn-info rounded-xl px-4">Buscar</button>
+            {% if query %}
+            <a href="{% url 'core:proyectos_lista' %}" class="btn btn-sm btn-ghost rounded-xl">Limpiar</a>
+            {% endif %}
+        </form>
+
+        <div class="flex items-center gap-2 self-end md:self-auto">
+            <!-- View Mode Switcher -->
+            <div class="btn-group bg-base-300 p-0.5 rounded-xl border border-base-300 flex">
+                <button type="button" @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'btn-active btn-info' : 'btn-ghost'" class="btn btn-xs rounded-lg px-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                </button>
+                <button type="button" @click="viewMode = 'table'" :class="viewMode === 'table' ? 'btn-active btn-info' : 'btn-ghost'" class="btn btn-xs rounded-lg px-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+            <a href="{% url 'core:proyecto_crear' %}" class="btn btn-sm btn-info rounded-xl gap-2 shadow-sm font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo Proyecto
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    {% if proyectos %}
+
+    <!-- 1. Grid View -->
+    <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for p in proyectos %}
+        <div class="card bg-base-200 border border-base-300 shadow-md hover:shadow-xl hover:border-info/50 transition-all duration-300 rounded-3xl flex flex-col justify-between overflow-hidden">
+            <div class="p-6 space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-1 flex-1 min-w-0">
+                        <span class="badge badge-info badge-outline font-mono text-[10px] py-1 px-2">PID: {{ p.pid|slice:":8" }}</span>
+                        <h3 class="font-bold text-lg text-base-content hover:text-info transition truncate">
+                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}">{{ p.nombre }}</a>
+                        </h3>
+                    </div>
+                    <span class="badge badge-sm font-bold uppercase text-[10px] px-2.5 py-1.5 {% if p.estado == 'activo' %}badge-success text-success-content{% elif p.estado == 'completado' %}badge-info text-info-content{% else %}badge-warning text-warning-content{% endif %}">
+                        {{ p.estado|default:"activo" }}
+                    </span>
+                </div>
+
+                <p class="text-xs text-base-content/70 line-clamp-3 leading-relaxed">
+                    {{ p.descripcion|default:"Iniciativa tecnológica sin descripción detallada registrada." }}
+                </p>
+
+                <!-- Stack Tecnológico Chips -->
+                <div class="space-y-1.5">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-base-content/40">Stack de Tecnologías</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        {% for tech in p.tecnologias %}
+                        <span class="badge badge-sm badge-outline border-base-300 text-[11px] font-medium bg-base-100/50">{{ tech }}</span>
+                        {% empty %}
+                        <span class="text-[11px] text-base-content/40 italic">Sin tecnologías especificadas</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Timeline Info -->
+                <div class="pt-2 flex items-center justify-between text-[11px] text-base-content/50 border-t border-base-300/60">
+                    <span class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {{ p.fecha_inicio|default:"Inicio N/A" }}
+                    </span>
+                    <span>&rarr;</span>
+                    <span>{{ p.fecha_fin|default:"En curso" }}</span>
+                </div>
+            </div>
+
+            <!-- Card Bottom Bar -->
+            <div class="px-6 py-3.5 bg-base-300/30 border-t border-base-300 flex items-center justify-between">
+                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="btn btn-xs btn-info rounded-xl font-semibold gap-1">
+                    Ver Detalles &rarr;
+                </a>
+                <div class="flex items-center gap-1">
+                    <a href="{% url 'core:proyecto_editar' pid=p.pid %}" class="btn btn-xs btn-ghost rounded-lg hover:bg-base-200" title="Editar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </a>
+                    <a href="{% url 'core:proyecto_eliminar' pid=p.pid %}" class="btn btn-xs btn-ghost text-error rounded-lg hover:bg-error/10" title="Eliminar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 2. Table View -->
+    <div x-show="viewMode === 'table'" class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl" style="display: none;">
+        <div class="overflow-x-auto">
+            <table class="table w-full">
+                <thead class="bg-base-300/60 text-xs uppercase font-bold text-base-content/70">
+                    <tr>
+                        <th class="py-4 pl-6">Proyecto</th>
+                        <th>Estado</th>
+                        <th>Stack Tecnológico</th>
+                        <th>Periodo</th>
+                        <th class="text-right pr-6">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-base-300/40 text-sm">
+                    {% for p in proyectos %}
+                    <tr class="hover:bg-base-100/50 transition">
+                        <td class="pl-6 py-4">
+                            <div class="font-bold text-base-content hover:text-info transition">
+                                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}">{{ p.nombre }}</a>
+                            </div>
+                            <span class="text-[10px] font-mono text-base-content/50">PID: {{ p.pid|slice:":10" }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-sm font-bold uppercase text-[10px] {% if p.estado == 'activo' %}badge-success text-success-content{% elif p.estado == 'completado' %}badge-info text-info-content{% else %}badge-warning text-warning-content{% endif %}">
+                                {{ p.estado }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex flex-wrap gap-1 max-w-xs">
+                                {% for tech in p.tecnologias|slice:":3" %}
+                                <span class="badge badge-xs badge-outline">{{ tech }}</span>
+                                {% endfor %}
+                                {% if p.tecnologias|length > 3 %}
+                                <span class="badge badge-xs badge-ghost">+{{ p.tecnologias|length|add:"-3" }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="text-xs text-base-content/60">
+                            {{ p.fecha_inicio|default:"N/A" }} &rarr; {{ p.fecha_fin|default:"Actual" }}
+                        </td>
+                        <td class="text-right pr-6 space-x-1">
+                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="btn btn-xs btn-ghost rounded-lg">Ver</a>
+                            <a href="{% url 'core:proyecto_editar' pid=p.pid %}" class="btn btn-xs btn-info btn-outline rounded-lg">Editar</a>
+                            <a href="{% url 'core:proyecto_eliminar' pid=p.pid %}" class="btn btn-xs btn-error btn-outline rounded-lg">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="card bg-base-200 border border-base-300 p-12 text-center rounded-3xl shadow-sm">
+        <div class="max-w-md mx-auto space-y-4">
+            <div class="w-16 h-16 rounded-full bg-info/10 text-info mx-auto flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-black text-base-content">No se encontraron proyectos</h3>
+            <p class="text-xs text-base-content/60 leading-relaxed">
+                {% if query %}
+                No hay resultados que coincidan con la búsqueda "<span class="text-info font-semibold">{{ query }}</span>".
+                {% else %}
+                Aún no hay proyectos registrados en el grafo. Añade el primer proyecto colaborativo para conectar profesionales y tecnologías.
+                {% endif %}
+            </p>
+            <div class="pt-2 flex justify-center gap-3">
+                {% if query %}
+                <a href="{% url 'core:proyectos_lista' %}" class="btn btn-sm btn-ghost rounded-xl">Restablecer Búsqueda</a>
+                {% endif %}
+                <a href="{% url 'core:proyecto_crear' %}" class="btn btn-sm btn-info rounded-xl font-bold shadow-md">Crear Proyecto</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

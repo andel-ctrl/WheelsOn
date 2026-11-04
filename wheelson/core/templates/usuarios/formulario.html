@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ accion }} Usuario | WheelsOn{% endblock %}
+{% block page_title %}{{ accion }} Usuario{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
+
+    <div class="card bg-base-200 shadow border border-base-300">
+        <div class="card-body p-6 sm:p-8">
+            <h2 class="card-title text-xl mb-4 border-b border-base-300 pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Informacion Personal y Profesional
+            </h2>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Nombre *</span></label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}<span class="text-error text-xs">{{ form.nombre.errors.0 }}</span>{% endif %}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Apellido *</span></label>
+                        {{ form.apellido }}
+                        {% if form.apellido.errors %}<span class="text-error text-xs">{{ form.apellido.errors.0 }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Email *</span></label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<span class="text-error text-xs">{{ form.email.errors.0 }}</span>{% endif %}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Contrasena {% if accion == "Editar" %}(opcional){% else %}*{% endif %}</span></label>
+                        {{ form.password }}
+                        {% if form.password.errors %}<span class="text-error text-xs">{{ form.password.errors.0 }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Titulo Profesional</span></label>
+                        {{ form.titulo_profesional }}
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text font-semibold">Ubicacion</span></label>
+                        {{ form.ubicacion }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label"><span class="label-text font-semibold">Biografia Profesional</span></label>
+                    {{ form.biografia }}
+                </div>
+
+                <div class="card-actions justify-end gap-2 pt-4 border-t border-base-300">
+                    <a href="{% url 'core:usuarios_lista' %}" class="btn btn-ghost btn-sm">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-sm">Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
