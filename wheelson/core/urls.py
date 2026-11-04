@@ -67,4 +67,7 @@ urlpatterns = [
     # Relaciones - Usuario <-> Oferta (:POSTULA_A)
     path("ofertas/<str:oid>/postular/", views.oferta_postular, name="oferta_postular"),
     path("ofertas/<str:oid>/postulaciones/<str:uid>/eliminar/", views.oferta_postulacion_eliminar, name="oferta_postulacion_eliminar"),
+
+    # Consultas Avanzadas de Grafo (Fase 6)
+    path("consultas/", views.consultas_index, name="consultas_index"),
 ]

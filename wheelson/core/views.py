@@ -28,6 +28,7 @@ from core.services import (
     RequisitoOfertaService,
     PostulacionService,
 )
+from core.graph_queries import GraphAnalyticsService
 
 
 def dashboard(request):
@@ -589,4 +590,61 @@ def oferta_postulacion_eliminar(request, oid, uid):
         PostulacionService.desvincular(uid, oid)
         messages.success(request, "Postulacion cancelada.")
     return redirect("core:oferta_detalle", oid=oid)
+
+
+# ==============================================================================
+# VISTAS DE CONSULTAS AVANZADAS DE GRAFOS (FASE 6)
+# ==============================================================================
+
+def consultas_index(request):
+    tab = request.GET.get("tab", "camino")
+    usuarios = UsuarioService.all()
+    empresas = EmpresaService.all()
+    ofertas = OfertaService.all()
+
+    uid1 = request.GET.get("uid1") or (usuarios[0].uid if len(usuarios) > 0 else "")
+    uid2 = request.GET.get("uid2") or (usuarios[1].uid if len(usuarios) > 1 else (usuarios[0].uid if usuarios else ""))
+    eid = request.GET.get("eid") or (empresas[0].eid if len(empresas) > 0 else "")
+    oid = request.GET.get("oid") or (ofertas[0].oid if len(ofertas) > 0 else "")
+
+    res_camino = None
+    res_comun = None
+    res_similares = None
+    res_empresa = None
+    res_demandadas = GraphAnalyticsService.habilidades_mas_demandadas(limit=10)
+    res_candidatos = None
+
+    if tab == "camino" and uid1 and uid2:
+        res_camino = GraphAnalyticsService.shortest_path_usuarios(uid1, uid2)
+    elif tab == "comun" and uid1 and uid2:
+        res_comun = GraphAnalyticsService.contactos_en_comun(uid1, uid2)
+    elif tab == "similares" and uid1:
+        res_similares = GraphAnalyticsService.usuarios_con_habilidades_similares(uid1, limit=10)
+    elif tab == "ruta_empresa" and uid1 and eid:
+        res_empresa = GraphAnalyticsService.ruta_usuario_empresa(uid1, eid)
+    elif tab == "candidatos" and oid:
+        res_candidatos = GraphAnalyticsService.candidatos_para_oferta(oid, limit=10)
+
+    context = {
+        "tab": tab,
+        "usuarios": usuarios,
+        "empresas": empresas,
+        "ofertas": ofertas,
+        "uid1": uid1,
+        "uid2": uid2,
+        "eid": eid,
+        "oid": oid,
+        "usuario1": UsuarioService.get(uid1) if uid1 else None,
+        "usuario2": UsuarioService.get(uid2) if uid2 else None,
+        "empresa_obj": EmpresaService.get(eid) if eid else None,
+        "oferta_obj": OfertaService.get(oid) if oid else None,
+        "res_camino": res_camino,
+        "res_comun": res_comun,
+        "res_similares": res_similares,
+        "res_empresa": res_empresa,
+        "res_demandadas": res_demandadas,
+        "res_candidatos": res_candidatos,
+    }
+    return render(request, "grafo/consultas.html", context)
+
 

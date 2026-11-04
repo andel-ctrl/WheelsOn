@@ -28,6 +28,7 @@ from core.services import (
     RequisitoOfertaService,
     PostulacionService,
 )
+from core.graph_queries import GraphAnalyticsService
 from core.forms import (
     UsuarioForm,
     EmpresaForm,
@@ -41,6 +42,11 @@ from core.forms import (
     PublicarOfertaEmpresaForm,
     RequisitoOfertaForm,
     PostulacionForm,
+    CaminoCortoForm,
+    ContactosComunForm,
+    HabilidadesSimilaresForm,
+    RutaEmpresaForm,
+    CandidatosOfertaForm,
 )
 
 
@@ -507,5 +513,99 @@ class RelationshipsManagementTest(TestCase):
         self.assertEqual(res_red.status_code, 200)
         self.assertContains(res_red, "Red de Conexiones")
         self.assertContains(res_red, self.u2.nombre)
+
+
+class AdvancedGraphQueriesTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.u1 = UsuarioService.create(nombre="Carlos", apellido="Mendoza", email="carlos@test.com", titulo_profesional="Backend Lead")
+        self.u2 = UsuarioService.create(nombre="Diana", apellido="Rios", email="diana@test.com", titulo_profesional="Fullstack Dev")
+        self.u3 = UsuarioService.create(nombre="Esteban", apellido="Gomez", email="esteban@test.com", titulo_profesional="Cloud Architect")
+        self.emp = EmpresaService.create(nombre="CloudSys", industria="Cloud", tamano="mediana")
+        self.h1 = HabilidadService.create(nombre="FastAPI", categoria="tecnica")
+        self.h2 = HabilidadService.create(nombre="Neo4j", categoria="tecnica")
+        self.ofr = OfertaService.create(titulo="Python Architect", modalidad="remoto", estado="abierta")
+
+    def test_shortest_path_analytics(self):
+        res_disconn = GraphAnalyticsService.shortest_path_usuarios(self.u1.uid, self.u3.uid)
+        self.assertFalse(res_disconn["encontrado"])
+
+        ConexionService.conectar(self.u1.uid, self.u2.uid)
+        ConexionService.conectar(self.u2.uid, self.u3.uid)
+
+        res_conn = GraphAnalyticsService.shortest_path_usuarios(self.u1.uid, self.u3.uid)
+        self.assertTrue(res_conn["encontrado"])
+        self.assertEqual(res_conn["grados"], 2)
+        self.assertEqual(len(res_conn["camino"]), 3)
+
+    def test_contactos_en_comun_analytics(self):
+        ConexionService.conectar(self.u1.uid, self.u2.uid)
+        ConexionService.conectar(self.u3.uid, self.u2.uid)
+
+        comunes = GraphAnalyticsService.contactos_en_comun(self.u1.uid, self.u3.uid)
+        self.assertEqual(len(comunes), 1)
+        self.assertEqual(comunes[0].uid, self.u2.uid)
+
+    def test_usuarios_con_habilidades_similares_analytics(self):
+        HabilidadUsuarioService.vincular(self.u1.uid, self.h1.hid, nivel="avanzado")
+        HabilidadUsuarioService.vincular(self.u2.uid, self.h1.hid, nivel="intermedio")
+        HabilidadUsuarioService.vincular(self.u1.uid, self.h2.hid, nivel="experto")
+
+        similares = GraphAnalyticsService.usuarios_con_habilidades_similares(self.u1.uid)
+        self.assertEqual(len(similares), 1)
+        self.assertEqual(similares[0]["usuario"].uid, self.u2.uid)
+        self.assertEqual(similares[0]["total_compartidas"], 1)
+        self.assertIn("FastAPI", similares[0]["habilidades_comunes"])
+
+    def test_ruta_usuario_empresa_analytics(self):
+        ConexionService.conectar(self.u1.uid, self.u2.uid)
+        EmpleoService.vincular(self.u2.uid, self.emp.eid, cargo="Cloud Architect", actual=True)
+
+        ruta = GraphAnalyticsService.ruta_usuario_empresa(self.u1.uid, self.emp.eid)
+        self.assertTrue(ruta["encontrado"])
+        self.assertGreaterEqual(ruta["longitud"], 2)
+
+    def test_habilidades_mas_demandadas_analytics(self):
+        RequisitoOfertaService.vincular(self.ofr.oid, self.h1.hid, nivel_minimo="avanzado", prioridad="obligatoria")
+        RequisitoOfertaService.vincular(self.ofr.oid, self.h2.hid, nivel_minimo="basico", prioridad="deseable")
+
+        demandadas = GraphAnalyticsService.habilidades_mas_demandadas()
+        self.assertGreaterEqual(len(demandadas), 2)
+        nombres = [d["habilidad"] for d in demandadas]
+        self.assertIn("FastAPI", nombres)
+        self.assertIn("Neo4j", nombres)
+
+    def test_candidatos_para_oferta_analytics(self):
+        RequisitoOfertaService.vincular(self.ofr.oid, self.h1.hid, prioridad="obligatoria")
+        HabilidadUsuarioService.vincular(self.u1.uid, self.h1.hid)
+
+        candidatos = GraphAnalyticsService.candidatos_para_oferta(self.ofr.oid)
+        self.assertEqual(len(candidatos), 1)
+        self.assertEqual(candidatos[0]["usuario"].uid, self.u1.uid)
+        self.assertEqual(candidatos[0]["total_coincidencias"], 1)
+
+    def test_consultas_view_endpoints(self):
+        res = self.client.get(reverse("core:consultas_index"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Consultas Avanzadas de Grafo")
+
+        res_cc = self.client.get(reverse("core:consultas_index") + f"?query_type=camino_corto&uid_origen={self.u1.uid}&uid_destino={self.u2.uid}")
+        self.assertEqual(res_cc.status_code, 200)
+
+        res_comun = self.client.get(reverse("core:consultas_index") + f"?query_type=contactos_comun&uid1={self.u1.uid}&uid2={self.u2.uid}")
+        self.assertEqual(res_comun.status_code, 200)
+
+        res_hab = self.client.get(reverse("core:consultas_index") + f"?query_type=habilidades_similares&uid={self.u1.uid}")
+        self.assertEqual(res_hab.status_code, 200)
+
+        res_ruta = self.client.get(reverse("core:consultas_index") + f"?query_type=ruta_empresa&uid={self.u1.uid}&eid={self.emp.eid}")
+        self.assertEqual(res_ruta.status_code, 200)
+
+        res_dem = self.client.get(reverse("core:consultas_index") + "?query_type=demanda_habilidades")
+        self.assertEqual(res_dem.status_code, 200)
+
+        res_cand = self.client.get(reverse("core:consultas_index") + f"?query_type=candidatos_oferta&oid={self.ofr.oid}")
+        self.assertEqual(res_cand.status_code, 200)
+
 
 

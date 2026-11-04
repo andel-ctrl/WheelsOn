@@ -268,3 +268,31 @@ class PostulacionForm(BaseTailwindForm):
         required=False,
         label="Carta de Presentacion",
     )
+
+
+# ==============================================================================
+# FORMULARIOS DE CONSULTAS AVANZADAS DE GRAFOS (FASE 6)
+# ==============================================================================
+
+class CaminoCortoForm(BaseTailwindForm):
+    uid1 = forms.CharField(max_length=64, label="Usuario Origen")
+    uid2 = forms.CharField(max_length=64, label="Usuario Destino")
+
+
+class ContactosComunForm(BaseTailwindForm):
+    uid1 = forms.CharField(max_length=64, label="Primer Usuario")
+    uid2 = forms.CharField(max_length=64, label="Segundo Usuario")
+
+
+class HabilidadesSimilaresForm(BaseTailwindForm):
+    uid = forms.CharField(max_length=64, label="Usuario de Referencia")
+
+
+class RutaEmpresaForm(BaseTailwindForm):
+    uid = forms.CharField(max_length=64, label="Usuario Origen")
+    eid = forms.CharField(max_length=64, label="Empresa Objetivo")
+
+
+class CandidatosOfertaForm(BaseTailwindForm):
+    oid = forms.CharField(max_length=64, label="Oferta Laboral")
+
