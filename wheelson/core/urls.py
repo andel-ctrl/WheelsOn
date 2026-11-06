@@ -77,6 +77,10 @@ urlpatterns = [
     # Panel de Analítica de Grafos (Fase 8)
     path("analitica/", views.analitica_dashboard, name="analitica_dashboard"),
 
+    # Visualización Interactiva de Grafos con Vis.js (Fase 9)
+    path("grafo/", views.grafo_interactivo, name="grafo_interactivo"),
+    path("grafo/api/data/", views.grafo_data_api, name="grafo_data_api"),
+
     # Autenticación y Cuentas (Fase 8 Extension)
     path("login/", views.login_view, name="login"),
     path("registro/", views.registro_view, name="registro"),

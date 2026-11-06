@@ -99,11 +99,11 @@ def _init_memory_seed():
 
     # 1. Seed 15 Usuarios (nombres.txt)
     usuarios_data = [
-        ("usr_carlos001", "Carlos", "Calabria", "carlos@wheelson.com", "Tech Lead & Graph Architect", "Bogota, Colombia", "Especialista en bases de datos de grafos, modelado Cypher y arquitectura distribuida en Python."),
+        ("usr_carlos001", "Carlos", "Calabria", "carlos@wheelson.com", "Senior Backend & Graph Engineer", "Bogota, Colombia", "Especialista en bases de datos de grafos, modelado Cypher y arquitectura distribuida en Python."),
         ("usr_angelo002", "Angelo", "Caneda", "angelo@wheelson.com", "Senior Backend & Distributed Systems", "Medellin, Colombia", "Ingeniero backend enfocado en microservicios de alto rendimiento, concurrencia y FastAPI."),
         ("usr_dubal003", "Dubal", "Aguilar", "dubal@wheelson.com", "Data Architect & Big Data Specialist", "Barranquilla, Colombia", "Arquitecto de datos especializado en pipelines distribuidos, Spark y almacenamiento analitico."),
         ("usr_luis004", "Luis", "Angel", "luis.angel@wheelson.com", "Fullstack Engineer & Cloud Native", "Cali, Colombia", "Desarrollador fullstack con experiencia en ecosistemas React, TypeScript, Python y despliegues en la nube."),
-        ("usr_mateo005", "Mateo", "Cisneros", "mateo@wheelson.com", "AI/ML Engineer & Graph ML", "Bucaramanga, Colombia", "Investigador en aprendizaje automatico sobre grafos, embeddings relacionales y redes neuronales."),
+        ("usr_mateo005", "Mateo", "Cisneros", "mateo@wheelson.com", "Tech Lead & Graph Architect", "Bucaramanga, Colombia", "Tech Lead de WheelsOn, especialista en modelado de grafos complejos, algoritmos de recomendacion y arquitectura distribuida."),
         ("usr_juan006", "Juan", "Arrieta", "juan@wheelson.com", "DevOps & Site Reliability Engineer", "Cartagena, Colombia", "Especialista en observabilidad, automatizacion CI/CD, clusters Kubernetes y seguridad en la nube."),
         ("usr_jeronimo007", "Jeronimo", "Castro", "jeronimo@wheelson.com", "Frontend Architect & UI/UX Specialist", "Pereira, Colombia", "Apasionado por el diseno de interfaces modernas, estetica minimalista y rendimiento web."),
         ("usr_wilson008", "Wilson", "Estrada", "wilson@wheelson.com", "Cybersecurity & Infrastructure Lead", "Manizales, Colombia", "Lider de seguridad informatica enfocado en proteccion de infraestructuras criticas y hardening."),
@@ -177,14 +177,20 @@ def _init_memory_seed():
 
     # 6. Seed Relaciones de Conexión (:CONECTA_CON) - Red Social Rica
     conexiones_data = [
-        # Hub Carlos Calabria (usr_carlos001)
-        ("usr_carlos001", "usr_angelo002", "Gran colaboracion en el diseno del motor de grafos!"),
+        # Hub Tech Lead Mateo Cisneros (usr_mateo005)
+        ("usr_mateo005", "usr_carlos001", "Gran colaboracion en el motor de grafos y arquitectura backend."),
+        ("usr_mateo005", "usr_angelo002", "Revisemos la integracion de los endpoints y microservicios."),
+        ("usr_mateo005", "usr_dubal003", "Excelente avance en el pipeline de datos y particionado."),
+        ("usr_mateo005", "usr_luis004", "El frontend reactivo de WheelsOn quedo impecable."),
+        ("usr_mateo005", "usr_jeronimo007", "La estetica y usabilidad de la plataforma esta genial."),
+        ("usr_mateo005", "usr_wilson008", "Revisemos las politicas de seguridad del cluster."),
+        ("usr_mateo005", "usr_maria009", "Alineemos los entregables tecnicos del proximo sprint."),
+        ("usr_mateo005", "usr_santiago011", "Optimizamos los indices y restricciones en Neo4j."),
+        ("usr_mateo005", "usr_andres015", "Comparativa de embeddings de nodos relacionales finalizada."),
+        # Conexiones adicionales de Carlos Calabria
+        ("usr_carlos001", "usr_angelo002", "Gran debate sobre concurrencia y FastAPI."),
         ("usr_carlos001", "usr_dubal003", "Excelente debate sobre particionado en grafos distribuidos."),
         ("usr_carlos001", "usr_luis004", "El frontend reactivo de WheelsOn quedo impecable."),
-        ("usr_carlos001", "usr_mateo005", "Interesante enfoque de algoritmos de recomendacion."),
-        ("usr_carlos001", "usr_jeronimo007", "La estetica de la red social esta genial."),
-        ("usr_carlos001", "usr_wilson008", "Revisemos las politicas de seguridad del cluster."),
-        ("usr_carlos001", "usr_maria009", "Alineemos los entregables del proximo sprint."),
         ("usr_carlos001", "usr_santiago011", "Optimizamos los indices y restricciones en Neo4j."),
         # Cluster Backend & Data
         ("usr_angelo002", "usr_dubal003", "Conectemos el pipeline de ingestion con los microservicios."),
@@ -198,10 +204,6 @@ def _init_memory_seed():
         ("usr_jeronimo007", "usr_maria009", "Feedback de experiencia de usuario implementado."),
         ("usr_luis004", "usr_miguel010", "Unificando endpoints para la app y la web."),
         ("usr_luis004", "usr_luisc013", "Listos los tests e2e para el flujo de publicacion."),
-        # Cluster IA & Data Science
-        ("usr_mateo005", "usr_andres015", "Comparativa de embeddings de nodos finalizada."),
-        ("usr_mateo005", "usr_maria009", "Presentacion de resultados de clustering lista."),
-        ("usr_mateo005", "usr_santiago011", "Consultas Cypher analiticas optimizadas."),
         # Cluster DevOps, Cloud & Seguridad
         ("usr_juan006", "usr_wilson008", "Auditoria de red interna aprobada sin hallazgos."),
         ("usr_juan006", "usr_santiagoa014", "Infraestructura como codigo en Terraform desplegada."),
@@ -216,11 +218,11 @@ def _init_memory_seed():
 
     # 7. Seed Relaciones (:TRABAJA_EN)
     empleos_data = [
-        ("usr_carlos001", "emp_nexus01", "Tech Lead & Graph Architect", "2024-01-15", True),
+        ("usr_mateo005", "emp_nexus01", "Tech Lead & Graph Architect", "2024-01-15", True),
+        ("usr_carlos001", "emp_nexus01", "Senior Backend & Graph Engineer", "2024-02-01", True),
         ("usr_angelo002", "emp_techin02", "Senior Backend Engineer", "2023-03-01", True),
         ("usr_dubal003", "emp_globant03", "Principal Data Architect", "2022-06-10", True),
         ("usr_luis004", "emp_techin02", "Fullstack Developer", "2023-08-15", True),
-        ("usr_mateo005", "emp_nexus01", "Lead AI Researcher", "2024-02-01", True),
         ("usr_juan006", "emp_globant03", "DevOps & SRE Lead", "2023-01-10", True),
         ("usr_jeronimo007", "emp_nexus01", "Frontend Architect", "2023-11-01", True),
         ("usr_wilson008", "emp_techin02", "Cybersecurity Specialist", "2022-09-01", True),
@@ -237,12 +239,18 @@ def _init_memory_seed():
 
     # 8. Seed Relaciones (:TIENE_HABILIDAD)
     habilidades_usuarios = [
-        # Carlos Calabria
+        # Mateo Cisneros (Tech Lead)
+        ("usr_mateo005", "hab_py01", "experto", 7),
+        ("usr_mateo005", "hab_neo02", "experto", 5),
+        ("usr_mateo005", "hab_cyp03", "avanzado", 5),
+        ("usr_mateo005", "hab_lid05", "experto", 6),
+        ("usr_mateo005", "hab_ml09", "experto", 5),
+        ("usr_mateo005", "hab_doc04", "avanzado", 4),
+        # Carlos Calabria (Senior Backend)
         ("usr_carlos001", "hab_py01", "experto", 7),
         ("usr_carlos001", "hab_neo02", "experto", 5),
         ("usr_carlos001", "hab_cyp03", "avanzado", 4),
         ("usr_carlos001", "hab_doc04", "avanzado", 4),
-        ("usr_carlos001", "hab_lid05", "avanzado", 5),
         # Angelo Caneda
         ("usr_angelo002", "hab_py01", "experto", 6),
         ("usr_angelo002", "hab_doc04", "avanzado", 5),
@@ -256,10 +264,6 @@ def _init_memory_seed():
         ("usr_luis004", "hab_rea07", "experto", 5),
         ("usr_luis004", "hab_ts08", "avanzado", 4),
         ("usr_luis004", "hab_py01", "intermedio", 3),
-        # Mateo Cisneros
-        ("usr_mateo005", "hab_ml09", "experto", 5),
-        ("usr_mateo005", "hab_py01", "experto", 6),
-        ("usr_mateo005", "hab_neo02", "intermedio", 3),
         # Juan Arrieta
         ("usr_juan006", "hab_doc04", "experto", 6),
         ("usr_juan006", "hab_k8s11", "avanzado", 4),
@@ -297,15 +301,15 @@ def _init_memory_seed():
         _memory_habilidades_usuario.add(source_id=uid, target_id=hid, nivel=niv, anios_experiencia=anios)
 
     # 9. Seed Relaciones (:PARTICIPA_EN)
-    _memory_participaciones.add(source_id="usr_carlos001", target_id="proy_graph01", rol="Tech Director & Architect", fecha_inicio="2026-10-01", activo=True)
+    _memory_participaciones.add(source_id="usr_mateo005", target_id="proy_graph01", rol="Tech Director & Lead Architect", fecha_inicio="2026-10-01", activo=True)
+    _memory_participaciones.add(source_id="usr_carlos001", target_id="proy_graph01", rol="Senior Graph Engineer", fecha_inicio="2026-10-01", activo=True)
     _memory_participaciones.add(source_id="usr_angelo002", target_id="proy_graph01", rol="Backend Lead", fecha_inicio="2026-10-05", activo=True)
     _memory_participaciones.add(source_id="usr_jeronimo007", target_id="proy_graph01", rol="Frontend Architect", fecha_inicio="2026-10-10", activo=True)
     _memory_participaciones.add(source_id="usr_luis004", target_id="proy_graph01", rol="Fullstack Developer", fecha_inicio="2026-10-12", activo=True)
     _memory_participaciones.add(source_id="usr_santiago011", target_id="proy_graph01", rol="Database DBA", fecha_inicio="2026-10-15", activo=True)
 
-    _memory_participaciones.add(source_id="usr_mateo005", target_id="proy_fintech02", rol="Lead ML Engineer", fecha_inicio="2026-09-01", activo=True)
     _memory_participaciones.add(source_id="usr_dubal003", target_id="proy_fintech02", rol="Data Architect", fecha_inicio="2026-09-05", activo=True)
-    _memory_participaciones.add(source_id="usr_andres015", target_id="proy_fintech02", rol="Data Scientist", fecha_inicio="2026-09-10", activo=True)
+    _memory_participaciones.add(source_id="usr_andres015", target_id="proy_fintech02", rol="Lead Data Scientist", fecha_inicio="2026-09-10", activo=True)
 
     # 10. Seed Relaciones (:PUBLICA)
     _memory_publicaciones.add(source_id="emp_nexus01", target_id="ofr_dataeng01", fecha_publicacion="2026-11-01")

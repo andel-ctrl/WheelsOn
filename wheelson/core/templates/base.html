@@ -185,6 +185,18 @@
                     <span>Analítica</span>
                 </a>
 
+                <!-- Grafo Interactivo (Fase 9 - Vis.js Network) -->
+                <a href="{% url 'core:grafo_interactivo' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/grafo/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {% if '/grafo/' in request.path %}text-[#00b84c]{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <circle cx="6" cy="6" r="2.5" />
+                        <circle cx="18" cy="6" r="2.5" />
+                        <circle cx="12" cy="18" r="2.5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7.5L10.5 15.5M16 7.5L13.5 15.5M8.5 6h7" />
+                    </svg>
+                    <span>Grafo Interactivo</span>
+                </a>
+
                 <!-- Consultas Cypher (Modo Grafo Avanzado) -->
                 <a href="{% url 'core:consultas_index' %}"
                    class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/consultas/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
@@ -248,22 +260,9 @@
             </div>
             {% endif %}
 
-            <!-- Footer Peerlist exact text -->
-            <div class="text-[11px] text-gray-500 px-2 space-y-1">
-                <div class="flex items-center gap-2">
-                    <a href="#" class="hover:underline">Blog</a>
-                    <span>•</span>
-                    <a href="#" class="hover:underline">Ayuda</a>
-                    <span>•</span>
-                    <a href="#" class="hover:underline">Soporte</a>
-                    <span>•</span>
-                    <button @click="toggleTheme()" class="hover:text-white" title="Cambiar tema">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                    </button>
-                </div>
-                <p class="text-[10px] text-gray-600">&copy; 2026 WheelsOn, Inc.</p>
+            <!-- Footer WheelsOn -->
+            <div class="px-2 pt-1">
+                <p class="text-[11px] text-gray-600 font-mono">&copy; 2026 WheelsOn, Inc.</p>
             </div>
         </div>
     </aside>
@@ -296,6 +295,7 @@
                 <li><a href="{% url 'core:conexiones_red' %}" class="block py-1.5 text-gray-400">Mi Red</a></li>
                 <li><a href="{% url 'core:recomendaciones_index' %}" class="block py-1.5 text-gray-400">Sugerencias</a></li>
                 <li><a href="{% url 'core:analitica_dashboard' %}" class="block py-1.5 text-gray-400">Analítica</a></li>
+                <li><a href="{% url 'core:grafo_interactivo' %}" class="block py-1.5 text-gray-400">Grafo Interactivo</a></li>
                 <li><a href="{% url 'core:consultas_index' %}" class="block py-1.5 text-gray-400">Consultas Cypher</a></li>
             </ul>
         </div>

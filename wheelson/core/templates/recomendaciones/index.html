@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Suggestions & Motor de Recomendaciones | WheelsOn{% endblock %}
+{% block title %}Sugerencias & Motor de Recomendaciones | WheelsOn{% endblock %}
 {% block page_title %}Sugerencias y Recomendaciones de Grafo{% endblock %}
 
 {% block content %}
@@ -8,10 +8,6 @@
 
     <!-- Header Hero Banner (Camuflado al fondo oscuro) -->
     <div class="peer-card p-6 sm:p-7 rounded-2xl bg-[#0e1116] border border-[#181c24] space-y-2">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#090b0e] border border-[#1a1e27] text-[11px] font-mono text-[#00b84c]">
-            <span class="w-2 h-2 rounded-full bg-[#00b84c] animate-pulse"></span>
-            <span>Motor de Recomendaciones Heurístico & Topológico Neo4j</span>
-        </div>
         <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
             Recomendaciones Inteligentes
         </h1>
@@ -95,7 +91,7 @@
                             {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
                         </div>
                         <span class="px-2 py-0.5 rounded-full bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 text-[10px] font-bold">
-                            Score: {{ item.score }}
+                            Afinidad: {{ item.score }}
                         </span>
                     </div>
 

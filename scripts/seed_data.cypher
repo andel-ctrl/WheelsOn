@@ -13,7 +13,7 @@ CREATE (u1:Usuario {
     apellido: "Calabria",
     email: "carlos@wheelson.com",
     password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Tech Lead & Graph Architect",
+    titulo_profesional: "Senior Backend & Graph Engineer",
     ubicacion: "Bogota, Colombia",
     biografia: "Especialista en bases de datos de grafos, modelado Cypher y arquitectura distribuida en Python.",
     fecha_registro: date("2026-10-01")
@@ -57,9 +57,9 @@ CREATE (u5:Usuario {
     apellido: "Cisneros",
     email: "mateo@wheelson.com",
     password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "AI/ML Engineer & Graph ML",
+    titulo_profesional: "Tech Lead & Graph Architect",
     ubicacion: "Bucaramanga, Colombia",
-    biografia: "Investigador en aprendizaje automatico sobre grafos, embeddings relacionales y redes neuronales.",
+    biografia: "Tech Lead de WheelsOn, especialista en modelado de grafos complejos, algoritmos de recomendacion y arquitectura distribuida.",
     fecha_registro: date("2026-10-12")
 })
 CREATE (u6:Usuario {
@@ -291,11 +291,11 @@ MATCH (u12:Usuario {uid: "usr_jose012"}), (u13:Usuario {uid: "usr_luisc013"}) CR
 MATCH (u11:Usuario {uid: "usr_santiago011"}), (u12:Usuario {uid: "usr_jose012"}) CREATE (u11)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u12);
 
 // 8. Relaciones Laborales [:TRABAJA_EN]
-MATCH (u:Usuario {uid: "usr_carlos001"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Tech Lead & Graph Architect", actual: true, fecha_inicio: date("2024-01-15")}]->(e);
+MATCH (u:Usuario {uid: "usr_mateo005"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Tech Lead & Graph Architect", actual: true, fecha_inicio: date("2024-01-15")}]->(e);
 MATCH (u:Usuario {uid: "usr_angelo002"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Senior Backend Engineer", actual: true, fecha_inicio: date("2023-03-01")}]->(e);
 MATCH (u:Usuario {uid: "usr_dubal003"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:TRABAJA_EN {cargo: "Principal Data Architect", actual: true, fecha_inicio: date("2022-06-10")}]->(e);
 MATCH (u:Usuario {uid: "usr_luis004"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Fullstack Developer", actual: true, fecha_inicio: date("2023-08-15")}]->(e);
-MATCH (u:Usuario {uid: "usr_mateo005"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Lead AI Researcher", actual: true, fecha_inicio: date("2024-02-01")}]->(e);
+MATCH (u:Usuario {uid: "usr_carlos001"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Senior Backend & Graph Engineer", actual: true, fecha_inicio: date("2024-02-01")}]->(e);
 MATCH (u:Usuario {uid: "usr_juan006"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:TRABAJA_EN {cargo: "DevOps & SRE Lead", actual: true, fecha_inicio: date("2023-01-10")}]->(e);
 MATCH (u:Usuario {uid: "usr_jeronimo007"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Frontend Architect", actual: true, fecha_inicio: date("2023-11-01")}]->(e);
 MATCH (u:Usuario {uid: "usr_wilson008"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Cybersecurity Specialist", actual: true, fecha_inicio: date("2022-09-01")}]->(e);

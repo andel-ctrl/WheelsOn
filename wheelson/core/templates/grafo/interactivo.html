@@ -1,0 +1,636 @@
+{% extends "base.html" %}
+
+{% block title %}Grafo Interactivo | WheelsOn{% endblock %}
+{% block page_title %}Explorador de Grafo Interactivo{% endblock %}
+
+{% block content %}
+<style>
+/* Lienzo responsivo de alta densidad vertical que se adapta a la altura de pantalla */
+#vis-graph-canvas {
+    width: 100%;
+    height: 78vh;
+    min-height: 720px;
+    max-height: 1200px;
+}
+@media (min-height: 900px) {
+    #vis-graph-canvas {
+        height: calc(100vh - 220px);
+        min-height: 780px;
+        max-height: 1400px;
+    }
+}
+@media (max-width: 640px) {
+    #vis-graph-canvas {
+        height: 65vh;
+        min-height: 520px;
+    }
+}
+/* Adaptación nativa en Modo Pantalla Completa */
+#vis-graph-wrapper:fullscreen #vis-graph-canvas,
+#vis-graph-wrapper:-webkit-full-screen #vis-graph-canvas {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+}
+#vis-graph-wrapper:fullscreen,
+#vis-graph-wrapper:-webkit-full-screen {
+    border-radius: 0 !important;
+    border: none !important;
+}
+</style>
+
+<div class="max-w-7xl mx-auto space-y-4 animate-fade-in-up" x-data="grafoManager()">
+
+    <!-- Header Principal Estilo Peerlist Dark -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#181c24]">
+        <div>
+            <h1 class="text-xl font-black text-white tracking-tight">Explorador de Grafo Interactivo</h1>
+            <p class="text-xs text-gray-400 mt-0.5">
+                Navegación visual asociativa de los 15 miembros reales, habilidades, proyectos, empresas y relaciones semánticas.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0e1116] border border-[#181c24] text-xs font-mono text-gray-300">
+                <span class="w-2 h-2 rounded-full bg-[#00b84c] animate-pulse"></span>
+                <span>Nodos: <strong class="text-white" x-text="stats.total_nodos">34</strong></span>
+                <span class="text-gray-600">|</span>
+                <span>Aristas: <strong class="text-[#00b84c]" x-text="stats.total_aristas">101</strong></span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Barra de Controles y Filtros Dinámicos -->
+    <div class="bg-[#0e1116] border border-[#181c24] rounded-2xl p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+
+            <!-- Filtros por Tipo de Nodo (Píldoras con Checkbox) -->
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="text-gray-500 font-bold text-[11px] uppercase tracking-wider mr-1">Filtrar:</span>
+                
+                <button type="button" @click="toggleTipo('Usuario')"
+                        :class="tiposSeleccionados.includes('Usuario') ? 'bg-[#00b84c]/20 text-[#00b84c] border-[#00b84c]/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
+                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
+                    <span>Usuarios (<span x-text="stats.usuarios">15</span>)</span>
+                </button>
+
+                <button type="button" @click="toggleTipo('Empresa')"
+                        :class="tiposSeleccionados.includes('Empresa') ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
+                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    <span>Empresas (<span x-text="stats.empresas">3</span>)</span>
+                </button>
+
+                <button type="button" @click="toggleTipo('Habilidad')"
+                        :class="tiposSeleccionados.includes('Habilidad') ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
+                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span>Habilidades (<span x-text="stats.habilidades">12</span>)</span>
+                </button>
+
+                <button type="button" @click="toggleTipo('Proyecto')"
+                        :class="tiposSeleccionados.includes('Proyecto') ? 'bg-purple-500/20 text-purple-400 border-purple-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
+                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                    <span>Proyectos (<span x-text="stats.proyectos">2</span>)</span>
+                </button>
+
+                <button type="button" @click="toggleTipo('Oferta')"
+                        :class="tiposSeleccionados.includes('Oferta') ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
+                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                    <span>Empleos (<span x-text="stats.ofertas">2</span>)</span>
+                </button>
+            </div>
+
+            <!-- Selector de Subgrafo Egocéntrico -->
+            <div class="flex items-center gap-2">
+                <label class="text-[11px] font-bold text-gray-400">Subgrafo:</label>
+                <select x-model="subgrafoSeleccionado" @change="cargarDatosGrafo()"
+                        class="bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-3 py-1.5 focus:outline-none">
+                    <option value="">Red Global Completa</option>
+                    {% for u in usuarios_para_filtro %}
+                    <option value="{{ u.uid }}" {% if subgrafo_uid == u.uid %}selected{% endif %}>
+                        Vecindario de {{ u.nombre_completo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+        </div>
+
+        <!-- Fila de Búsqueda y Botones de Control de Vista -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#181c24]">
+            
+            <!-- Buscador en tiempo real con foco animado -->
+            <div class="flex items-center gap-2 flex-1 max-w-sm">
+                <div class="relative w-full">
+                    <input type="text" x-model="textoBusqueda" @keyup.enter="buscarYEnfocar()"
+                           placeholder="Buscar nodo (ej. Mateo, Python, Google)..."
+                           class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] rounded-full pl-8 pr-4 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none" />
+                    <svg class="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <button type="button" @click="buscarYEnfocar()" class="peer-btn-green px-3.5 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                    Enfocar
+                </button>
+            </div>
+
+            <!-- Botones de Acción sobre el Lienzo -->
+            <div class="flex items-center gap-2 text-xs">
+                <!-- Toggle Física -->
+                <button type="button" @click="toggleFisica()"
+                        :class="fisicaActiva ? 'bg-[#181c24] text-emerald-400 border-emerald-500/30' : 'bg-[#12151b] text-gray-400 border-[#1e232d]'"
+                        class="px-3 py-1.5 rounded-full border transition flex items-center gap-1" title="Pausar o activar simulación física">
+                    <span class="w-2 h-2 rounded-full" :class="fisicaActiva ? 'bg-[#00b84c]' : 'bg-gray-500'"></span>
+                    <span x-text="fisicaActiva ? 'Física: Activa' : 'Física: Fija'"></span>
+                </button>
+
+                <!-- Toggle Layout Jerárquico vs Fuerza Dirigida -->
+                <button type="button" @click="toggleLayout()"
+                        :class="layoutJerarquico ? 'bg-[#181c24] text-cyan-400 border-cyan-500/30' : 'bg-[#12151b] text-gray-400 border-[#1e232d]'"
+                        class="px-3 py-1.5 rounded-full border transition flex items-center gap-1" title="Cambiar distribución">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/></svg>
+                    <span x-text="layoutJerarquico ? 'Jerárquico' : 'Fuerza Dirigida'"></span>
+                </button>
+
+                <!-- Zoom Controls -->
+                <div class="inline-flex rounded-full bg-[#12151b] border border-[#1e232d] p-0.5">
+                    <button type="button" @click="zoomIn()" class="p-1 px-2 text-gray-300 hover:text-white" title="Acercar">+</button>
+                    <button type="button" @click="zoomOut()" class="p-1 px-2 text-gray-300 hover:text-white" title="Alejar">-</button>
+                    <button type="button" @click="fitNetwork()" class="p-1 px-2 text-gray-300 hover:text-white font-mono text-[10px]" title="Ajustar pantalla">Ajustar</button>
+                </div>
+
+                <!-- Maximizar / Pantalla Completa -->
+                <button type="button" @click="toggleFullscreen()"
+                        class="px-3 py-1.5 rounded-full border border-[#1e232d] bg-[#12151b] text-gray-300 hover:text-white hover:border-gray-500 transition flex items-center gap-1.5"
+                        title="Expandir a pantalla completa">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                    <span x-text="isFullscreen ? 'Salir' : 'Maximizar'"></span>
+                </button>
+
+                <!-- Exportar PNG -->
+                <button type="button" @click="exportarPNG()" class="px-3 py-1.5 rounded-full border border-[#1e232d] bg-[#12151b] text-gray-300 hover:text-white hover:border-gray-500 transition" title="Descargar imagen">
+                    Exportar PNG
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Área del Lienzo de Grafo + Panel Lateral de Inspección -->
+    <div id="vis-graph-wrapper" class="relative w-full rounded-2xl overflow-hidden border border-[#181c24] bg-[#090b0e] shadow-2xl">
+        
+        <!-- Canvas de Vis.js Adaptable y de Gran Altura -->
+        <div id="vis-graph-canvas" class="w-full cursor-grab active:cursor-grabbing"></div>
+
+        <!-- Indicador flotante en esquina inferior izquierda -->
+        <div class="absolute bottom-4 left-4 z-10 bg-[#0e1116]/90 backdrop-blur-md border border-[#181c24] rounded-xl px-3 py-1.5 text-[11px] font-mono text-gray-400 flex items-center gap-3">
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
+                <span>U: Usuario</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                <span>E: Empresa</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span>H: Habilidad</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                <span>P: Proyecto</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span>J: Empleo</span>
+            </span>
+        </div>
+
+        <!-- Panel Lateral Deslizante de Inspección (Offcanvas Inspector) -->
+        <div x-show="nodoSeleccionado !== null" x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform translate-x-8"
+             x-transition:enter-end="opacity-100 transform translate-x-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform translate-x-0"
+             x-transition:leave-end="opacity-0 transform translate-x-8"
+             class="absolute top-4 right-4 bottom-4 w-80 sm:w-96 bg-[#0e1116]/95 backdrop-blur-xl border border-[#242b38] rounded-2xl p-5 z-20 flex flex-col justify-between shadow-2xl overflow-y-auto"
+             style="display: none;">
+            
+            <div class="space-y-4">
+                <!-- Header del Panel -->
+                <div class="flex items-start justify-between gap-3 border-b border-[#1e232d] pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shadow flex-shrink-0"
+                             :class="{
+                                'bg-[#00b84c] text-white': nodoSeleccionado?.group === 'Usuario',
+                                'bg-cyan-500 text-white': nodoSeleccionado?.group === 'Empresa',
+                                'bg-amber-500 text-white': nodoSeleccionado?.group === 'Habilidad',
+                                'bg-purple-500 text-white': nodoSeleccionado?.group === 'Proyecto',
+                                'bg-rose-500 text-white': nodoSeleccionado?.group === 'Oferta'
+                             }">
+                            <span x-text="nodoSeleccionado?.group.slice(0, 1)">U</span>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
+                                  :class="{
+                                    'bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30': nodoSeleccionado?.group === 'Usuario',
+                                    'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30': nodoSeleccionado?.group === 'Empresa',
+                                    'bg-amber-500/20 text-amber-400 border border-amber-500/30': nodoSeleccionado?.group === 'Habilidad',
+                                    'bg-purple-500/20 text-purple-400 border border-purple-500/30': nodoSeleccionado?.group === 'Proyecto',
+                                    'bg-rose-500/20 text-rose-400 border border-rose-500/30': nodoSeleccionado?.group === 'Oferta'
+                                  }"
+                                  x-text="nodoSeleccionado?.group"></span>
+                            <h3 class="font-bold text-sm text-white truncate mt-1" x-text="nodoSeleccionado?.label"></h3>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="nodoSeleccionado = null" class="text-gray-400 hover:text-white p-1 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Propiedades del Nodo -->
+                <div class="space-y-2 text-xs">
+                    <template x-if="nodoSeleccionado?.properties?.rol">
+                        <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22]">
+                            <span class="text-[10px] text-gray-500 uppercase font-mono block">Cargo / Especialidad</span>
+                            <p class="text-white font-medium mt-0.5" x-text="nodoSeleccionado.properties.rol"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="nodoSeleccionado?.properties?.email">
+                        <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22]">
+                            <span class="text-[10px] text-gray-500 uppercase font-mono block">Correo Electrónico</span>
+                            <p class="text-gray-300 font-mono text-[11px] mt-0.5" x-text="nodoSeleccionado.properties.email"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="nodoSeleccionado?.properties?.ubicacion">
+                        <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22]">
+                            <span class="text-[10px] text-gray-500 uppercase font-mono block">Ubicación Geográfica</span>
+                            <p class="text-gray-300 mt-0.5" x-text="nodoSeleccionado.properties.ubicacion"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="nodoSeleccionado?.properties?.categoria">
+                        <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22]">
+                            <span class="text-[10px] text-gray-500 uppercase font-mono block">Categoría Técnica</span>
+                            <p class="text-amber-400 font-bold mt-0.5" x-text="nodoSeleccionado.properties.categoria"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="nodoSeleccionado?.properties?.estado">
+                        <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22]">
+                            <span class="text-[10px] text-gray-500 uppercase font-mono block">Estado del Proyecto</span>
+                            <p class="text-purple-400 font-bold capitalize mt-0.5" x-text="nodoSeleccionado.properties.estado"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="nodoSeleccionado?.properties?.salario_min || nodoSeleccionado?.properties?.salario_max">
+                        <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22]">
+                            <span class="text-[10px] text-gray-500 uppercase font-mono block">Rango Salarial</span>
+                            <p class="text-rose-400 font-mono font-bold mt-0.5" x-text="'$' + nodoSeleccionado.properties.salario_min + ' - $' + nodoSeleccionado.properties.salario_max"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="nodoSeleccionado?.properties?.bio">
+                        <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22]">
+                            <span class="text-[10px] text-gray-500 uppercase font-mono block">Biografía / Acerca de</span>
+                            <p class="text-gray-400 text-[11px] leading-relaxed mt-0.5" x-text="nodoSeleccionado.properties.bio"></p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Lista de Conexiones Directas (Vecinos) -->
+                <div class="space-y-2 pt-2 border-t border-[#1e232d]">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-white">Vecinos Directos en el Grafo</span>
+                        <span class="text-[11px] font-mono text-[#00b84c]" x-text="vecinosDelNodo.length + ' enlaces'"></span>
+                    </div>
+
+                    <div class="max-h-60 sm:max-h-72 overflow-y-auto space-y-1.5 pr-1">
+                        <template x-for="vecino in vecinosDelNodo" :key="vecino.id">
+                            <div @click="enfocarNodo(vecino.id)"
+                                 class="p-2 rounded-xl bg-[#090b0e] hover:bg-[#12151b] border border-[#161a22] hover:border-gray-600 transition flex items-center justify-between cursor-pointer text-xs">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-2 h-2 rounded-full flex-shrink-0"
+                                          :class="{
+                                            'bg-[#00b84c]': vecino.group === 'Usuario',
+                                            'bg-cyan-400': vecino.group === 'Empresa',
+                                            'bg-amber-400': vecino.group === 'Habilidad',
+                                            'bg-purple-400': vecino.group === 'Proyecto',
+                                            'bg-rose-400': vecino.group === 'Oferta'
+                                          }"></span>
+                                    <span class="text-gray-200 truncate" x-text="vecino.label"></span>
+                                </div>
+                                <span class="text-[10px] font-mono text-gray-500" x-text="vecino.relLabel"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción al pie del Inspector -->
+            <div class="pt-4 border-t border-[#1e232d] space-y-2">
+                <template x-if="nodoSeleccionado?.properties?.url">
+                    <a :href="nodoSeleccionado.properties.url" class="peer-btn-green w-full py-2 rounded-xl text-xs font-bold text-center block shadow-md">
+                        Ver Ficha Completa &rarr;
+                    </a>
+                </template>
+                <div class="flex gap-2">
+                    <button type="button" @click="enfocarNodo(nodoSeleccionado.id)" class="flex-1 py-1.5 rounded-xl border border-[#1e232d] bg-[#12151b] hover:bg-[#1c212b] text-gray-300 hover:text-white text-xs font-medium transition">
+                        Centrar
+                    </button>
+                    <button type="button" @click="aislarVecindario(nodoSeleccionado.id)" class="flex-1 py-1.5 rounded-xl border border-[#1e232d] bg-[#12151b] hover:bg-[#1c212b] text-gray-300 hover:text-white text-xs font-medium transition">
+                        Aislar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SCRIPT DE INICIALIZACION Y GESTION DE VIS.JS NETWORK -->
+<script>
+function grafoManager() {
+    return {
+        network: null,
+        datasetNodes: null,
+        datasetEdges: null,
+        tiposSeleccionados: ['Usuario', 'Empresa', 'Habilidad', 'Proyecto', 'Oferta'],
+        subgrafoSeleccionado: '{{ subgrafo_uid|default:"" }}',
+        textoBusqueda: '{{ busqueda|default:"" }}',
+        fisicaActiva: true,
+        layoutJerarquico: false,
+        nodoSeleccionado: null,
+        vecinosDelNodo: [],
+        isFullscreen: false,
+        stats: {{ initial_data_json|safe }}.stats,
+        datosIniciales: {{ initial_data_json|safe }},
+
+        init() {
+            this.inicializarRed(this.datosIniciales);
+
+            document.addEventListener('fullscreenchange', () => {
+                this.isFullscreen = !!document.fullscreenElement;
+                setTimeout(() => {
+                    if (this.network) {
+                        this.network.redraw();
+                        this.network.fit({ animation: { duration: 400 } });
+                    }
+                }, 100);
+            });
+
+            window.addEventListener('resize', () => {
+                if (this.network) {
+                    this.network.redraw();
+                }
+            });
+        },
+
+        inicializarRed(data) {
+            const container = document.getElementById('vis-graph-canvas');
+            
+            this.datasetNodes = new vis.DataSet(data.nodes);
+            this.datasetEdges = new vis.DataSet(data.edges);
+
+            const visData = {
+                nodes: this.datasetNodes,
+                edges: this.datasetEdges
+            };
+
+            const options = {
+                nodes: {
+                    borderWidth: 1.5,
+                    borderWidthSelected: 3,
+                    shadow: { enabled: true, color: 'rgba(0,0,0,0.5)', size: 8, x: 2, y: 3 },
+                    font: { face: 'Helvetica', align: 'center' }
+                },
+                edges: {
+                    width: 1.2,
+                    hoverWidth: 2.5,
+                    selectionWidth: 3,
+                    arrows: { to: { enabled: true, scaleFactor: 0.6 } },
+                    smooth: { enabled: true, type: 'continuous', roundness: 0.2 }
+                },
+                physics: {
+                    enabled: this.fisicaActiva,
+                    solver: 'barnesHut',
+                    barnesHut: {
+                        gravitationalConstant: -3500,
+                        centralGravity: 0.28,
+                        springLength: 110,
+                        springConstant: 0.04,
+                        damping: 0.09,
+                        avoidOverlap: 0.25
+                    },
+                    stabilization: { iterations: 120, updateInterval: 25 }
+                },
+                interaction: {
+                    hover: true,
+                    hoverConnectedEdges: true,
+                    selectConnectedEdges: true,
+                    tooltipDelay: 150,
+                    zoomView: true,
+                    dragView: true,
+                    multiselect: false
+                }
+            };
+
+            this.network = new vis.Network(container, visData, options);
+
+            // Evento Click en Nodo
+            this.network.on('click', (params) => {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    this.seleccionarNodoPorId(nodeId);
+                } else {
+                    this.nodoSeleccionado = null;
+                    this.vecinosDelNodo = [];
+                }
+            });
+
+            // Double Click: Enfocar y expandir
+            this.network.on('doubleClick', (params) => {
+                if (params.nodes.length > 0) {
+                    this.enfocarNodo(params.nodes[0]);
+                }
+            });
+        },
+
+        seleccionarNodoPorId(nodeId) {
+            const node = this.datasetNodes.get(nodeId);
+            if (!node) return;
+
+            this.nodoSeleccionado = node;
+            
+            // Buscar vecinos directos
+            const connectedEdges = this.network.getConnectedEdges(nodeId);
+            const vecinos = [];
+
+            connectedEdges.forEach(edgeId => {
+                const edge = this.datasetEdges.get(edgeId);
+                if (edge) {
+                    const otherId = edge.from === nodeId ? edge.to : edge.from;
+                    const otherNode = this.datasetNodes.get(otherId);
+                    if (otherNode) {
+                        vecinos.push({
+                            id: otherNode.id,
+                            label: otherNode.label,
+                            group: otherNode.group,
+                            relLabel: edge.label || 'Vínculo'
+                        });
+                    }
+                }
+            });
+
+            this.vecinosDelNodo = vecinos;
+        },
+
+        toggleTipo(tipo) {
+            if (this.tiposSeleccionados.includes(tipo)) {
+                if (this.tiposSeleccionados.length === 1) return; // Evitar vaciar
+                this.tiposSeleccionados = this.tiposSeleccionados.filter(t => t !== tipo);
+            } else {
+                this.tiposSeleccionados.push(tipo);
+            }
+            this.cargarDatosGrafo();
+        },
+
+        cargarDatosGrafo() {
+            const params = new URLSearchParams();
+            if (this.subgrafoSeleccionado) {
+                params.set('subgrafo', this.subgrafoSeleccionado);
+            }
+            if (this.tiposSeleccionados.length > 0) {
+                params.set('tipos', this.tiposSeleccionados.join(','));
+            }
+            if (this.textoBusqueda) {
+                params.set('q', this.textoBusqueda);
+            }
+
+            fetch(`{% url 'core:grafo_data_api' %}?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    this.stats = data.stats;
+                    this.datasetNodes.clear();
+                    this.datasetEdges.clear();
+                    this.datasetNodes.add(data.nodes);
+                    this.datasetEdges.add(data.edges);
+                    this.fitNetwork();
+                })
+                .catch(err => console.error('Error cargando datos del grafo:', err));
+        },
+
+        buscarYEnfocar() {
+            if (!this.textoBusqueda.trim()) return;
+            const term = this.textoBusqueda.trim().toLowerCase();
+            
+            const matches = this.datasetNodes.get({
+                filter: (n) => n.label.toLowerCase().includes(term)
+            });
+
+            if (matches.length > 0) {
+                const targetNode = matches[0];
+                this.enfocarNodo(targetNode.id);
+                this.seleccionarNodoPorId(targetNode.id);
+            }
+        },
+
+        enfocarNodo(nodeId) {
+            if (!this.network) return;
+            this.network.focus(nodeId, {
+                scale: 1.3,
+                animation: {
+                    duration: 900,
+                    easingFunction: 'easeInOutQuad'
+                }
+            });
+            this.network.selectNodes([nodeId]);
+            this.seleccionarNodoPorId(nodeId);
+        },
+
+        aislarVecindario(nodeId) {
+            this.subgrafoSeleccionado = nodeId;
+            this.cargarDatosGrafo();
+        },
+
+        toggleFisica() {
+            this.fisicaActiva = !this.fisicaActiva;
+            this.network.setOptions({
+                physics: { enabled: this.fisicaActiva }
+            });
+        },
+
+        toggleLayout() {
+            this.layoutJerarquico = !this.layoutJerarquico;
+            if (this.layoutJerarquico) {
+                this.network.setOptions({
+                    layout: {
+                        hierarchical: {
+                            direction: 'UD',
+                            sortMethod: 'directed',
+                            levelSeparation: 120,
+                            nodeSpacing: 100
+                        }
+                    },
+                    physics: { enabled: false }
+                });
+            } else {
+                this.network.setOptions({
+                    layout: { hierarchical: { enabled: false } },
+                    physics: { enabled: true, solver: 'barnesHut' }
+                });
+            }
+        },
+
+        zoomIn() {
+            const scale = this.network.getScale();
+            this.network.moveTo({ scale: scale * 1.3, animation: { duration: 300 } });
+        },
+
+        zoomOut() {
+            const scale = this.network.getScale();
+            this.network.moveTo({ scale: scale * 0.75, animation: { duration: 300 } });
+        },
+
+        fitNetwork() {
+            if (this.network) {
+                this.network.fit({ animation: { duration: 800, easingFunction: 'easeInOutQuad' } });
+            }
+        },
+
+        toggleFullscreen() {
+            const wrapper = document.getElementById('vis-graph-wrapper');
+            if (!document.fullscreenElement) {
+                if (wrapper.requestFullscreen) {
+                    wrapper.requestFullscreen().catch(err => console.log(err));
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(err => console.log(err));
+                }
+            }
+        },
+
+        exportarPNG() {
+            const canvas = document.querySelector('#vis-graph-canvas canvas');
+            if (!canvas) return;
+            const link = document.createElement('a');
+            link.download = 'WheelsOn_Grafo_Interactivo.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    };
+}
+</script>
+{% endblock %}

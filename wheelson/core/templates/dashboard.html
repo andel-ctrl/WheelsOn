@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Scroll | WheelsOn{% endblock %}
-{% block page_title %}Scroll Principal{% endblock %}
+{% block title %}Inicio | WheelsOn{% endblock %}
+{% block page_title %}Inicio & Novedades{% endblock %}
 
 {% block content %}
 <!-- Layout de 2 Columnas (Center Feed 680px + Right Discovery 340px) idéntico a ejemplo.png -->
@@ -12,39 +12,12 @@
     <!-- ========================================================================= -->
     <div class="w-full max-w-[680px] border-x border-[#1e232d] min-h-screen flex flex-col">
 
-        <!-- Top Header Bar of Center Column (Exacto a ejemplo.png) -->
-        <div class="sticky top-0 z-30 bg-[#0d0f12]/90 backdrop-blur-md border-b border-[#1e232d] px-5 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <span class="font-black text-lg text-white tracking-tight">Scroll</span>
-
-                <!-- Filter Pill Switcher [NEWEST | TRENDING] -->
-                <div class="inline-flex rounded-full bg-[#12151b] border border-[#222731] p-0.5 text-xs font-semibold"
-                     x-data="{ tabFilter: 'newest' }">
-                    <button @click="tabFilter = 'newest'"
-                            :class="tabFilter === 'newest' ? 'bg-[#1c212b] text-white' : 'text-gray-400 hover:text-white'"
-                            class="px-3 py-1 rounded-full transition text-[11px] font-bold uppercase tracking-wider">
-                        NEWEST
-                    </button>
-                    <button @click="tabFilter = 'trending'"
-                            :class="tabFilter === 'trending' ? 'bg-[#1c212b] text-white' : 'text-gray-400 hover:text-white'"
-                            class="px-3 py-1 rounded-full transition text-[11px] font-bold uppercase tracking-wider">
-                        TRENDING
-                    </button>
-                </div>
-            </div>
-
-            <!-- Filter Icon Controls (Sliders exacto a ejemplo.png) -->
-            <div class="flex items-center gap-2">
-                <span class="text-[10px] text-gray-500 font-mono hidden sm:inline">Red Profesional Orientada a Grafos</span>
-                <button class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#161a22] transition" title="Filtrar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                    </svg>
-                </button>
-            </div>
+        <!-- Top Header Bar of Center Column -->
+        <div class="sticky top-0 z-30 bg-[#0d0f12]/90 backdrop-blur-md border-b border-[#1e232d] px-5 py-3.5 flex items-center justify-between">
+            <span class="font-black text-lg text-white tracking-tight">Inicio</span>
         </div>
 
-        <!-- Composer Box ("What are you working on?") (Exacto a ejemplo.png con expansión fluida) -->
+        <!-- Composer Box ("¿En qué estás trabajando?") (Exacto a ejemplo.png con expansión fluida) -->
         <div class="p-4 sm:p-5 border-b border-[#181c24]" x-data="{ expanded: false, descripcion: '', nombre: '', tecnologias: '' }">
             <div class="peer-card p-4 space-y-3 bg-[#0e1116] border border-[#181c24] transition-all duration-200">
                 
@@ -54,8 +27,11 @@
                         {{ current_user.nombre|slice:":1" }}{{ current_user.apellido|slice:":1" }}
                     </div>
                     <div class="flex-1 text-gray-400 hover:text-gray-200 text-xs py-2 px-3 rounded-xl bg-[#090b0e] border border-[#161a22] transition select-none">
-                        What are you working on?
+                        ¿En qué estás trabajando hoy?
                     </div>
+                    <button type="button" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold shadow-sm hover:scale-105 transition flex-shrink-0">
+                        Publicar
+                    </button>
                 </div>
 
                 <!-- Expanded State: Formulario interactivo en el feed -->
@@ -83,7 +59,7 @@
 
                     <div class="flex items-center justify-between pt-2 border-t border-[#181c24]">
                         <div class="flex items-center gap-3 text-gray-400 text-xs">
-                            <span class="text-[11px] text-gray-500 hidden sm:inline">Compartir como Proof of Work</span>
+                            <span class="text-[11px] text-gray-500 hidden sm:inline">Compartir como logro técnico</span>
                             <a href="{% url 'core:proyecto_crear' %}" class="text-[11px] text-emerald-400/80 hover:text-emerald-300 hover:underline">
                                 Formulario completo &rarr;
                             </a>
@@ -93,45 +69,11 @@
                                 Cancelar
                             </button>
                             <button type="submit" class="peer-btn-green px-5 py-1.5 rounded-full text-xs font-bold shadow-md hover:scale-105 transition">
-                                Post
+                                Publicar
                             </button>
                         </div>
                     </div>
                 </form>
-
-                <!-- Iconos de acción rápida debajo cuando está colapsado -->
-                <div x-show="!expanded" class="flex items-center justify-between pt-2 border-t border-[#181c24]">
-                    <div class="flex items-center gap-4 text-gray-400">
-                        <!-- Image Icon -->
-                        <button type="button" @click="expanded = true" class="hover:text-emerald-400 transition" title="Añadir captura">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </button>
-                        <!-- Video Icon -->
-                        <button type="button" @click="expanded = true" class="hover:text-emerald-400 transition" title="Video demo">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                        </button>
-                        <!-- Code / Brackets Icon -->
-                        <button type="button" @click="expanded = true" class="hover:text-emerald-400 transition" title="Stack tecnológico">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                            </svg>
-                        </button>
-                        <!-- Document Icon -->
-                        <button type="button" @click="expanded = true" class="hover:text-emerald-400 transition" title="Proof of work">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <button type="button" @click="expanded = true" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold shadow-sm hover:scale-105 transition">
-                        Post
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -167,15 +109,37 @@
                                     </span>
                                 </div>
                                 <p class="text-[11px] text-gray-500 font-mono">
-                                    @{{ item.autor.nombre|default:"user"|lower }} &bull; #show &bull; {{ item.fecha }}
+                                    @{{ item.autor.nombre|default:"usuario"|lower }} &bull; #lanzamiento &bull; {{ item.fecha }}
                                 </p>
                             </div>
                         </div>
 
-                        <!-- 3-Dots Menu -->
-                        <div class="text-gray-500 hover:text-white cursor-pointer px-1">
-                            •••
+                        <!-- 3-Dots Menu (Solo visible para el propietario del proyecto) -->
+                        {% if current_user and item.autor and item.autor.uid == current_user.uid %}
+                        <div class="dropdown dropdown-end">
+                            <label tabindex="0" class="btn btn-ghost btn-xs text-gray-400 hover:text-white px-1.5 rounded-lg cursor-pointer">
+                                •••
+                            </label>
+                            <ul tabindex="0" class="dropdown-content menu p-2 shadow-2xl bg-[#161a22] border border-[#222731] rounded-xl w-36 text-xs z-30">
+                                <li>
+                                    <a href="{% url 'core:proyecto_editar' pid=item.proyecto.pid %}" class="flex items-center gap-2 hover:bg-[#202632] text-gray-300 hover:text-white py-1.5 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        <span>Editar</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'core:proyecto_eliminar' pid=item.proyecto.pid %}" class="flex items-center gap-2 hover:bg-rose-500/20 text-rose-400 py-1.5 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        <span>Eliminar</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
+                        {% endif %}
                     </div>
 
                     <!-- Post Hook & Text Content -->
@@ -185,7 +149,7 @@
                         </p>
                         <p class="text-gray-400">
                             {{ item.proyecto.descripcion|default:"Proyecto de desarrollo e investigación relacional sobre grafos en la plataforma WheelsOn."|truncatewords:24 }}
-                            <a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" class="text-[#00b84c] font-semibold hover:underline">Read More</a>
+                            <a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" class="text-[#00b84c] font-semibold hover:underline">Leer más</a>
                         </p>
                     </div>
 
@@ -193,7 +157,7 @@
                     <a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" class="block border border-[#161a22] hover:border-[#222834] rounded-xl p-3.5 bg-[#090b0e] transition">
                         <div class="flex items-center justify-between gap-3">
                             <div class="space-y-1 min-w-0">
-                                <h4 class="font-bold text-xs text-white truncate">{{ item.proyecto.nombre }}: proof of work | WheelsOn</h4>
+                                <h4 class="font-bold text-xs text-white truncate">{{ item.proyecto.nombre }}: logro técnico | WheelsOn</h4>
                                 <p class="text-[11px] text-gray-400 line-clamp-1">
                                     Stack: {{ item.tecnologias|join:", "|default:"Python, Neo4j, Cypher" }}
                                 </p>
@@ -203,44 +167,10 @@
                                 </div>
                             </div>
                             <div class="w-16 h-12 rounded-lg bg-[#0e1116] border border-[#181c24] flex items-center justify-center text-xs font-mono text-[#00b84c] flex-shrink-0">
-                                Proof
+                                Proyecto
                             </div>
                         </div>
                     </a>
-
-                    <!-- Engagement Footer Bar (Exacto a ejemplo.png) -->
-                    <div class="flex items-center justify-between pt-1 text-xs text-gray-400">
-                        <div class="flex items-center gap-5">
-                            <!-- Comments -->
-                            <button class="flex items-center gap-1.5 hover:text-white transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                                <span class="text-[11px]">0</span>
-                            </button>
-                            <!-- Repost -->
-                            <button class="flex items-center gap-1.5 hover:text-white transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                <span class="text-[11px]">0</span>
-                            </button>
-                            <!-- Upvote Pill -->
-                            <button class="flex items-center gap-1 px-2.5 py-1 rounded-full border border-[#1f2532] hover:border-[#00b84c] hover:text-[#00b84c] transition text-[11px] font-bold">
-                                <span>⇧</span>
-                                <span>1</span>
-                            </button>
-                        </div>
-
-                        <!-- Share & Bookmark -->
-                        <div class="flex items-center gap-2">
-                            <button class="hover:text-white transition" title="Compartir">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
 
                     <!-- Social Proof Subline -->
                     <div class="text-[10px] text-gray-500 pt-1 border-t border-[#181c24] flex items-center gap-1.5">
@@ -270,7 +200,7 @@
                                         {{ item.empresa.nombre|default:"Empresa en WheelsOn" }}
                                     </span>
                                     <span class="badge badge-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[9px] font-bold">
-                                        HIRING
+                                        CONTRATANDO
                                     </span>
                                 </div>
                                 <p class="text-[11px] text-gray-500 font-mono">
@@ -281,7 +211,7 @@
 
                         {% if item.match_pct > 0 %}
                         <span class="badge badge-sm bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 font-bold text-[10px]">
-                            {{ item.match_pct }}% Match
+                            {{ item.match_pct }}% Compatibilidad
                         </span>
                         {% endif %}
                     </div>
@@ -375,88 +305,35 @@
             <!-- Green Action Button "Create Profile" / "+ Proyecto" -->
             <a href="{% url 'core:proyecto_crear' %}"
                class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">
-                Create Profile
+                + Proyecto
             </a>
         </div>
 
-        <!-- WIDGET 1: FEATURED LAUNCH OF THE DAY! (Exacto a ejemplo.png) -->
-        <div class="space-y-2">
-            <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-white">Featured launch of the day!</span>
-                <a href="{% url 'core:proyectos_lista' %}" class="text-[11px] text-gray-500 hover:text-gray-300 underline">
-                    Get featured
-                </a>
-            </div>
-
-            <!-- Featured Launch Card -->
-            {% if feed_items %}
-            {% with p_featured=feed_items.0.proyecto %}
-            <div class="peer-card p-3.5 bg-[#0e1116] flex items-center justify-between gap-3 border border-[#181c24] rounded-2xl">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black flex items-center justify-center text-sm shadow flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    </div>
-                    <div class="min-w-0">
-                        <a href="{% url 'core:proyecto_detalle' pid=p_featured.pid %}" class="font-bold text-xs text-white hover:underline block truncate">
-                            {{ p_featured.nombre }}
-                        </a>
-                        <p class="text-[11px] text-gray-400 truncate mt-0.5">
-                            {{ p_featured.descripcion|default:"Neo4j graph engine & proof of work..." }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Upvote Box Pill (Exacto a ejemplo.png) -->
-                <div class="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg border border-[#1f2532] bg-[#090b0e] hover:border-[#00b84c] text-gray-300 hover:text-[#00b84c] cursor-pointer transition flex-shrink-0">
-                    <span class="text-xs">⇧</span>
-                    <span class="font-bold text-xs">7</span>
-                </div>
-            </div>
-            {% endwith %}
-            {% endif %}
-        </div>
-
-        <!-- WIDGET 2: ACTIVE DISCUSSIONS / COLEGAS RECOMENDADOS (Exacto a ejemplo.png) -->
-        <div class="space-y-3 pt-2">
+        <!-- WIDGET: MIS CONTACTOS (Vecindario Directo de la Persona) -->
+        <div class="space-y-3">
             <div class="flex items-center justify-between text-xs">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-[#00b84c] animate-pulse"></span>
-                    <span class="font-bold text-white">Active Discussions</span>
+                    <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
+                    <span class="font-bold text-white">Mis contactos</span>
                 </div>
-                <a href="{% url 'core:recomendaciones_index' %}?tab=contactos" class="text-gray-500 hover:text-white font-bold text-xs">
-                    &rarr;
+                <a href="{% url 'core:conexiones_red' %}" class="text-[11px] text-[#00b84c] font-bold hover:underline">
+                    Ver red &rarr;
                 </a>
             </div>
 
-            <div class="space-y-3.5">
-                {% for col in colegas_sugeridos %}
-                <div class="space-y-1">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-5 h-5 rounded-full bg-[#151921] text-[10px] text-white font-bold flex items-center justify-center">
-                                {{ col.usuario.nombre|slice:":1" }}
-                            </div>
-                            <a href="{% url 'core:usuario_detalle' uid=col.usuario.uid %}" class="font-bold text-xs text-white hover:underline">
-                                {{ col.usuario.nombre_completo }}
-                            </a>
-                        </div>
-                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#00b84c]/20 text-[#00b84c]">
-                            P LAUNCH
-                        </span>
+            <div class="space-y-2">
+                {% for c in mis_contactos %}
+                <a href="{% url 'core:usuario_detalle' uid=c.usuario.uid %}" class="flex items-center gap-2.5 p-2 rounded-xl bg-[#0e1116] border border-[#181c24] hover:border-[#222834] hover:bg-[#12151b] transition">
+                    <div class="w-8 h-8 rounded-full bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                        {{ c.usuario.nombre|slice:":1" }}{{ c.usuario.apellido|slice:":1" }}
                     </div>
-
-                    <p class="text-[11px] text-gray-400 line-clamp-2 pl-7">
-                        {{ col.usuario.titulo_profesional|default:"Especialista de software en la red WheelsOn." }}
-                    </p>
-
-                    <p class="text-[10px] text-gray-500 pl-7 hover:text-gray-400 cursor-pointer">
-                        {{ col.motivo|default:"Amigo en común en la red" }} &rarr;
-                    </p>
-                </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="font-bold text-xs text-white block truncate hover:underline">{{ c.usuario.nombre_completo }}</span>
+                        <span class="text-[10px] text-gray-500 block truncate font-mono">{{ c.usuario.titulo_profesional|default:"Miembro de la red" }}</span>
+                    </div>
+                </a>
                 {% empty %}
-                <p class="text-xs text-gray-500">Sin miembros pendientes</p>
+                <p class="text-xs text-gray-500">Aún no tienes contactos conectados.</p>
                 {% endfor %}
             </div>
         </div>
@@ -465,7 +342,7 @@
         {% if empleos_sugeridos %}
         <div class="space-y-3 pt-2 border-t border-[#181c24]">
             <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-white">Jobs for you</span>
+                <span class="font-bold text-white">Empleos para ti</span>
                 <a href="{% url 'core:ofertas_lista' %}" class="text-xs text-[#00b84c] font-bold hover:underline">
                     Ver todos
                 </a>

@@ -795,6 +795,51 @@ class RecommendationEngineTest(TestCase):
         self.assertNotIn("active_user_uid", self.client.session)
 
 
+class Fase9VisualizacionGrafoTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_grafo_interactivo_view_renders(self):
+        res = self.client.get(reverse("core:grafo_interactivo"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Explorador de Grafo Interactivo")
+        self.assertContains(res, "vis-graph-canvas")
+        self.assertContains(res, "Vis.js Network")
+
+    def test_grafo_data_api_returns_valid_structure(self):
+        res = self.client.get(reverse("core:grafo_data_api"))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res["content-type"], "application/json")
+        data = res.json()
+        self.assertIn("nodes", data)
+        self.assertIn("edges", data)
+        self.assertIn("stats", data)
+        self.assertGreater(data["stats"]["total_nodos"], 0)
+        self.assertGreater(data["stats"]["total_aristas"], 0)
+
+    def test_grafo_data_api_filter_types(self):
+        res = self.client.get(reverse("core:grafo_data_api") + "?tipos=Usuario,Empresa")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        for node in data["nodes"]:
+            self.assertIn(node["group"], ["Usuario", "Empresa"])
+
+    def test_grafo_data_api_subgraph(self):
+        res = self.client.get(reverse("core:grafo_data_api") + "?subgrafo=usr_carlos001")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        node_ids = [n["id"] for n in data["nodes"]]
+        self.assertIn("usr_carlos001", node_ids)
+
+    def test_grafo_data_api_search(self):
+        res = self.client.get(reverse("core:grafo_data_api") + "?q=Carlos")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        carlos_nodes = [n for n in data["nodes"] if "Carlos" in n["label"]]
+        self.assertGreater(len(carlos_nodes), 0)
+
+
+
 
 
 

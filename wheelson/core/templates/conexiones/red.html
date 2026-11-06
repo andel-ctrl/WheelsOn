@@ -6,34 +6,6 @@
 {% block content %}
 <div class="space-y-6 animate-fade-in-up" x-data="{ showConnectModal: false, targetUid: '', targetNombre: '' }">
 
-    <!-- Active User Selector Bar (Estilo Peerlist Dark) -->
-    <div class="peer-card bg-[#0e1116] border border-[#181c24] p-3.5 rounded-2xl">
-        <form method="GET" class="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-[#00b84c]/20 text-[#00b84c] flex items-center justify-center font-bold">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="font-bold text-xs text-white">Perspectiva Activa en la Red</h3>
-                    <p class="text-[11px] text-gray-500 font-mono">Explorando subgrafo de 1er grado:</p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <select name="uid" onchange="this.form.submit()" class="bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-1.5 focus:outline-none w-full sm:w-64 font-medium">
-                    {% for u in usuarios %}
-                    <option value="{{ u.uid }}" {% if usuario_activo and usuario_activo.uid == u.uid %}selected{% endif %}>
-                        {{ u.nombre_completo }} ({{ u.titulo_profesional|default:"Profesional" }})
-                    </option>
-                    {% endfor %}
-                </select>
-                <noscript><button type="submit" class="peer-btn-green px-3 py-1.5 rounded-full text-xs font-bold">Ver</button></noscript>
-            </div>
-        </form>
-    </div>
-
     {% if usuario_activo %}
     <!-- Active User Hero Banner (Camuflado) -->
     <div class="peer-card p-5 rounded-2xl bg-[#0e1116] border border-[#181c24] flex flex-col sm:flex-row items-center justify-between gap-4">

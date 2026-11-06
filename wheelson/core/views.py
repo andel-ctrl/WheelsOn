@@ -1,5 +1,6 @@
 from datetime import date
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from django.contrib import messages
 from core.forms import (
     UsuarioForm,
@@ -34,13 +35,14 @@ from core.services import (
 from core.graph_queries import GraphAnalyticsService
 from core.recommendations import RecommendationEngine
 from core.analytics import NetworkAnalyticsService
+from core.graph_viz import GrafoVisualizacionService
 import json
 
 
 def dashboard(request):
     all_users = UsuarioService.all()
     active_uid = request.session.get("active_user_uid")
-    current_user = UsuarioService.get(active_uid) if active_uid else (UsuarioService.get("usr_carlos001") or (all_users[0] if all_users else None))
+    current_user = UsuarioService.get(active_uid) if active_uid else (UsuarioService.get("usr_mateo005") or (all_users[0] if all_users else None))
     uid_ref = current_user.uid if current_user else ""
 
     if request.method == "POST":
@@ -148,6 +150,7 @@ def dashboard(request):
     feed_items.sort(key=lambda x: x.get("orden", 5))
 
     # Widgets de Descubrimiento de Grafo para la columna derecha
+    mis_contactos = ConexionService.listar(uid_ref) if uid_ref else []
     colegas_sugeridos = RecommendationEngine.recomendar_contactos(uid_ref, limit=4) if uid_ref else []
     empleos_sugeridos = RecommendationEngine.recomendar_empleos(uid_ref, limit=3) if uid_ref else []
     habilidades_trending = GraphAnalyticsService.habilidades_mas_demandadas(limit=6)
@@ -163,6 +166,7 @@ def dashboard(request):
         "usuarios_recientes": all_users[:5],
         "ofertas_recientes": ofertas[:5],
         "feed_items": feed_items,
+        "mis_contactos": mis_contactos,
         "colegas_sugeridos": colegas_sugeridos,
         "empleos_sugeridos": empleos_sugeridos,
         "habilidades_trending": habilidades_trending,
@@ -898,6 +902,54 @@ def logout_view(request):
     request.session.flush()
     messages.info(request, "Has cerrado sesión correctamente. ¡Hasta pronto!")
     return redirect("core:login")
+
+
+# ==============================================================================
+# FASE 9: VISUALIZACIÓN INTERACTIVA DE GRAFOS CON VIS.JS
+# ==============================================================================
+
+def grafo_interactivo(request):
+    """
+    Vista principal del explorador interactivo de grafos con Vis.js Network.
+    Permite visualizar la red completa o subgrafos egocéntricos con controles de física y filtros.
+    """
+    subgrafo_uid = request.GET.get("subgrafo", "").strip() or None
+    busqueda = request.GET.get("q", "").strip() or None
+    
+    # Obtener datos iniciales
+    datos_grafo = GrafoVisualizacionService.obtener_datos_grafo(
+        subgrafo_uid=subgrafo_uid,
+        busqueda=busqueda
+    )
+
+    context = {
+        "subgrafo_uid": subgrafo_uid,
+        "busqueda": busqueda or "",
+        "usuarios_para_filtro": UsuarioService.all(),
+        "stats": datos_grafo["stats"],
+        "initial_data_json": json.dumps(datos_grafo),
+    }
+    return render(request, "grafo/interactivo.html", context)
+
+
+def grafo_data_api(request):
+    """
+    Endpoint JSON que provee nodos y aristas filtradas dinámicamente para Vis.js Network.
+    Soporta filtros por tipo de nodo, búsqueda por texto y subgrafos por UID.
+    """
+    subgrafo_uid = request.GET.get("subgrafo", "").strip() or None
+    busqueda = request.GET.get("q", "").strip() or None
+    tipos_str = request.GET.get("tipos", "").strip()
+    
+    tipos_nodo = [t.strip() for t in tipos_str.split(",") if t.strip()] if tipos_str else None
+
+    datos = GrafoVisualizacionService.obtener_datos_grafo(
+        subgrafo_uid=subgrafo_uid,
+        tipos_nodo=tipos_nodo,
+        busqueda=busqueda
+    )
+    return JsonResponse(datos)
+
 
 
 

@@ -42,9 +42,9 @@ def social_context(request):
             "dev_mode": request.session.get("dev_mode", False),
         }
 
-    # Si no hay usuario en sesion, fijar usr_carlos001 o el primero de la lista
+    # Si no hay usuario en sesion, fijar usr_mateo005 (Tech Lead) o el primero de la lista
     if not current_user:
-        current_user = UsuarioService.get("usr_carlos001") or all_users[0]
+        current_user = UsuarioService.get("usr_mateo005") or all_users[0]
         request.session["active_user_uid"] = current_user.uid
 
     # Toggle de modo dev (inspector Cypher)
