@@ -229,3 +229,35 @@ function panelAvisos(uid) {
             .catch(function () { window.location.href = enlace.href; });
     });
 })();
+
+/* Tema claro u oscuro. Se guarda en este navegador. Los gráficos y el grafo se dibujan en
+   un lienzo con sus colores ya calculados, así que esas páginas se recargan al cambiar. */
+(function () {
+    var CLAVE = 'wheelson-tema';
+    function actual() { return document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro'; }
+    function marcar() {
+        var tema = actual();
+        document.querySelectorAll('[data-ws-tema]').forEach(function (boton) {
+            boton.setAttribute('aria-pressed', boton.getAttribute('data-ws-tema') === tema ? 'true' : 'false');
+        });
+        var color = document.querySelector('meta[name="theme-color"]');
+        if (color) { color.setAttribute('content', tema === 'oscuro' ? '#07090C' : '#FAF7F6'); }
+    }
+    document.addEventListener('click', function (evento) {
+        var boton = evento.target.closest ? evento.target.closest('[data-ws-tema]') : null;
+        if (!boton) { return; }
+        var tema = boton.getAttribute('data-ws-tema');
+        if (tema === actual()) { return; }
+        if (tema === 'oscuro') { document.documentElement.setAttribute('data-tema', 'oscuro'); } else { document.documentElement.removeAttribute('data-tema'); }
+        try { localStorage.setItem(CLAVE, tema); } catch (e) {}
+        marcar();
+        if (document.querySelector('canvas, #user-constellation-network, #vis-graph-canvas')) { window.location.reload(); }
+    }, true); // En captura: el menú móvil detiene los clics antes de que lleguen al documento
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', marcar); } else { marcar(); }
+    // El login cambia su ola y la foto solo por CSS; otras pestañas se enteran al guardar
+    window.addEventListener('storage', function (evento) {
+        if (evento.key !== CLAVE) { return; }
+        if (evento.newValue === 'oscuro') { document.documentElement.setAttribute('data-tema', 'oscuro'); } else { document.documentElement.removeAttribute('data-tema'); }
+        marcar();
+    });
+})();

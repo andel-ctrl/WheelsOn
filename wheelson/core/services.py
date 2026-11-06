@@ -267,14 +267,33 @@ class EmpresaService:
         return True
 
     @staticmethod
-    def pagina(q="", skip=0, limit=6):
+    def pagina(q="", skip=0, limit=6, uid=""):
+        """Primero las que administras, luego donde trabajas hoy y después las demás."""
         return pagina_de_nodos(
             Empresa,
             """$q = '' OR toLower(coalesce(n.nombre, '')) CONTAINS $q
                OR toLower(coalesce(n.industria, '')) CONTAINS $q
                OR toLower(coalesce(n.ubicacion, '')) CONTAINS $q""",
-            "toLower(n.nombre)", skip, limit, q=q,
+            """CASE WHEN EXISTS { (:Usuario {uid: $uid})-[:ADMINISTRA]->(n) } THEN 0
+                    WHEN EXISTS { (:Usuario {uid: $uid})-[t:TRABAJA_EN]->(n) WHERE coalesce(t.actual, true) } THEN 1
+                    ELSE 2 END, toLower(n.nombre)""",
+            skip, limit, q=q, uid=str(uid or ""),
         )
+
+    @staticmethod
+    def relacion_de(uid, ids):
+        """{eid: 'administra' | 'trabaja'} de esta persona, solo con las empresas indicadas."""
+        filas = consulta(
+            """
+            MATCH (u:Usuario {uid: $uid}), (e:Empresa) WHERE e.eid IN $ids
+            WITH e, EXISTS { (u)-[:ADMINISTRA]->(e) } AS administra,
+                 EXISTS { (u)-[t:TRABAJA_EN]->(e) WHERE coalesce(t.actual, true) } AS trabaja
+            WHERE administra OR trabaja
+            RETURN e.eid, CASE WHEN administra THEN 'administra' ELSE 'trabaja' END
+            """,
+            uid=str(uid or ""), ids=ids,
+        )
+        return dict(filas)
 
     @staticmethod
     def resumen_edificios(ids=None):
@@ -369,17 +388,34 @@ class HabilidadService:
 
 class ProyectoService:
     @staticmethod
-    def pagina(q="", estado="", skip=0, limit=6):
-        """Los activos primero; dentro de cada estado, los más recientes."""
+    def pagina(q="", estado="", skip=0, limit=6, uid=""):
+        """Primero los que lideras y donde participas; luego, activos y más recientes."""
         return pagina_de_nodos(
             Proyecto,
             """($estado = '' OR n.estado = $estado)
                AND ($q = '' OR toLower(n.nombre) CONTAINS $q
                     OR toLower(coalesce(n.descripcion, '')) CONTAINS $q
                     OR any(t IN coalesce(n.tecnologias, []) WHERE toLower(t) CONTAINS $q))""",
-            "CASE n.estado WHEN 'activo' THEN 0 WHEN 'pausado' THEN 1 ELSE 2 END, n.fecha_inicio DESC, toLower(n.nombre)",
-            skip, limit, q=q, estado=estado,
+            """CASE WHEN EXISTS { (:Usuario {uid: $uid})-[:LIDERA]->(n) } THEN 0
+                    WHEN EXISTS { (:Usuario {uid: $uid})-[:PARTICIPA_EN]->(n) } THEN 1
+                    ELSE 2 END,
+               CASE n.estado WHEN 'activo' THEN 0 WHEN 'pausado' THEN 1 ELSE 2 END, n.fecha_inicio DESC, toLower(n.nombre)""",
+            skip, limit, q=q, estado=estado, uid=str(uid or ""),
         )
+
+    @staticmethod
+    def relacion_de(uid, ids):
+        """{pid: 'lidera' | 'participa'} de esta persona, solo con los proyectos indicados."""
+        filas = consulta(
+            """
+            MATCH (u:Usuario {uid: $uid}), (p:Proyecto) WHERE p.pid IN $ids
+            WITH p, EXISTS { (u)-[:LIDERA]->(p) } AS lidera, EXISTS { (u)-[:PARTICIPA_EN]->(p) } AS participa
+            WHERE lidera OR participa
+            RETURN p.pid, CASE WHEN lidera THEN 'lidera' ELSE 'participa' END
+            """,
+            uid=str(uid or ""), ids=ids,
+        )
+        return dict(filas)
 
     @staticmethod
     def resumen_carpetas(ids=None):

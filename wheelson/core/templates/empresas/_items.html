@@ -1,6 +1,7 @@
 {% load wheelson_ui %}
 {% for e in empresas %}
-<article class="ws-edificio">
+<article class="ws-edificio{% if e.relacion %} ws-edificio--mia{% endif %}">
+    {% if e.relacion %}<p class="ws-edificio__mia">{% if e.relacion == 'administra' %}La administras{% else %}Trabajas aquí{% endif %}</p>{% endif %}
     <a class="ws-edificio__cielo" href="{% url 'core:empresa_detalle' eid=e.eid %}" tabindex="-1" aria-hidden="true">
         <span class="ws-edificio__sol"></span>
         {% skyline e.eid e.tamano e.resumen.empleados %}

@@ -399,9 +399,11 @@ def usuario_eliminar(request, uid):
 def empresas_lista(request):
     query = request.GET.get("q", "").strip().lower()
     pag = _paginacion(request, 6)
-    empresas, total = EmpresaService.pagina(query, pag["skip"], pag["limit"])
+    empresas, total = EmpresaService.pagina(query, pag["skip"], pag["limit"], uid=request.permisos.uid)
     resumen = EmpresaService.resumen_edificios(ids=[e.eid for e in empresas])
+    relaciones = EmpresaService.relacion_de(request.permisos.uid, [e.eid for e in empresas])
     for empresa in empresas:
+        empresa.relacion = relaciones.get(empresa.eid)
         empresa.resumen = resumen.get(empresa.eid, {"empleados": 0, "ofertas": 0})
     return _responder_lista(request, "empresas/lista.html", "empresas/_items.html", "lista-empresas", {"empresas": empresas, "query": query}, pag, total)
 
@@ -828,9 +830,11 @@ def proyectos_lista(request):
     query = request.GET.get("q", "").strip().lower()
     estado = request.GET.get("estado", "").strip().lower()
     pag = _paginacion(request, 6)
-    proyectos, total = ProyectoService.pagina(query, estado, pag["skip"], pag["limit"])
+    proyectos, total = ProyectoService.pagina(query, estado, pag["skip"], pag["limit"], uid=request.permisos.uid)
     miembros, avances = ProyectoService.resumen_carpetas(ids=[p.pid for p in proyectos])
+    relaciones = ProyectoService.relacion_de(request.permisos.uid, [p.pid for p in proyectos])
     for proyecto in proyectos:
+        proyecto.relacion = relaciones.get(proyecto.pid)
         iniciales = miembros.get(proyecto.pid, [])
         proyecto.iniciales = iniciales[:4]
         proyecto.mas_miembros = max(len(iniciales) - 4, 0)

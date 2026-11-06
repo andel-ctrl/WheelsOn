@@ -1,0 +1,226 @@
+/* ==========================================================================
+   Modo oscuro: negro y verde. Se activa con data-tema="oscuro" en <html>.
+   Solo cambia colores: la forma y el movimiento son los mismos del tema claro.
+   ========================================================================== */
+
+html[data-tema="oscuro"] {
+    color-scheme: dark;
+    --bg: #07090C;
+    --surface: #0E1116;
+    --raised: #12151B;
+    --border: #1E232D;
+    --linea: #242B38;
+    --neutro-suave: #161A22;
+    --neutro-fuerte: #2A313D;
+    --control: #566070;
+    --text: #E8EDF2;
+    --text-2: #B4BDC8;
+    --muted: #8E98A6;
+    --primary: #00B84C;
+    --primary-hover: #00D157;
+    --on-primary: #03130A;
+    --primary-soft: rgba(0, 184, 76, 0.16);
+    --accent: #00C853;
+    --accent-text: #2EDB7A;
+    --accent-soft: rgba(0, 184, 76, 0.13);
+    --ok: #2EDB7A;
+    --warn: #E0B341;
+    --err: #FF7070;
+    --info: #6DB0FF;
+    --n-usuario: #6C84F0;
+    --n-empresa: #22C3D0;
+    --n-habilidad: #D4B62E;
+    --n-proyecto: #C65AC1;
+    --n-oferta: #E0693F;
+    --luz-1: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --luz-2: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --sombra-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 18px -12px rgba(0, 0, 0, 0.7);
+    --sombra-2: 0 2px 4px rgba(0, 0, 0, 0.4), 0 22px 40px -24px rgba(0, 0, 0, 0.8);
+    --sombra-3: 0 4px 10px rgba(0, 0, 0, 0.45), 0 40px 70px -28px rgba(0, 0, 0, 0.9);
+    --vidrio: rgba(14, 17, 22, 0.74);
+    --liquido: linear-gradient(150deg, rgba(24, 29, 37, 0.86), rgba(14, 17, 22, 0.64));
+    --liquido-borde: rgba(255, 255, 255, 0.09);
+    --liquido-sombra: inset 0 1px 1px rgba(255, 255, 255, 0.06), 0 18px 40px -24px rgba(0, 0, 0, 0.85);
+    --tinte: rgba(255, 255, 255, 0.06);
+    --grafico-1: #8E98A6;
+    --grafico-2: #00C853;
+    --grafico-borde: #0E1116;
+    /* DaisyUI */
+    --b1: 17.5% 0.012 255; --b2: 20% 0.013 255; --b3: 25% 0.015 255; --bc: 93.5% 0.008 250;
+    --p: 68% 0.2 150; --pc: 13% 0.03 150;
+    --s: 72% 0.12 205; --sc: 13% 0.03 205;
+    --a: 72% 0.2 150; --ac: 13% 0.03 150;
+    --n: 25% 0.015 255; --nc: 93.5% 0.008 250;
+    --in: 72% 0.13 250; --inc: 13% 0.03 250;
+    --su: 75% 0.18 150; --suc: 13% 0.03 150;
+    --wa: 80% 0.14 85; --wac: 13% 0.03 85;
+    --er: 72% 0.17 25; --erc: 13% 0.03 25;
+}
+html[data-tema="oscuro"] [data-theme="wheelson"], html[data-theme="wheelson"][data-tema="oscuro"] { color-scheme: dark; }
+
+/* --- Fondo: las mismas formas líquidas, en verdes casi negros ---------------- */
+html[data-tema="oscuro"] .ws-fondo { background: #07090C; }
+html[data-tema="oscuro"] #fondo-lila stop { stop-color: #0C1A13; }
+html[data-tema="oscuro"] #fondo-lila stop:last-child { stop-color: #0A1410; }
+html[data-tema="oscuro"] #fondo-rosa stop { stop-color: #0B2016; }
+html[data-tema="oscuro"] #fondo-rosa stop:last-child { stop-color: #081510; }
+html[data-tema="oscuro"] #fondo-coral stop { stop-color: #0F3A24; }
+html[data-tema="oscuro"] #fondo-coral stop:last-child { stop-color: #0A1F15; }
+html[data-tema="oscuro"] .ws-fondo__puntos { background-image: radial-gradient(circle, rgba(0, 200, 83, 0.36) 1.1px, transparent 1.6px); }
+
+/* --- Botones ----------------------------------------------------------------- */
+html[data-tema="oscuro"] .ws-btn--primario { background: linear-gradient(180deg, #16D968, #00B84C); color: var(--on-primary); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 18px -8px rgba(0, 200, 83, 0.55); }
+html[data-tema="oscuro"] .ws-btn--primario:hover { background: linear-gradient(180deg, #2AE878, #00C853); color: var(--on-primary); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 12px 22px -8px rgba(0, 200, 83, 0.7); }
+html[data-tema="oscuro"] .ws-btn--primario svg { color: var(--on-primary); }
+html[data-tema="oscuro"] .peer-btn-green { color: var(--on-primary) !important; }
+html[data-tema="oscuro"] .btn-primary, html[data-tema="oscuro"] .btn-accent, html[data-tema="oscuro"] .btn-info, html[data-tema="oscuro"] .btn-secondary { color: var(--on-primary); }
+
+/* --- Barra lateral, cuenta y paneles ----------------------------------------- */
+html[data-tema="oscuro"] .ws-sidebar { background: rgba(14, 17, 22, 0.8); }
+html[data-tema="oscuro"] .ws-nav__sep { background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent); }
+html[data-tema="oscuro"] .ws-nav__item:hover { background: rgba(255, 255, 255, 0.06); }
+html[data-tema="oscuro"] .ws-nav__item.is-activo, html[data-tema="oscuro"] .ws-nav__item.is-activo:hover { border-color: rgba(0, 200, 83, 0.28); background: linear-gradient(100deg, rgba(0, 200, 83, 0.24), rgba(0, 200, 83, 0.05)); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06), 0 10px 20px -12px rgba(0, 200, 83, 0.5); }
+html[data-tema="oscuro"] .ws-cuenta { background: rgba(255, 255, 255, 0.05); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06), 0 14px 28px -20px rgba(0, 0, 0, 0.8); }
+html[data-tema="oscuro"] a.ws-cuenta__titular:hover, html[data-tema="oscuro"] .ws-opcion__boton:hover, html[data-tema="oscuro"] .ws-fila:hover { background: rgba(255, 255, 255, 0.07); }
+html[data-tema="oscuro"] .ws-opcion { border-top-color: rgba(255, 255, 255, 0.08); }
+html[data-tema="oscuro"] .ws-movil-cabecera, html[data-tema="oscuro"] .ws-movil-menu { background: rgba(14, 17, 22, 0.92); }
+html[data-tema="oscuro"] .ws-movil-velo { background: rgba(0, 0, 0, 0.6); }
+html[data-tema="oscuro"] .ws-campana { background: rgba(24, 29, 37, 0.8); }
+html[data-tema="oscuro"] .ws-campana__punto { color: var(--on-primary); }
+html[data-tema="oscuro"] .ws-mensaje--success { border-color: rgba(46, 219, 122, 0.4); }
+html[data-tema="oscuro"] .ws-mensaje--error { border-color: rgba(255, 112, 112, 0.45); }
+html[data-tema="oscuro"] .ws-hito::before, html[data-tema="oscuro"] .ws-panel::before, html[data-tema="oscuro"] .ws-compositor::before { background: radial-gradient(280px circle at var(--x, 50%) var(--y, 0), rgba(0, 200, 83, 0.1), transparent 70%); }
+
+html[data-tema="oscuro"] .ws-nav__item.is-activo::after { background-image: url("../img/rueda-mini-verde.svg"); }
+html[data-tema="oscuro"] .ws-panel-avisos { background: rgba(14, 17, 22, 0.97); border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.9); }
+
+/* --- Avatares ---------------------------------------------------------------- */
+html[data-tema="oscuro"] .ws-avatar--marca, html[data-tema="oscuro"] .ws-hito__nodo--persona { background: linear-gradient(150deg, #232A35, #161A22); border-color: rgba(255, 255, 255, 0.1); color: var(--text); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06), 0 6px 14px -8px rgba(0, 0, 0, 0.8); }
+html[data-tema="oscuro"] .ws-hito__nodo--empresa { background: #1B3A29; color: #D6FFE6; }
+html[data-tema="oscuro"] .ws-persona__foto, html[data-tema="oscuro"] .ws-perfil__foto, html[data-tema="oscuro"] .ws-parada__foto, html[data-tema="oscuro"] .ws-contacto__foto { background: #12151B; color: #D6FFE6; }
+html[data-tema="oscuro"] .ws-persona__foto { box-shadow: 0 0 0 5px #00C853, 0 0 0 9px rgba(0, 200, 83, 0.2), 0 14px 24px -10px rgba(0, 0, 0, 0.8); }
+html[data-tema="oscuro"] .ws-perfil__foto { box-shadow: 0 0 0 6px #00C853, 0 0 0 11px rgba(0, 200, 83, 0.2), 0 18px 28px -12px rgba(0, 0, 0, 0.8); }
+html[data-tema="oscuro"] .ws-parada__foto { box-shadow: 0 0 0 4px #00C853, 0 0 0 7px rgba(0, 200, 83, 0.2); }
+html[data-tema="oscuro"] .ws-contacto__foto { box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.45); }
+html[data-tema="oscuro"] .ws-equipo span { border-color: #12151B; background: #232A35; color: var(--text); }
+html[data-tema="oscuro"] .ws-equipo span.ws-equipo__mas { background: #0A7D3C !important; color: #FFFFFF; }
+
+/* --- Feed -------------------------------------------------------------------- */
+html[data-tema="oscuro"] .ws-hito--proyecto { background: none; }
+html[data-tema="oscuro"] .ws-hito--avance { background: linear-gradient(120deg, rgba(15, 135, 145, 0.2), rgba(14, 17, 22, 0.66)); }
+html[data-tema="oscuro"] .ws-hito__nodo--avance { background: #0E1116; border-color: #22C3D0; box-shadow: 0 0 0 5px rgba(34, 195, 208, 0.16); }
+html[data-tema="oscuro"] .ws-hito--avance::after { background: repeating-linear-gradient(180deg, rgba(34, 195, 208, 0.45) 0 5px, transparent 5px 11px); }
+html[data-tema="oscuro"] .ws-avance__proyecto { color: #5FDCE6; }
+html[data-tema="oscuro"] .ws-hito--oferta { filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.7)); }
+html[data-tema="oscuro"] .ws-oferta { background: linear-gradient(115deg, #141A1E, #10241A); }
+html[data-tema="oscuro"] .ws-oferta::after { background: radial-gradient(closest-side, rgba(0, 200, 83, 0.2), transparent); }
+html[data-tema="oscuro"] .ws-oferta__talon { border-right-color: rgba(46, 219, 122, 0.35); }
+html[data-tema="oscuro"] .ws-hito--conexion { background: linear-gradient(100deg, rgba(108, 132, 240, 0.16), rgba(14, 17, 22, 0.7)); }
+html[data-tema="oscuro"] .ws-enlace-personas__union { background: #1E232D; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+html[data-tema="oscuro"] .ws-percepcion__btn { background: rgba(255, 255, 255, 0.06); box-shadow: 0 6px 14px -10px rgba(0, 0, 0, 0.8); }
+
+html[data-tema="oscuro"] .ws-medidor { background: radial-gradient(closest-side, #0E1116 78%, transparent 80%), conic-gradient(var(--accent) calc(var(--pct) * 1%), rgba(255, 255, 255, 0.12) 0); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 14px 26px -16px rgba(0, 200, 83, 0.6); }
+
+/* --- Campos ------------------------------------------------------------------ */
+html[data-tema="oscuro"] .ws-buscador input, html[data-tema="oscuro"] .ws-buscador select, html[data-tema="oscuro"] .ws-selector select, html[data-tema="oscuro"] .ws-acceso__caja input.input { background: rgba(18, 21, 27, 0.9); border-color: rgba(255, 255, 255, 0.14); color: var(--text); }
+html[data-tema="oscuro"] .ws-campo { background: rgba(18, 21, 27, 0.9); border-color: rgba(255, 255, 255, 0.14); color: var(--text); }
+html[data-tema="oscuro"] .ws-cypher__codigo { background: rgba(255, 255, 255, 0.05); }
+
+/* --- Acceso ------------------------------------------------------------------ */
+html[data-tema="oscuro"] .ws-acceso__visual { background: #07090C; }
+html[data-tema="oscuro"] .ws-acceso__visual::after { background: linear-gradient(180deg, rgba(4, 12, 8, 0.66) 0%, rgba(4, 12, 8, 0.06) 26%, rgba(4, 12, 8, 0.12) 46%, rgba(3, 18, 10, 0.88) 76%, rgba(3, 12, 8, 0.97) 100%); }
+html[data-tema="oscuro"] .ws-acceso__logo .ws-logo__e-aro, html[data-tema="oscuro"] .ws-acceso__logo .ws-logo__e-barra { stroke: #2EDB7A; }
+html[data-tema="oscuro"] .ws-acceso__logo .ws-logo__e-masa { fill: #2EDB7A; }
+html[data-tema="oscuro"] .ws-acceso__lema em { color: #2EDB7A; }
+html[data-tema="oscuro"] .ws-acceso__cifras li { text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+html[data-tema="oscuro"] #ola-trazo stop { stop-color: #A6FFCB; }
+html[data-tema="oscuro"] #ola-trazo stop:nth-child(2) { stop-color: #00C853; }
+html[data-tema="oscuro"] #ola-trazo stop:last-child { stop-color: #0B8A42; }
+html[data-tema="oscuro"] .ws-acceso__ola-eco { stroke: rgba(0, 200, 83, 0.3); }
+html[data-tema="oscuro"] .ws-acceso__tarjeta { background: rgba(14, 17, 22, 0.82); }
+html[data-tema="oscuro"] .ws-acceso__demo { border-top-color: rgba(255, 255, 255, 0.09); }
+html[data-tema="oscuro"] .ws-acceso__personas a:hover { background: rgba(255, 255, 255, 0.07); }
+
+/* --- Carpetas ---------------------------------------------------------------- */
+html[data-tema="oscuro"] .ws-carpeta { --tono: linear-gradient(180deg, #0A7D3C, #06592B); --tono-solido: #0A7D3C; }
+html[data-tema="oscuro"] .ws-carpeta--completado { --tono: linear-gradient(180deg, #0F7A84, #0A545B); --tono-solido: #0F7A84; }
+html[data-tema="oscuro"] .ws-carpeta--pausado { --tono: linear-gradient(180deg, #8F6910, #64490B); --tono-solido: #8F6910; }
+html[data-tema="oscuro"] .ws-expediente { --tono: #0A7D3C; --tono-fin: #06592B; }
+html[data-tema="oscuro"] .ws-expediente--completado { --tono: #0F7A84; --tono-fin: #0A545B; }
+html[data-tema="oscuro"] .ws-expediente--pausado { --tono: #8F6910; --tono-fin: #64490B; }
+html[data-tema="oscuro"] .ws-carpeta__espalda, html[data-tema="oscuro"] .ws-expediente__espalda { box-shadow: 0 26px 40px -26px rgba(0, 0, 0, 0.9); }
+html[data-tema="oscuro"] .ws-carpeta__hoja { background: linear-gradient(#222933, #1A2029); box-shadow: 0 -4px 12px -6px rgba(0, 0, 0, 0.7); }
+html[data-tema="oscuro"] .ws-carpeta__hoja--atras { background: #151A21; }
+html[data-tema="oscuro"] .ws-carpeta__frente, html[data-tema="oscuro"] .ws-expediente__frente { border-color: rgba(255, 255, 255, 0.09); background: linear-gradient(160deg, #161B22, #101E18); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 -8px 18px -12px rgba(0, 0, 0, 0.8); }
+html[data-tema="oscuro"] .ws-expediente__foto { border-color: #222933; box-shadow: 0 -6px 16px -8px rgba(0, 0, 0, 0.7); }
+html[data-tema="oscuro"] .ws-expediente__hoja { background: repeating-linear-gradient(180deg, #222933 0 15px, #1A2029 15px 16px); box-shadow: 0 -6px 16px -8px rgba(0, 0, 0, 0.7); }
+
+html[data-tema="oscuro"] .ws-carpeta__mia { background: #E8FFF1; color: #04331A; }
+html[data-tema="oscuro"] .ws-carpeta--mia .ws-carpeta__frente { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent), 0 -8px 18px -12px rgba(0, 0, 0, 0.8); }
+html[data-tema="oscuro"] .ws-edificio__mia { background: #2EDB7A; color: #04331A; }
+
+/* --- Pasajes ----------------------------------------------------------------- */
+html[data-tema="oscuro"] .ws-boleto { filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.7)); }
+html[data-tema="oscuro"] .ws-boleto__papel, html[data-tema="oscuro"] .ws-ruta__linea em { background: #141920; }
+html[data-tema="oscuro"] .ws-boleto--cerrado .ws-boleto__papel, html[data-tema="oscuro"] .ws-boleto--cerrado .ws-ruta__linea em { background: #111419; }
+html[data-tema="oscuro"] .ws-boleto__cuerpo::after { background: repeating-linear-gradient(90deg, #B4BDC8 0 2px, transparent 2px 5px, #B4BDC8 5px 6px, transparent 6px 8px, #B4BDC8 8px 11px, transparent 11px 13px, #B4BDC8 13px 14px, transparent 14px 18px); }
+html[data-tema="oscuro"] .ws-boleto__talon { background: radial-gradient(130px 90px at 100% 0, rgba(46, 219, 122, 0.3), transparent 72%), linear-gradient(165deg, #0A7A3B, #065C2C 62%, #04331A); }
+html[data-tema="oscuro"] .ws-boleto--cerrado .ws-boleto__talon { background: linear-gradient(165deg, #333B47, #1E232D); }
+html[data-tema="oscuro"] .ws-boleto__talon .ws-btn--primario, html[data-tema="oscuro"] .ws-boleto__talon .ws-btn--primario:hover { background: #E8FFF1; color: #04331A; box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.8); }
+
+/* --- Edificios: la misma ciudad, de noche ------------------------------------ */
+html[data-tema="oscuro"] .ws-edificio__cielo { background: linear-gradient(180deg, #05070A 0%, #0A1F14 55%, #0F4A2B 100%); }
+html[data-tema="oscuro"] .ws-edificio__sol { background: radial-gradient(circle, #E3FFEE, #6FEFA6 72%); box-shadow: 0 0 44px 10px rgba(46, 219, 122, 0.35); }
+html[data-tema="oscuro"] .ws-torres rect { fill: #0A0D11; }
+html[data-tema="oscuro"] .ws-apagada { fill: #1E2630; }
+html[data-tema="oscuro"] .ws-luz { fill: #2EDB7A; }
+html[data-tema="oscuro"] .ws-edificio:hover .ws-luz { fill: #A6FFCB; }
+html[data-tema="oscuro"] .ws-pisos, html[data-tema="oscuro"] .ws-pisos div + div { border-color: rgba(255, 255, 255, 0.1); }
+
+/* --- Personas ---------------------------------------------------------------- */
+html[data-tema="oscuro"] .ws-persona, html[data-tema="oscuro"] .ws-perfil { background: linear-gradient(150deg, #161B22, #0F1419); }
+html[data-tema="oscuro"] .ws-persona__ola stop:first-child, html[data-tema="oscuro"] .ws-perfil__ola stop:first-child { stop-color: #00C853; }
+html[data-tema="oscuro"] .ws-persona__ola stop:last-child, html[data-tema="oscuro"] .ws-perfil__ola stop:last-child { stop-color: #0B8A42; }
+html[data-tema="oscuro"] .ws-persona__ola path[fill="#3B2147"], html[data-tema="oscuro"] .ws-perfil__ola path[fill="#3B2147"] { fill: #0D2E1D; }
+html[data-tema="oscuro"] .ws-persona__trazo { background: linear-gradient(90deg, var(--accent) 60%, #A6FFCB 60%); }
+html[data-tema="oscuro"] .ws-persona__nota, html[data-tema="oscuro"] .ws-candidato__carta { background: rgba(255, 255, 255, 0.06); }
+html[data-tema="oscuro"] .ws-grado__marcas i, html[data-tema="oscuro"] .ws-nivel__barra { background: rgba(255, 255, 255, 0.12); }
+html[data-tema="oscuro"] .ws-grado__marcas i.es-llena, html[data-tema="oscuro"] .ws-nivel__barra i { background: linear-gradient(90deg, #00B84C, #2EDB7A); }
+
+/* --- Mi Red ------------------------------------------------------------------ */
+html[data-tema="oscuro"] .ws-bandeja { background: linear-gradient(120deg, #10241A, rgba(14, 17, 22, 0.9)); }
+html[data-tema="oscuro"] .ws-bandeja__fila, html[data-tema="oscuro"] .ws-renglon, html[data-tema="oscuro"] .ws-entrada, html[data-tema="oscuro"] .ws-candidato { border-color: rgba(255, 255, 255, 0.08); }
+html[data-tema="oscuro"] .ws-contacto, html[data-tema="oscuro"] .ws-catalogo__item { background: rgba(24, 29, 37, 0.82); box-shadow: 0 10px 22px -18px rgba(0, 0, 0, 0.9); }
+html[data-tema="oscuro"] .ws-contacto:hover { background: #1C222B; }
+html[data-tema="oscuro"] .ws-quizas { background: radial-gradient(200px 140px at 100% 0, rgba(0, 200, 83, 0.4), transparent 72%), linear-gradient(165deg, #0F2A1C, #070B0A); box-shadow: 0 24px 40px -24px rgba(0, 0, 0, 0.9); border: 1px solid rgba(0, 200, 83, 0.18); }
+html[data-tema="oscuro"] .ws-quizas__bajada, html[data-tema="oscuro"] .ws-quizas__motivo { color: #D0DAD4; }
+html[data-tema="oscuro"] .ws-quizas__foto { background: #12151B; color: #D6FFE6; box-shadow: 0 0 0 3px #00C853; }
+html[data-tema="oscuro"] .ws-quizas__conectar { color: #2EDB7A; }
+
+/* --- Fichas ------------------------------------------------------------------ */
+html[data-tema="oscuro"] .ws-quitar:hover { background: rgba(255, 112, 112, 0.15); }
+html[data-tema="oscuro"] .ws-trayecto li::before { background: #0E1116; border-color: rgba(255, 255, 255, 0.3); }
+html[data-tema="oscuro"] .ws-trayecto li.es-actual::before { background: var(--accent); border-color: var(--accent); }
+html[data-tema="oscuro"] .ws-trayecto li::after { background: rgba(255, 255, 255, 0.12); }
+html[data-tema="oscuro"] .ws-constelacion { background: rgba(255, 255, 255, 0.03); }
+
+/* --- Colores fijos de las pantallas heredadas -------------------------------- */
+html[data-tema="oscuro"] .bg-\[\#0e1116\]\/95, html[data-tema="oscuro"] .bg-\[\#0e1116\]\/90 { background-color: rgba(14, 17, 22, 0.94) !important; }
+html[data-tema="oscuro"] .text-emerald-400 { color: #2EDB7A !important; }
+html[data-tema="oscuro"] .bg-gray-800 { background-color: #1E232D !important; }
+html[data-tema="oscuro"] .text-cyan-400 { color: #5FDCE6 !important; }
+html[data-tema="oscuro"] .text-amber-400 { color: #E0B341 !important; }
+html[data-tema="oscuro"] .text-red-400, html[data-tema="oscuro"] .hover\:text-red-400:hover, html[data-tema="oscuro"] .hover\:text-red-300:hover { color: #FF7070 !important; }
+html[data-tema="oscuro"] .hover\:text-purple-400:hover { color: #2EDB7A !important; }
+html[data-tema="oscuro"] .bg-\[\#00b84c\]\/10, html[data-tema="oscuro"] .bg-emerald-500\/10 { background-color: rgba(0, 184, 76, 0.1) !important; }
+html[data-tema="oscuro"] .bg-\[\#00b84c\]\/15 { background-color: rgba(0, 184, 76, 0.15) !important; }
+html[data-tema="oscuro"] .bg-\[\#00b84c\]\/20 { background-color: rgba(0, 184, 76, 0.2) !important; }
+html[data-tema="oscuro"] .border-\[\#00b84c\]\/20, html[data-tema="oscuro"] .border-\[\#00b84c\]\/30, html[data-tema="oscuro"] .border-\[\#00b84c\]\/40, html[data-tema="oscuro"] .border-emerald-500\/20, html[data-tema="oscuro"] .border-emerald-500\/30, html[data-tema="oscuro"] .border-purple-800\/40 { border-color: rgba(0, 184, 76, 0.35) !important; }
+html[data-tema="oscuro"] .hover\:bg-emerald-500\/10:hover, html[data-tema="oscuro"] .hover\:bg-emerald-500\/20:hover { background-color: rgba(0, 184, 76, 0.16) !important; }
+html[data-tema="oscuro"] .border-rose-900\/50, html[data-tema="oscuro"] .border-purple-500\/20, html[data-tema="oscuro"] .border-purple-500\/30, html[data-tema="oscuro"] .border-purple-500\/40 { border-color: rgba(0, 184, 76, 0.3) !important; }
+html[data-tema="oscuro"] .ws-chip-usuario { background-color: rgba(108, 132, 240, 0.16) !important; color: #A9B8FF !important; border-color: rgba(108, 132, 240, 0.4) !important; }
+html[data-tema="oscuro"] .bg-\[\#00b84c\] { background-color: #2A313D !important; }
+html[data-tema="oscuro"] .bg-gradient-to-tr { background-color: #232A35 !important; }
+
+/* --- Selector de tema -------------------------------------------------------- */
+html[data-tema="oscuro"] .ws-tema--flotante { background: rgba(14, 17, 22, 0.8); border-color: rgba(255, 255, 255, 0.1); }
