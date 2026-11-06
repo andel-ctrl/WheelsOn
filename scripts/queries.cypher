@@ -67,22 +67,29 @@ ORDER BY total_ofertas DESC, obligatorias DESC
 LIMIT $limit;
 
 // ------------------------------------------------------------------------------
-// CONSULTA 6: Candidatos recomendados para una oferta laboral (Match Semantico)
-// Cruza los requerimientos obligatorios y deseables de una oferta con las habilidades de los usuarios.
+// CONSULTA 6: Candidatos recomendados para una oferta segun competencias y conexiones
+// Debe cumplir al menos un requisito; los contactos en la empresa suben su puesto.
+// Excluye a quienes ya trabajan en la empresa que publica la oferta.
 // ------------------------------------------------------------------------------
-MATCH (o:Oferta {oid: $oid})-[r:REQUIERE]->(h:Habilidad)<-[t:TIENE_HABILIDAD]-(u:Usuario)
-WITH u,
-     count(h) AS total_coincidencias,
-     collect(h.nombre) AS habilidades_match,
-     count(CASE WHEN r.prioridad = 'obligatoria' THEN 1 END) AS obligatorias_cubiertas
-ORDER BY total_coincidencias DESC, obligatorias_cubiertas DESC
+MATCH (o:Oferta {oid: $oid})-[r:REQUIERE]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u:Usuario)
+WHERE NOT EXISTS {
+    MATCH (u)-[t:TRABAJA_EN]->(:Empresa)-[:PUBLICA]->(o)
+    WHERE coalesce(t.actual, true)
+}
+WITH o, u,
+     count(DISTINCT h) AS total_coincidencias,
+     collect(DISTINCT h.nombre) AS habilidades_match,
+     count(DISTINCT CASE WHEN r.prioridad = 'obligatoria' THEN h END) AS obligatorias_cubiertas
+OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[t:TRABAJA_EN]->(:Empresa)-[:PUBLICA]->(o)
+WHERE coalesce(t.actual, true)
+WITH o, u, total_coincidencias, habilidades_match, obligatorias_cubiertas,
+     collect(DISTINCT c.nombre + ' ' + c.apellido) AS contactos
 RETURN u.uid AS uid,
        u.nombre + ' ' + u.apellido AS nombre_completo,
-       u.titulo_profesional AS titulo,
-       u.ubicacion AS ubicacion,
-       total_coincidencias,
-       obligatorias_cubiertas,
-       habilidades_match
+       total_coincidencias, obligatorias_cubiertas, habilidades_match, contactos,
+       total_coincidencias * 3 + obligatorias_cubiertas * 2 + size(contactos) * 2 AS score,
+       EXISTS { (u)-[:POSTULA_A]->(o) } AS ya_postulado
+ORDER BY score DESC, total_coincidencias DESC, nombre_completo ASC
 LIMIT $limit;
 
 // ------------------------------------------------------------------------------
@@ -179,3 +186,44 @@ RETURN coalesce(a.uid, a.eid, a.hid, a.pid, a.oid) AS origen,
        coalesce(b.uid, b.eid, b.hid, b.pid, b.oid) AS destino,
        type(r) AS tipo,
        properties(r) AS propiedades;
+
+// ------------------------------------------------------------------------------
+// CONSULTA 13: Camino de un usuario a una oferta
+// Pasa por contactos y empleos hasta la empresa que publica la oferta.
+// ------------------------------------------------------------------------------
+MATCH (u:Usuario {uid: $uid}), (o:Oferta {oid: $oid})
+MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN|PUBLICA*..7]-(o))
+RETURN [n IN nodes(p) | {
+    tipo: labels(n)[0],
+    id: coalesce(n.uid, n.eid, n.oid),
+    nombre: CASE
+        WHEN n:Usuario THEN n.nombre + ' ' + n.apellido
+        WHEN n:Oferta THEN n.titulo
+        ELSE n.nombre
+    END
+}] AS pasos_ruta,
+[r IN relationships(p) | type(r)] AS relaciones,
+length(p) AS longitud_camino;
+
+// ------------------------------------------------------------------------------
+// CONSULTA 14: Proyectos que comparten tecnologias o miembros relacionados
+// Miembros relacionados: personas de ambos equipos conectadas entre si.
+// ------------------------------------------------------------------------------
+MATCH (p:Proyecto {pid: $pid}), (otro:Proyecto)
+WHERE otro <> p
+WITH p, otro,
+     [t IN coalesce(p.tecnologias, [])
+      WHERE toLower(t) IN [x IN coalesce(otro.tecnologias, []) | toLower(x)]] AS tecnologias
+OPTIONAL MATCH (p)<-[:PARTICIPA_EN]-(m:Usuario)-[:PARTICIPA_EN]->(otro)
+WITH p, otro, tecnologias, collect(DISTINCT m) AS comunes
+OPTIONAL MATCH (p)<-[:PARTICIPA_EN]-(a:Usuario)-[:CONECTA_CON]-(b:Usuario)-[:PARTICIPA_EN]->(otro)
+WHERE NOT a IN comunes AND NOT b IN comunes
+WITH otro, tecnologias, comunes,
+     collect(DISTINCT a.nombre + ' ' + a.apellido + ' - ' + b.nombre + ' ' + b.apellido) AS conectados
+WITH otro, tecnologias, conectados,
+     [m IN comunes | m.nombre + ' ' + m.apellido] AS miembros_comunes,
+     size(tecnologias) * 2 + size(comunes) * 3 + size(conectados) AS score
+WHERE score > 0
+RETURN otro.pid AS pid, otro.nombre AS nombre, tecnologias, miembros_comunes, conectados, score
+ORDER BY score DESC, nombre ASC
+LIMIT $limit;

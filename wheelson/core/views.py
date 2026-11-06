@@ -749,12 +749,16 @@ def consultas_index(request):
     usuarios = UsuarioService.all()
     empresas = EmpresaService.all()
     ofertas = OfertaService.all()
+    proyectos = ProyectoService.all()
 
     uid1 = request.GET.get("uid1") or (usuarios[0].uid if len(usuarios) > 0 else "")
     uid2 = request.GET.get("uid2") or (usuarios[1].uid if len(usuarios) > 1 else (usuarios[0].uid if usuarios else ""))
     eid = request.GET.get("eid") or (empresas[0].eid if len(empresas) > 0 else "")
     oid = request.GET.get("oid") or (ofertas[0].oid if len(ofertas) > 0 else "")
+    pid = request.GET.get("pid") or (proyectos[0].pid if len(proyectos) > 0 else "")
 
+    res_ruta_oferta = None
+    res_proyectos = None
     res_camino = None
     res_comun = None
     res_similares = None
@@ -772,16 +776,24 @@ def consultas_index(request):
         res_empresa = GraphAnalyticsService.ruta_usuario_empresa(uid1, eid)
     elif tab == "candidatos" and oid:
         res_candidatos = GraphAnalyticsService.candidatos_para_oferta(oid, limit=10)
+    elif tab == "ruta_oferta" and uid1 and oid:
+        res_ruta_oferta = GraphAnalyticsService.ruta_usuario_oferta(uid1, oid)
+    elif tab == "proyectos" and pid:
+        res_proyectos = GraphAnalyticsService.proyectos_relacionados(pid, limit=10)
 
     context = {
         "tab": tab,
         "usuarios": usuarios,
         "empresas": empresas,
         "ofertas": ofertas,
+        "proyectos": proyectos,
         "uid1": uid1,
         "uid2": uid2,
         "eid": eid,
         "oid": oid,
+        "pid": pid,
+        "res_ruta_oferta": res_ruta_oferta,
+        "res_proyectos": res_proyectos,
         "usuario1": UsuarioService.get(uid1) if uid1 else None,
         "usuario2": UsuarioService.get(uid2) if uid2 else None,
         "empresa_obj": EmpresaService.get(eid) if eid else None,

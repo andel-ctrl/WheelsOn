@@ -6,7 +6,7 @@ from django.urls import reverse
 from neo4j.exceptions import AuthError, ServiceUnavailable
 from neomodel import UniqueProperty, db
 
-from core.test_utils import Neo4jTestCase as TestCase, ejecutar_script_cypher
+from core.test_utils import Neo4jTestCase as TestCase, SCRIPTS, ejecutar_script_cypher
 from core.models import (
     Usuario,
     Empresa,
@@ -887,6 +887,8 @@ class ScriptDeDatosTest(TestCase):
             "/consultas/?tab=similares&uid1=usr_carlos001",
             "/consultas/?tab=ruta_empresa&uid1=usr_andres015&eid=emp_techin02",
             "/consultas/?tab=candidatos&oid=ofr_dataeng01",
+            "/consultas/?tab=ruta_oferta&uid1=usr_andres015&oid=ofr_dataeng01",
+            "/consultas/?tab=proyectos&pid=proy_graph01",
             "/recomendaciones/?tab=contactos&uid=usr_carlos001",
             "/recomendaciones/?tab=empleos&uid=usr_carlos001",
             "/recomendaciones/?tab=colaboradores&pid=proy_graph01",
@@ -909,7 +911,10 @@ class SoloNeo4jTest(TestCase):
 
     def test_pantallas_funcionan_con_base_vacia(self):
         cliente = Client()
-        for ruta in ["/", "/usuarios/", "/consultas/", "/recomendaciones/", "/analitica/", "/grafo/", "/conexiones/"]:
+        for ruta in [
+            "/", "/usuarios/", "/consultas/", "/recomendaciones/", "/analitica/", "/grafo/", "/conexiones/",
+            "/consultas/?tab=ruta_oferta", "/consultas/?tab=proyectos", "/consultas/?tab=candidatos",
+        ]:
             with self.subTest(ruta=ruta):
                 self.assertEqual(cliente.get(ruta).status_code, 200)
 
@@ -1154,3 +1159,276 @@ class PanelDeAnaliticaTest(TestCase):
         balance = NetworkAnalyticsService.analisis_oferta_demanda_habilidades()
         self.assertTrue(balance["top_demandadas"])
         self.assertTrue(all(item["demanda"] > 0 for item in balance["top_demandadas"]))
+
+
+class ProyectosRelacionadosTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.base = ProyectoService.create(nombre="Base", tecnologias="Python, Neo4j")
+        self.ana = UsuarioService.create(nombre="Ana", apellido="Paz", email="ana@test.com")
+        self.beto = UsuarioService.create(nombre="Beto", apellido="Rey", email="beto@test.com")
+
+    def test_tecnologias_comunes_sin_distinguir_mayusculas(self):
+        otro = ProyectoService.create(nombre="Otro", tecnologias="python, Django")
+        resultado = GraphAnalyticsService.proyectos_relacionados(self.base.pid)
+        self.assertEqual([r["proyecto"].pid for r in resultado], [otro.pid])
+        self.assertEqual(resultado[0]["tecnologias_comunes"], ["Python"])
+        self.assertEqual(resultado[0]["miembros_comunes"], [])
+        self.assertEqual(resultado[0]["miembros_conectados"], [])
+
+    def test_miembros_comunes_sin_tecnologias_comunes(self):
+        otro = ProyectoService.create(nombre="Otro", tecnologias="Go")
+        ParticipacionProyectoService.vincular(self.ana.uid, self.base.pid)
+        ParticipacionProyectoService.vincular(self.ana.uid, otro.pid)
+        resultado = GraphAnalyticsService.proyectos_relacionados(self.base.pid)
+        self.assertEqual(resultado[0]["miembros_comunes"], ["Ana Paz"])
+        self.assertEqual(resultado[0]["tecnologias_comunes"], [])
+
+    def test_miembros_conectados_entre_equipos(self):
+        otro = ProyectoService.create(nombre="Otro", tecnologias="Go")
+        ParticipacionProyectoService.vincular(self.ana.uid, self.base.pid)
+        ParticipacionProyectoService.vincular(self.beto.uid, otro.pid)
+        ConexionService.conectar(self.beto.uid, self.ana.uid)
+        resultado = GraphAnalyticsService.proyectos_relacionados(self.base.pid)
+        self.assertEqual(resultado[0]["miembros_conectados"], ["Ana Paz - Beto Rey"])
+
+    def test_miembro_comun_no_se_repite_como_conectado(self):
+        otro = ProyectoService.create(nombre="Otro", tecnologias="Go")
+        for proyecto in (self.base, otro):
+            ParticipacionProyectoService.vincular(self.ana.uid, proyecto.pid)
+        ParticipacionProyectoService.vincular(self.beto.uid, otro.pid)
+        ConexionService.conectar(self.ana.uid, self.beto.uid)
+        resultado = GraphAnalyticsService.proyectos_relacionados(self.base.pid)
+        self.assertEqual(resultado[0]["miembros_comunes"], ["Ana Paz"])
+        self.assertEqual(resultado[0]["miembros_conectados"], [])
+
+    def test_proyecto_sin_relacion_no_aparece(self):
+        ProyectoService.create(nombre="Aislado", tecnologias="Cobol")
+        self.assertEqual(GraphAnalyticsService.proyectos_relacionados(self.base.pid), [])
+
+    def test_proyecto_sin_tecnologias_no_falla(self):
+        vacio = ProyectoService.create(nombre="Vacio")
+        self.assertEqual(GraphAnalyticsService.proyectos_relacionados(vacio.pid), [])
+
+    def test_ordena_por_puntaje_y_respeta_el_limite(self):
+        uno = ProyectoService.create(nombre="Uno", tecnologias="Python")
+        dos = ProyectoService.create(nombre="Dos", tecnologias="Python, Neo4j")
+        resultado = GraphAnalyticsService.proyectos_relacionados(self.base.pid)
+        self.assertEqual([r["proyecto"].pid for r in resultado], [dos.pid, uno.pid])
+        self.assertEqual(len(GraphAnalyticsService.proyectos_relacionados(self.base.pid, limit=1)), 1)
+
+    def test_identificador_vacio_o_inexistente(self):
+        self.assertEqual(GraphAnalyticsService.proyectos_relacionados(""), [])
+        self.assertEqual(GraphAnalyticsService.proyectos_relacionados("no_existe"), [])
+
+    def test_datos_de_ejemplo_y_pantalla(self):
+        ejecutar_script_cypher("seed_data.cypher")
+        resultado = GraphAnalyticsService.proyectos_relacionados("proy_graph01")
+        self.assertEqual(resultado[0]["proyecto"].pid, "proy_fintech02")
+        self.assertCountEqual(resultado[0]["tecnologias_comunes"], ["Python", "Neo4j"])
+        self.assertIn("Santiago Vieira - Dubal Aguilar", resultado[0]["miembros_conectados"])
+
+        res = Client().get(reverse("core:consultas_index") + "?tab=proyectos&pid=proy_graph01")
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Plataforma Fintech AI")
+        self.assertContains(res, "Miembros conectados entre equipos")
+
+
+class CandidatosConConexionesTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.empresa = EmpresaService.create(nombre="Acme", industria="X")
+        self.oferta = OfertaService.create(titulo="Dev", estado="abierta")
+        PublicacionOfertaService.vincular(self.empresa.eid, self.oferta.oid)
+        self.py = HabilidadService.create(nombre="Python")
+        self.sql = HabilidadService.create(nombre="SQL")
+        RequisitoOfertaService.vincular(self.oferta.oid, self.py.hid, prioridad="obligatoria")
+        RequisitoOfertaService.vincular(self.oferta.oid, self.sql.hid, prioridad="deseable")
+        self.interno = UsuarioService.create(nombre="Ines", apellido="Dentro", email="ines@test.com")
+        EmpleoService.vincular(self.interno.uid, self.empresa.eid, cargo="Lider")
+        self.con_contacto = UsuarioService.create(nombre="Zoe", apellido="Red", email="zoe@test.com")
+        self.sin_contacto = UsuarioService.create(nombre="Ana", apellido="Sola", email="ana@test.com")
+        for usuario in (self.con_contacto, self.sin_contacto):
+            HabilidadUsuarioService.vincular(usuario.uid, self.py.hid)
+
+    def _uids(self):
+        return [c["usuario"].uid for c in GraphAnalyticsService.candidatos_para_oferta(self.oferta.oid)]
+
+    def test_contacto_en_la_empresa_sube_el_puesto(self):
+        self.assertEqual(self._uids(), [self.sin_contacto.uid, self.con_contacto.uid])
+        ConexionService.conectar(self.con_contacto.uid, self.interno.uid)
+        self.assertEqual(self._uids(), [self.con_contacto.uid, self.sin_contacto.uid])
+        primero = GraphAnalyticsService.candidatos_para_oferta(self.oferta.oid)[0]
+        self.assertEqual(primero["contactos_en_empresa"], ["Ines Dentro"])
+
+    def test_competencias_pesan_mas_que_un_contacto(self):
+        ConexionService.conectar(self.con_contacto.uid, self.interno.uid)
+        HabilidadUsuarioService.vincular(self.sin_contacto.uid, self.sql.hid)
+        self.assertEqual(self._uids(), [self.sin_contacto.uid, self.con_contacto.uid])
+
+    def test_solo_conexion_sin_competencias_no_es_candidato(self):
+        sin_habilidad = UsuarioService.create(nombre="Beto", apellido="Rey", email="beto@test.com")
+        ConexionService.conectar(sin_habilidad.uid, self.interno.uid)
+        self.assertNotIn(sin_habilidad.uid, self._uids())
+
+    def test_empleado_actual_no_es_candidato_y_ex_empleado_si(self):
+        HabilidadUsuarioService.vincular(self.interno.uid, self.py.hid)
+        self.assertNotIn(self.interno.uid, self._uids())
+        EmpleoService.vincular(self.interno.uid, self.empresa.eid, cargo="Lider", actual=False)
+        self.assertIn(self.interno.uid, self._uids())
+
+    def test_ex_empleado_no_cuenta_como_contacto(self):
+        EmpleoService.vincular(self.interno.uid, self.empresa.eid, cargo="Lider", actual=False)
+        ConexionService.conectar(self.con_contacto.uid, self.interno.uid)
+        resultado = GraphAnalyticsService.candidatos_para_oferta(self.oferta.oid)
+        contactos = {c["usuario"].uid: c["contactos_en_empresa"] for c in resultado}
+        self.assertEqual(contactos[self.con_contacto.uid], [])
+
+    def test_conteos_no_se_inflan_con_varias_habilidades_y_contactos(self):
+        otro = UsuarioService.create(nombre="Oto", apellido="Dentro", email="oto@test.com")
+        EmpleoService.vincular(otro.uid, self.empresa.eid, cargo="Dev")
+        ConexionService.conectar(self.con_contacto.uid, self.interno.uid)
+        ConexionService.conectar(self.con_contacto.uid, otro.uid)
+        HabilidadUsuarioService.vincular(self.con_contacto.uid, self.sql.hid)
+        c = GraphAnalyticsService.candidatos_para_oferta(self.oferta.oid)[0]
+        self.assertEqual(c["total_coincidencias"], 2)
+        self.assertEqual(c["obligatorias_cubiertas"], 1)
+        self.assertCountEqual(c["contactos_en_empresa"], ["Ines Dentro", "Oto Dentro"])
+        self.assertEqual(c["score"], 2 * 3 + 1 * 2 + 2 * 2)
+
+    def test_indica_si_ya_se_postulo(self):
+        PostulacionService.postular(self.sin_contacto.uid, self.oferta.oid)
+        estados = {
+            c["usuario"].uid: c["ya_postulado"]
+            for c in GraphAnalyticsService.candidatos_para_oferta(self.oferta.oid)
+        }
+        self.assertTrue(estados[self.sin_contacto.uid])
+        self.assertFalse(estados[self.con_contacto.uid])
+
+    def test_oferta_sin_empresa_sigue_funcionando(self):
+        suelta = OfertaService.create(titulo="Suelta", estado="abierta")
+        RequisitoOfertaService.vincular(suelta.oid, self.py.hid)
+        self.assertEqual(len(GraphAnalyticsService.candidatos_para_oferta(suelta.oid)), 2)
+
+    def test_identificador_vacio_o_inexistente(self):
+        self.assertEqual(GraphAnalyticsService.candidatos_para_oferta(""), [])
+        self.assertEqual(GraphAnalyticsService.candidatos_para_oferta("no_existe"), [])
+
+    def test_datos_de_ejemplo_y_pantalla(self):
+        db.cypher_query("MATCH (n) DETACH DELETE n")
+        ejecutar_script_cypher("seed_data.cypher")
+        resultado = GraphAnalyticsService.candidatos_para_oferta("ofr_dataeng01")
+        uids = [c["usuario"].uid for c in resultado]
+        # Mateo y Carlos trabajan en Nexus Corp, la empresa que publica esta oferta.
+        self.assertNotIn("usr_mateo005", uids)
+        self.assertNotIn("usr_carlos001", uids)
+        self.assertEqual(uids[0], "usr_dubal003")
+        self.assertTrue(resultado[0]["ya_postulado"])
+        self.assertIn("Mateo Cisneros", resultado[0]["contactos_en_empresa"])
+
+        res = Client().get(reverse("core:consultas_index") + "?tab=candidatos&oid=ofr_dataeng01")
+        self.assertContains(res, "Contactos en la empresa")
+        self.assertContains(res, "Ya se postuló")
+
+
+class RutaUsuarioOfertaTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.empresa = EmpresaService.create(nombre="Acme", industria="X")
+        self.oferta = OfertaService.create(titulo="Dev", estado="abierta")
+        PublicacionOfertaService.vincular(self.empresa.eid, self.oferta.oid)
+        self.ana = UsuarioService.create(nombre="Ana", apellido="Paz", email="ana@test.com")
+        self.beto = UsuarioService.create(nombre="Beto", apellido="Rey", email="beto@test.com")
+
+    def _ruta(self, uid=None, oid=None):
+        return GraphAnalyticsService.ruta_usuario_oferta(uid or self.ana.uid, oid or self.oferta.oid)
+
+    def test_empleado_llega_por_su_empresa(self):
+        EmpleoService.vincular(self.ana.uid, self.empresa.eid, cargo="Dev")
+        ruta = self._ruta()
+        self.assertTrue(ruta["encontrado"])
+        self.assertEqual(ruta["longitud"], 2)
+        self.assertEqual([p["tipo"] for p in ruta["camino"]], ["Usuario", "Empresa", "Oferta"])
+        self.assertEqual(
+            [p["relacion_siguiente"] for p in ruta["camino"]],
+            ["TRABAJA_EN", "PUBLICA", None],
+        )
+
+    def test_llega_a_traves_de_un_contacto(self):
+        EmpleoService.vincular(self.beto.uid, self.empresa.eid, cargo="Dev")
+        ConexionService.conectar(self.beto.uid, self.ana.uid)
+        ruta = self._ruta()
+        self.assertEqual(ruta["longitud"], 3)
+        self.assertEqual([p["nombre"] for p in ruta["camino"]], ["Ana Paz", "Beto Rey", "Acme", "Dev"])
+
+    def test_sin_contactos_no_hay_camino(self):
+        EmpleoService.vincular(self.beto.uid, self.empresa.eid, cargo="Dev")
+        self.assertFalse(self._ruta()["encontrado"])
+
+    def test_oferta_sin_empresa_no_tiene_camino(self):
+        suelta = OfertaService.create(titulo="Suelta", estado="abierta")
+        self.assertFalse(self._ruta(oid=suelta.oid)["encontrado"])
+
+    def test_habilidad_compartida_no_cuenta_como_camino(self):
+        habilidad = HabilidadService.create(nombre="Python")
+        HabilidadUsuarioService.vincular(self.ana.uid, habilidad.hid)
+        HabilidadUsuarioService.vincular(self.beto.uid, habilidad.hid)
+        EmpleoService.vincular(self.beto.uid, self.empresa.eid, cargo="Dev")
+        self.assertFalse(self._ruta()["encontrado"])
+
+    def test_postularse_no_crea_camino_pero_se_informa(self):
+        PostulacionService.postular(self.ana.uid, self.oferta.oid)
+        ruta = self._ruta()
+        self.assertFalse(ruta["encontrado"])
+        self.assertTrue(ruta["ya_postulado"])
+
+    def test_postulacion_de_otro_no_sirve_de_puente(self):
+        ConexionService.conectar(self.ana.uid, self.beto.uid)
+        PostulacionService.postular(self.beto.uid, self.oferta.oid)
+        ruta = self._ruta()
+        self.assertFalse(ruta["encontrado"])
+        self.assertFalse(ruta["ya_postulado"])
+
+    def test_identificadores_vacios_o_inexistentes(self):
+        self.assertFalse(GraphAnalyticsService.ruta_usuario_oferta("", self.oferta.oid)["encontrado"])
+        self.assertFalse(GraphAnalyticsService.ruta_usuario_oferta(self.ana.uid, "")["encontrado"])
+        self.assertFalse(GraphAnalyticsService.ruta_usuario_oferta("no", "existe")["encontrado"])
+
+    def test_datos_de_ejemplo_y_pantalla(self):
+        ejecutar_script_cypher("seed_data.cypher")
+        ruta = GraphAnalyticsService.ruta_usuario_oferta("usr_andres015", "ofr_dataeng01")
+        self.assertTrue(ruta["encontrado"])
+        self.assertEqual(ruta["camino"][0]["id"], "usr_andres015")
+        self.assertEqual(ruta["camino"][-2]["id"], "emp_nexus01")
+        self.assertEqual(ruta["camino"][-1]["id"], "ofr_dataeng01")
+
+        res = Client().get(reverse("core:consultas_index") + "?tab=ruta_oferta&uid1=usr_andres015&oid=ofr_dataeng01")
+        self.assertContains(res, "Camino Encontrado")
+        self.assertContains(res, ":PUBLICA")
+
+    def test_pantalla_sin_camino_explica_el_motivo(self):
+        res = Client().get(
+            reverse("core:consultas_index") + f"?tab=ruta_oferta&uid1={self.ana.uid}&oid={self.oferta.oid}"
+        )
+        self.assertContains(res, "No se encontró un camino hacia esta oferta")
+
+
+class ScriptDeConsultasTest(TestCase):
+    """Todas las consultas del entregable deben ejecutarse sin errores en Neo4j."""
+
+    def test_todas_las_consultas_son_validas(self):
+        ejecutar_script_cypher("seed_data.cypher")
+        lineas = [
+            linea for linea in (SCRIPTS / "queries.cypher").read_text(encoding="utf-8").splitlines()
+            if not linea.strip().startswith("//")
+        ]
+        sentencias = [s.strip() for s in "\n".join(lineas).split(";\n") if s.strip()]
+        self.assertEqual(len(sentencias), 14)
+        parametros = {
+            "uid": "usr_dubal003", "uid1": "usr_carlos001", "uid2": "usr_dubal003",
+            "eid": "emp_nexus01", "oid": "ofr_dataeng01", "pid": "proy_graph01", "limit": 10,
+        }
+        for numero, sentencia in enumerate(sentencias, 1):
+            with self.subTest(consulta=numero):
+                filas, _ = db.cypher_query(sentencia.rstrip(";"), parametros)
+                self.assertGreater(len(filas), 0)

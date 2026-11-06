@@ -42,6 +42,14 @@
            class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'candidatos' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
             6. Match para Oferta
         </a>
+        <a href="?tab=ruta_oferta{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if oid %}&oid={{ oid }}{% endif %}"
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'ruta_oferta' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
+            7. Ruta a Oferta
+        </a>
+        <a href="?tab=proyectos{% if pid %}&pid={{ pid }}{% endif %}"
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'proyectos' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
+            8. Proyectos Relacionados
+        </a>
     </div>
 
     <!-- TAB 1: RUTA MAS CORTA (SHORTEST PATH) -->
@@ -418,9 +426,10 @@
             </form>
 
             <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-[#00b84c] font-bold">// Consulta Cypher de Match:</span><br>
+                <span class="text-[#00b84c] font-bold">// Consulta Cypher de Match (competencias y conexiones):</span><br>
                 MATCH (o:Oferta {oid: '{{ oid }}'})-[:REQUIERE]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u:Usuario)<br>
-                RETURN u, count(h) AS match_skills ORDER BY match_skills DESC;
+                OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[:TRABAJA_EN]->(:Empresa)-[:PUBLICA]->(o)<br>
+                RETURN u, count(DISTINCT h) AS competencias, count(DISTINCT c) AS contactos;
             </div>
         </div>
 
@@ -448,17 +457,158 @@
                                 <span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ h }}</span>
                                 {% endfor %}
                             </div>
+                            {% if cand.contactos_en_empresa %}
+                            <p class="text-[11px] text-gray-400 mt-1.5">Contactos en la empresa: {{ cand.contactos_en_empresa|join:", " }}</p>
+                            {% endif %}
                         </div>
                     </div>
 
-                    <span class="px-3 py-1 rounded-full bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 text-xs font-bold">
-                        {{ cand.total_coincidencias }} requisito(s) cubierto(s)
-                    </span>
+                    <div class="flex flex-col items-start sm:items-end gap-1.5">
+                        <span class="px-3 py-1 rounded-full bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 text-xs font-bold">
+                            {{ cand.total_coincidencias }} requisito(s) cubierto(s)
+                        </span>
+                        <span class="text-[11px] text-gray-400">
+                            {{ cand.contactos_en_empresa|length }} contacto(s) &bull; Puntaje {{ cand.score }}{% if cand.ya_postulado %} &bull; Ya se postuló{% endif %}
+                        </span>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
             <p class="text-xs text-gray-500 italic py-4 text-center">No se encontraron candidatos con habilidades coincidentes para esta oferta.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB 7: RUTA USUARIO -> OFERTA -->
+    {% elif tab == 'ruta_oferta' %}
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                Camino hacia una Oportunidad Laboral
+            </h2>
+
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <input type="hidden" name="tab" value="ruta_oferta">
+                <div class="md:col-span-5">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Usuario:</label>
+                    <select name="uid1" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
+                        {% for u in usuarios %}
+                        <option value="{{ u.uid }}" {% if uid1 == u.uid %}selected{% endif %}>{{ u.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="md:col-span-5">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Oferta Destino:</label>
+                    <select name="oid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
+                        {% for o in ofertas %}
+                        <option value="{{ o.oid }}" {% if oid == o.oid %}selected{% endif %}>{{ o.titulo }} ({{ o.modalidad }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Trazar Camino</button>
+                </div>
+            </form>
+
+            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
+                <span class="text-rose-400 font-bold">// Consulta Cypher de Camino hacia Oferta:</span><br>
+                MATCH (u:Usuario {uid: '{{ uid1 }}'}), (o:Oferta {oid: '{{ oid }}'})<br>
+                MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN|PUBLICA*..7]-(o))<br>
+                RETURN p;
+            </div>
+        </div>
+
+        {% if res_ruta_oferta and res_ruta_oferta.encontrado %}
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-6 rounded-2xl space-y-4">
+            <h3 class="font-bold text-sm text-white">
+                Camino Encontrado ({{ res_ruta_oferta.longitud }} paso(s)){% if res_ruta_oferta.ya_postulado %} &bull; Ya se postuló a esta oferta{% endif %}
+            </h3>
+
+            <div class="flex flex-wrap items-center justify-center gap-3 py-4">
+                {% for paso in res_ruta_oferta.camino %}
+                <div class="flex items-center gap-3">
+                    <div class="p-3 rounded-xl bg-[#090b0e] border border-[#161a22] text-center min-w-36">
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase {% if paso.tipo == 'Oferta' %}bg-rose-500/20 text-rose-400{% elif paso.tipo == 'Empresa' %}bg-cyan-500/20 text-cyan-400{% else %}bg-[#00b84c]/20 text-[#00b84c]{% endif %} mb-1 inline-block">
+                            {{ paso.tipo }}
+                        </span>
+                        <p class="font-bold text-xs text-white">{{ paso.nombre }}</p>
+                    </div>
+
+                    {% if paso.relacion_siguiente %}
+                    <div class="text-[#00b84c] font-black text-xl flex flex-col items-center">
+                        <span class="text-[9px] uppercase font-mono text-gray-500">:{{ paso.relacion_siguiente }}</span>
+                        &rarr;
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif res_ruta_oferta %}
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-8 text-center rounded-2xl">
+            <p class="text-xs text-gray-400">
+                No se encontró un camino hacia esta oferta. Revisa que tenga una empresa que la publique y que exista una cadena de contactos hasta ella.{% if res_ruta_oferta.ya_postulado %} Este usuario ya se postuló.{% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB 8: PROYECTOS RELACIONADOS -->
+    {% elif tab == 'proyectos' %}
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                Proyectos que Comparten Tecnologías o Miembros
+            </h2>
+
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <input type="hidden" name="tab" value="proyectos">
+                <div class="md:col-span-9">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Seleccionar Proyecto:</label>
+                    <select name="pid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
+                        {% for p in proyectos %}
+                        <option value="{{ p.pid }}" {% if pid == p.pid %}selected{% endif %}>{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="md:col-span-3">
+                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Buscar Relacionados</button>
+                </div>
+            </form>
+
+            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
+                <span class="text-purple-400 font-bold">// Consulta Cypher de Proyectos Relacionados:</span><br>
+                MATCH (p:Proyecto {pid: '{{ pid }}'}), (otro:Proyecto) WHERE otro &lt;&gt; p<br>
+                OPTIONAL MATCH (p)&lt;-[:PARTICIPA_EN]-(m:Usuario)-[:PARTICIPA_EN]-&gt;(otro)<br>
+                OPTIONAL MATCH (p)&lt;-[:PARTICIPA_EN]-(a:Usuario)-[:CONECTA_CON]-(b:Usuario)-[:PARTICIPA_EN]-&gt;(otro)<br>
+                RETURN otro, tecnologías en común, m, a, b;
+            </div>
+        </div>
+
+        {% if res_proyectos is not None %}
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h3 class="font-bold text-sm text-white">Proyectos Relacionados ({{ res_proyectos|length }})</h3>
+
+            {% if res_proyectos %}
+            <div class="space-y-2.5">
+                {% for item in res_proyectos %}
+                <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] space-y-2">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" class="font-bold text-sm text-white hover:text-[#00b84c]">{{ item.proyecto.nombre }}</a>
+                        <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs font-bold">Puntaje {{ item.score }}</span>
+                    </div>
+                    <p class="text-xs text-gray-400"><span class="font-bold text-gray-300">Tecnologías en común ({{ item.tecnologias_comunes|length }}):</span> {{ item.tecnologias_comunes|join:", "|default:"ninguna" }}</p>
+                    <p class="text-xs text-gray-400"><span class="font-bold text-gray-300">Miembros en común ({{ item.miembros_comunes|length }}):</span> {{ item.miembros_comunes|join:", "|default:"ninguno" }}</p>
+                    <p class="text-xs text-gray-400"><span class="font-bold text-gray-300">Miembros conectados entre equipos ({{ item.miembros_conectados|length }}):</span> {{ item.miembros_conectados|join:", "|default:"ninguno" }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-gray-500 italic py-4 text-center">Ningún otro proyecto comparte tecnologías o miembros con este.</p>
             {% endif %}
         </div>
         {% endif %}
