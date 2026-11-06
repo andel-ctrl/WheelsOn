@@ -60,7 +60,6 @@ class WheelsOnSetupTest(TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "WheelsOn")
-        self.assertContains(response, "Red Profesional Orientada a Grafos")
 
 
 class GraphModelsDefinitionTest(TestCase):

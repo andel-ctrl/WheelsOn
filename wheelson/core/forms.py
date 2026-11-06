@@ -28,13 +28,11 @@ class UsuarioForm(BaseTailwindForm):
         max_length=150,
         required=False,
         label="Titulo Profesional",
-        initial="Profesional",
     )
     ubicacion = forms.CharField(
         max_length=150,
         required=False,
         label="Ubicacion",
-        initial="No especificada",
     )
     biografia = forms.CharField(
         widget=forms.Textarea(),
@@ -304,10 +302,10 @@ class CandidatosOfertaForm(BaseTailwindForm):
 class LoginForm(BaseTailwindForm):
     email = forms.EmailField(
         label="Correo Electrónico",
-        widget=forms.EmailInput(attrs={"placeholder": "carlos@wheelson.com", "autocomplete": "email"})
+        widget=forms.EmailInput(attrs={"autocomplete": "email"})
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"placeholder": "••••••••", "autocomplete": "current-password"}),
+        widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}),
         label="Contraseña"
     )
 
@@ -316,42 +314,40 @@ class RegistroForm(BaseTailwindForm):
     nombre = forms.CharField(
         max_length=100,
         label="Nombre",
-        widget=forms.TextInput(attrs={"placeholder": "Carlos"})
+        widget=forms.TextInput()
     )
     apellido = forms.CharField(
         max_length=100,
         label="Apellido",
-        widget=forms.TextInput(attrs={"placeholder": "Calabria"})
+        widget=forms.TextInput()
     )
     email = forms.EmailField(
         label="Correo Electrónico",
-        widget=forms.EmailInput(attrs={"placeholder": "tu.correo@wheelson.com"})
+        widget=forms.EmailInput()
     )
     titulo_profesional = forms.CharField(
         max_length=150,
         required=False,
         label="Título Profesional",
-        initial="Profesional de Software",
-        widget=forms.TextInput(attrs={"placeholder": "Ej: Senior Backend & Graph Architect"})
+        widget=forms.TextInput()
     )
     ubicacion = forms.CharField(
         max_length=150,
         required=False,
         label="Ubicación",
-        initial="Bogota, Colombia",
-        widget=forms.TextInput(attrs={"placeholder": "Ej: Medellín, Colombia"})
+        widget=forms.TextInput()
     )
     biografia = forms.CharField(
-        widget=forms.Textarea(attrs={"placeholder": "Breve descripción sobre tu trayectoria técnica...", "rows": 3}),
+        widget=forms.Textarea(attrs={"rows": 3}),
         required=False,
         label="Biografía Corta"
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"placeholder": "Mínimo 6 caracteres"}),
+        widget=forms.PasswordInput(),
         label="Contraseña"
     )
     password_confirm = forms.CharField(
-        widget=forms.PasswordInput(attrs={"placeholder": "Repite tu contraseña"}),
+        widget=forms.PasswordInput(),
         label="Confirmar Contraseña"
     )
 
