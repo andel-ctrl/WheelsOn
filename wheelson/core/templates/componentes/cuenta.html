@@ -31,6 +31,8 @@
     </div>
     {% endif %}
 
+    <div class="ws-opcion">{% include "componentes/selector_tema.html" %}</div>
+
     <form class="ws-opcion ws-opcion--peligro" method="POST" action="{% url 'core:logout' %}">
         {% csrf_token %}
         <button type="submit" class="ws-opcion__boton">{% icono "sign-out" "regular" 18 %}<span>Cerrar sesión</span></button>

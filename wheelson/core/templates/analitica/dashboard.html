@@ -88,7 +88,7 @@
                     <p class="text-xs text-gray-500">Volumen bruto de amistades frente a autoridad calculada con Power Iteration (d=0.85)</p>
                 </div>
                 <div class="flex items-center gap-4 text-xs font-mono">
-                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#00b84c]"></span> Conexiones</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--grafico-1)"></span> Conexiones</span>
                     <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span> PageRank (%)</span>
                 </div>
             </div>
@@ -310,7 +310,7 @@
                 </div>
                 <div class="flex items-center gap-4 text-xs font-mono">
                     <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span> Oferta (Candidatos)</span>
-                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#00b84c]"></span> Demanda (Empresas)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--grafico-1)"></span> Demanda (Empresas)</span>
                 </div>
             </div>
             <div class="h-64 relative">
@@ -435,7 +435,9 @@
 document.addEventListener("DOMContentLoaded", function() {
     const rawData = JSON.parse(document.getElementById('datos-analitica').textContent);
     
-    Chart.defaults.color = '#574759';
+    const colorDe = (variable) => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+    const C = { texto: colorDe('--text-2'), rejilla: colorDe('--border'), uno: colorDe('--grafico-1'), dos: colorDe('--grafico-2'), borde: colorDe('--grafico-borde') };
+    Chart.defaults.color = C.texto;
     Chart.defaults.font.family = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
     Chart.defaults.font.size = 11;
 
@@ -450,14 +452,14 @@ document.addEventListener("DOMContentLoaded", function() {
                     {
                         label: 'Conexiones Directas',
                         data: rawData.influencia.grado,
-                        backgroundColor: '#6B5F5C',
+                        backgroundColor: C.uno,
                         borderRadius: 6,
                         barPercentage: 0.6,
                     },
                     {
                         label: 'PageRank Relativo (%)',
                         data: rawData.influencia.pagerank,
-                        backgroundColor: '#D9483B',
+                        backgroundColor: C.dos,
                         borderRadius: 6,
                         barPercentage: 0.6,
                     }
@@ -468,8 +470,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#574759' } },
-                    y: { grid: { color: '#EBE3E4' }, ticks: { color: '#574759' } }
+                    x: { grid: { display: false }, ticks: { color: C.texto } },
+                    y: { grid: { color: C.rejilla }, ticks: { color: C.texto } }
                 }
             }
         });
@@ -485,9 +487,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     data: rawData.comunidades.datos,
                     backgroundColor: [
-                        '#6B5F5C', '#D9483B', '#455DD1', '#14A3B0', '#9A831C', '#958698'
+                        C.uno, C.dos, colorDe('--n-usuario'), colorDe('--n-empresa'), colorDe('--n-habilidad'), colorDe('--control')
                     ],
-                    borderColor: '#FFFFFF',
+                    borderColor: C.borde,
                     borderWidth: 3,
                 }]
             },
@@ -497,7 +499,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { boxWidth: 10, padding: 12, color: '#574759' }
+                        labels: { boxWidth: 10, padding: 12, color: C.texto }
                     }
                 },
                 cutout: '68%'
@@ -516,14 +518,14 @@ document.addEventListener("DOMContentLoaded", function() {
                     {
                         label: 'Oferta (Candidatos)',
                         data: rawData.habilidades.oferta,
-                        backgroundColor: '#D9483B',
+                        backgroundColor: C.dos,
                         borderRadius: 6,
                         barPercentage: 0.6,
                     },
                     {
                         label: 'Demanda (Empresas)',
                         data: rawData.habilidades.demanda,
-                        backgroundColor: '#6B5F5C',
+                        backgroundColor: C.uno,
                         borderRadius: 6,
                         barPercentage: 0.6,
                     }
@@ -534,8 +536,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#574759' } },
-                    y: { grid: { color: '#EBE3E4' }, ticks: { color: '#574759', stepSize: 1 } }
+                    x: { grid: { display: false }, ticks: { color: C.texto } },
+                    y: { grid: { color: C.rejilla }, ticks: { color: C.texto, stepSize: 1 } }
                 }
             }
         });

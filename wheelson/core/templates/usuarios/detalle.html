@@ -342,14 +342,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const loading = document.getElementById("network-loading");
     if (!container) return;
 
+    const oscuro = document.documentElement.getAttribute('data-tema') === 'oscuro';
+    const textoFuerte = oscuro ? "#E8EDF2" : "#2A1A2E";
+    const textoSuave = oscuro ? "#B4BDC8" : "#574759";
+    const trazo = oscuro ? "#0E1116" : "#FFFFFF";
     const nodesData = [
         {
             id: "{{ usuario.uid }}",
             label: "{{ usuario.nombre|escapejs }}",
             shape: "dot",
-            color: { background: "#D9483B", border: "#B8372B" },
+            color: { background: oscuro ? "#00C853" : "#D9483B", border: oscuro ? "#00B84C" : "#B8372B" },
             size: 26,
-            font: { color: "#2A1A2E", size: 12, strokeWidth: 3, strokeColor: "#FFFFFF" }
+            font: { color: textoFuerte, size: 12, strokeWidth: 3, strokeColor: trazo }
         }
     ];
 
@@ -359,14 +363,14 @@ document.addEventListener("DOMContentLoaded", function () {
     nodesData.push({
         id: "{{ rel.usuario.uid }}",
         label: "{{ rel.usuario.nombre|escapejs }}",
-        color: { background: "#455DD1", border: "#3448AE" },
+        color: { background: oscuro ? "#6C84F0" : "#455DD1", border: oscuro ? "#455DD1" : "#3448AE" },
         size: 16,
-        font: { color: "#574759", size: 10, strokeWidth: 3, strokeColor: "#FFFFFF" }
+        font: { color: textoSuave, size: 10, strokeWidth: 3, strokeColor: trazo }
     });
     edgesData.push({
         from: "{{ usuario.uid }}",
         to: "{{ rel.usuario.uid }}",
-        color: { color: "rgba(107, 95, 92, 0.4)", highlight: "#D9483B" },
+        color: { color: oscuro ? "rgba(180, 189, 200, 0.35)" : "rgba(107, 95, 92, 0.4)", highlight: oscuro ? "#2EDB7A" : "#D9483B" },
         width: 1.5,
         smooth: { type: "continuous" }
     });

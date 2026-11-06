@@ -4,6 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FAF7F6">
+    <script>
+        // Antes de pintar nada, para que el tema elegido no parpadee.
+        try { if (localStorage.getItem('wheelson-tema') === 'oscuro') { document.documentElement.setAttribute('data-tema', 'oscuro'); } } catch (e) {}
+    </script>
     <title>{% block title %}{{ page_title|default:"Feed" }}{% endblock %} | WheelsOn</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
 
@@ -12,6 +17,7 @@
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link rel="stylesheet" href="{% static 'css/wheelson.css' %}">
     <link rel="stylesheet" href="{% static 'css/wheelson-compat.css' %}">
+    <link rel="stylesheet" href="{% static 'css/wheelson-oscuro.css' %}">
 
     <script src="{% static 'js/wheelson.js' %}"></script>
     <script defer src="{% static 'vendor/alpine-3.14.8.min.js' %}"></script>
@@ -22,6 +28,7 @@
 <body class="ws-body min-h-screen antialiased flex" x-data="{ mobileMenuOpen: false }" @keydown.escape.window="mobileMenuOpen = false">
 
     {% include "componentes/fondo_liquido.html" %}
+    {% if '/login/' in request.path or '/registro/' in request.path %}<div class="ws-tema--flotante">{% include "componentes/selector_tema.html" %}</div>{% endif %}
 
     {% if '/login/' not in request.path and '/registro/' not in request.path %}
     <aside class="ws-sidebar">

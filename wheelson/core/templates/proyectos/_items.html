@@ -1,6 +1,7 @@
 {% load wheelson_ui %}
 {% for p in proyectos %}
-<article class="ws-carpeta ws-carpeta--{{ p.estado|default:'activo' }}">
+<article class="ws-carpeta ws-carpeta--{{ p.estado|default:'activo' }}{% if p.relacion %} ws-carpeta--mia{% endif %}">
+    {% if p.relacion %}<p class="ws-carpeta__mia">{% if p.relacion == 'lidera' %}Tu proyecto · lo lideras{% else %}Participas{% endif %}</p>{% endif %}
     <div class="ws-carpeta__espalda" aria-hidden="true"></div>
     <p class="ws-carpeta__pestana">{% if p.estado == 'activo' %}En desarrollo{% elif p.estado == 'completado' %}Completado{% elif p.estado == 'pausado' %}Pausado{% else %}{{ p.estado }}{% endif %}</p>
     <div class="ws-carpeta__hoja ws-carpeta__hoja--atras" aria-hidden="true"></div>

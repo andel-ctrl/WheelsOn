@@ -391,14 +391,28 @@ function grafoManager() {
 
         // Con muchas relaciones, sus nombres vuelven ilegible el grafo: se ven al seleccionar un nodo.
         aristasLegibles(aristas) {
-            if (aristas.length <= 150) { return aristas; }
-            return aristas.map((a) => ({ ...a, font: { ...(a.font || {}), size: 0 } }));
+            const oscuro = document.documentElement.getAttribute('data-tema') === 'oscuro';
+            return aristas.map((a) => {
+                const copia = { ...a, font: { ...(a.font || {}) } };
+                if (aristas.length > 150) { copia.font.size = 0; }
+                if (oscuro) {
+                    copia.font.color = '#8E98A6';
+                    copia.font.strokeColor = '#0E1116';
+                    copia.color = { color: 'rgba(180, 189, 200, 0.28)', highlight: '#2EDB7A', hover: '#2EDB7A' };
+                }
+                return copia;
+            });
+        },
+
+        nodosLegibles(nodos) {
+            if (document.documentElement.getAttribute('data-tema') !== 'oscuro') { return nodos; }
+            return nodos.map((n) => ({ ...n, font: { ...(n.font || {}), color: '#E8EDF2', strokeColor: '#0E1116' } }));
         },
 
         inicializarRed(data) {
             const container = document.getElementById('vis-graph-canvas');
             
-            this.datasetNodes = new vis.DataSet(data.nodes);
+            this.datasetNodes = new vis.DataSet(this.nodosLegibles(data.nodes));
             this.datasetEdges = new vis.DataSet(this.aristasLegibles(data.edges));
 
             const visData = {
@@ -522,7 +536,7 @@ function grafoManager() {
                     this.stats = data.stats;
                     this.datasetNodes.clear();
                     this.datasetEdges.clear();
-                    this.datasetNodes.add(data.nodes);
+                    this.datasetNodes.add(this.nodosLegibles(data.nodes));
                     this.datasetEdges.add(this.aristasLegibles(data.edges));
                     this.fitNetwork();
                 })

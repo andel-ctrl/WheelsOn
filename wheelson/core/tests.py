@@ -4589,3 +4589,92 @@ class ConcurrenciaTest(_ConReglas):
     def test_pedir_unirse_muchas_veces_a_la_vez(self):
         self._a_la_vez(*[lambda: InvitacionService.solicitar_unirse(WILSON, "proy_fintech02") for _ in range(6)])
         self.assertEqual(db.cypher_query("MATCH (:Usuario {uid: $u})-[r:SOLICITA_UNIRSE]->(:Proyecto {pid: 'proy_fintech02'}) RETURN count(r)", {"u": WILSON})[0][0][0], 1)
+
+
+class TemaOscuroTest(_ConDatosDeEjemplo):
+    def test_el_selector_esta_en_la_cuenta_y_en_el_acceso(self):
+        for html in (entrar_como(LUIS).get("/").content.decode(), ClienteAnonimo().get("/login/").content.decode(), ClienteAnonimo().get("/registro/").content.decode()):
+            self.assertIn('data-ws-tema="oscuro"', html)
+            self.assertIn('data-ws-tema="claro"', html)
+
+    def test_el_tema_se_aplica_antes_de_cargar_los_estilos(self):
+        html = ClienteAnonimo().get("/login/").content.decode()
+        self.assertLess(html.index("wheelson-tema"), html.index("vendor/daisyui"))
+        self.assertLess(html.index("wheelson-compat.css"), html.index("wheelson-oscuro.css"))
+
+    def test_el_claro_sigue_siendo_el_predeterminado(self):
+        html = ClienteAnonimo().get("/login/").content.decode()
+        self.assertNotIn('<html lang="es" data-theme="wheelson" data-tema', html)
+
+    def test_el_oscuro_es_negro_y_verde(self):
+        css = open(finders.find("css/wheelson-oscuro.css"), encoding="utf-8").read()
+        self.assertIn("--surface: #0E1116;", css)
+        self.assertIn("--primary: #00B84C;", css)
+        self.assertNotIn("#D9483B", css)
+        self.assertNotIn("#6D1F6B", css)
+
+    def test_los_graficos_toman_el_color_del_tema(self):
+        html = entrar_como(LUIS).get("/analitica/").content.decode()
+        self.assertIn("colorDe('--grafico-2')", html)
+        self.assertNotIn("backgroundColor: '#D9483B'", html)
+
+    def test_lo_dibujado_con_imagen_tambien_cambia(self):
+        self.assertTrue(finders.find("img/rueda-mini-verde.svg"))
+        self.assertNotIn("#D9483B", open(finders.find("img/rueda-mini-verde.svg"), encoding="utf-8").read())
+        css = open(finders.find("css/wheelson-oscuro.css"), encoding="utf-8").read()
+        for selector in (".ws-panel-avisos", "#ola-trazo", "rueda-mini-verde"):
+            self.assertIn(selector, css)
+
+
+class LoMioPrimeroTest(_ConDatosDeEjemplo):
+    CARLOS = "usr_carlos001"
+
+    def _esperado(self, cypher, uid, clave):
+        return {f[0] for f in db.cypher_query(cypher, {"uid": uid})[0]}
+
+    def test_proyectos_primero_los_que_lidero_y_luego_donde_participo(self):
+        res = entrar_como(self.CARLOS).get("/proyectos/")
+        relaciones = [p.relacion for p in res.context["proyectos"]]
+        lideradas = self._esperado("MATCH (:Usuario {uid: $uid})-[:LIDERA]->(p) RETURN p.pid", self.CARLOS, "pid")
+        participa = self._esperado("MATCH (:Usuario {uid: $uid})-[:PARTICIPA_EN]->(p) RETURN p.pid", self.CARLOS, "pid") - lideradas
+        self.assertTrue(lideradas and participa)
+        self.assertEqual([r for r in relaciones if r], ["lidera"] * len(lideradas) + ["participa"] * len(participa))
+        self.assertEqual(relaciones[:len(lideradas) + len(participa)], [r for r in relaciones if r])
+        self.assertContains(res, "Tu proyecto · lo lideras")
+        self.assertContains(res, "Participas")
+
+    def test_empresas_primero_la_que_administro_y_luego_donde_trabajo(self):
+        res = entrar_como(MATEO).get("/empresas/")
+        primera = res.context["empresas"][0]
+        self.assertEqual((primera.eid, primera.relacion), ("emp_nexus01", "administra"))
+        self.assertContains(res, "La administras")
+        res = entrar_como(self.CARLOS).get("/empresas/")
+        self.assertEqual(res.context["empresas"][0].relacion, "trabaja")
+        self.assertContains(res, "Trabajas aquí")
+
+    def test_quien_ya_no_trabaja_ahi_no_la_ve_como_suya(self):
+        entrar_como(self.CARLOS).post(f"/empresas/emp_nexus01/equipo/{self.CARLOS}/terminar/")
+        res = entrar_como(self.CARLOS).get("/empresas/")
+        self.assertFalse(any(e.relacion for e in res.context["empresas"]))
+        self.assertNotContains(res, "Trabajas aquí")
+
+    def test_sin_relacion_no_hay_marca(self):
+        db.cypher_query("CREATE (:Usuario {uid: 'usr_sola', nombre: 'Sola', apellido: 'Nueva', email: 'sola@wheelson.com', rol: 'usuario'})")
+        for ruta, marca in (("/proyectos/", "ws-carpeta__mia"), ("/empresas/", "ws-edificio__mia")):
+            self.assertNotContains(entrar_como("usr_sola").get(ruta), marca)
+
+    def test_el_orden_se_respeta_al_cargar_mas_sin_repetir(self):
+        uid = self.CARLOS
+        primera = [p.pid for p in entrar_como(uid).get("/proyectos/").context["proyectos"]]
+        todos = [p.pid for p in entrar_como(uid).get("/proyectos/?pagina=10").context["proyectos"]]
+        self.assertEqual(todos[:len(primera)], primera)
+        self.assertEqual(len(todos), len(set(todos)))
+
+    def test_el_fragmento_lleva_la_marca(self):
+        self.assertContains(entrar_como(MATEO).get("/empresas/?fragmento=1"), "La administras")
+        self.assertContains(entrar_como(MATEO).get("/proyectos/?fragmento=1"), "lo lideras")
+
+    def test_buscar_y_filtrar_conservan_el_orden(self):
+        res = entrar_como(MATEO).get("/proyectos/?estado=activo")
+        self.assertEqual(res.context["proyectos"][0].relacion, "lidera")
+        self.assertTrue(all(p.estado == "activo" for p in res.context["proyectos"]))
