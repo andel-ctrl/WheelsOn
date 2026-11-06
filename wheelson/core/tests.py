@@ -860,11 +860,11 @@ class ScriptDeDatosTest(TestCase):
 
     def test_crea_todos_los_nodos_y_relaciones(self):
         nodos = dict(db.cypher_query("MATCH (n) RETURN labels(n)[0], count(*)")[0])
-        self.assertEqual(nodos, {"Usuario": 15, "Empresa": 3, "Habilidad": 12, "Proyecto": 2, "Oferta": 2})
+        self.assertEqual(nodos, {"Usuario": 15, "Empresa": 3, "Habilidad": 12, "Proyecto": 3, "Oferta": 2})
         relaciones = dict(db.cypher_query("MATCH ()-[r]->() RETURN type(r), count(*)")[0])
         self.assertEqual(relaciones, {
             "CONECTA_CON": 30, "TRABAJA_EN": 15, "TIENE_HABILIDAD": 42,
-            "PARTICIPA_EN": 8, "PUBLICA": 2, "REQUIERE": 6, "POSTULA_A": 2,
+            "PARTICIPA_EN": 11, "PUBLICA": 2, "REQUIERE": 6, "POSTULA_A": 2,
         })
 
     def test_usuario_de_ejemplo_puede_iniciar_sesion(self):
@@ -1222,15 +1222,22 @@ class ProyectosRelacionadosTest(TestCase):
         self.assertEqual(GraphAnalyticsService.proyectos_relacionados("no_existe"), [])
 
     def test_datos_de_ejemplo_y_pantalla(self):
+        db.cypher_query("MATCH (n) DETACH DELETE n")
         ejecutar_script_cypher("seed_data.cypher")
-        resultado = GraphAnalyticsService.proyectos_relacionados("proy_graph01")
-        self.assertEqual(resultado[0]["proyecto"].pid, "proy_fintech02")
-        self.assertCountEqual(resultado[0]["tecnologias_comunes"], ["Python", "Neo4j"])
-        self.assertIn("Santiago Vieira - Dubal Aguilar", resultado[0]["miembros_conectados"])
+        resultado = {
+            r["proyecto"].pid: r for r in GraphAnalyticsService.proyectos_relacionados("proy_graph01")
+        }
+        self.assertCountEqual(resultado, ["proy_fintech02", "proy_talento03"])
+        fintech = resultado["proy_fintech02"]
+        self.assertCountEqual(fintech["tecnologias_comunes"], ["Python", "Neo4j"])
+        self.assertEqual(fintech["miembros_comunes"], [])
+        self.assertIn("Santiago Vieira - Dubal Aguilar", fintech["miembros_conectados"])
+        self.assertEqual(resultado["proy_talento03"]["miembros_comunes"], ["Carlos Calabria"])
 
         res = Client().get(reverse("core:consultas_index") + "?tab=proyectos&pid=proy_graph01")
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "Plataforma Fintech AI")
+        self.assertContains(res, "Recomendador de Talento")
         self.assertContains(res, "Miembros conectados entre equipos")
 
 

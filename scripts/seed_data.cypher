@@ -54,6 +54,7 @@ CREATE (:Habilidad {hid: "hab_sql12", nombre: "PostgreSQL", categoria: "tecnica"
 // 5. Proyectos
 CREATE (:Proyecto {pid: "proy_graph01", nombre: "Motor de Grafos WheelsOn", descripcion: "Plataforma de investigacion y desarrollo para navegacion y analisis de redes complejas.", estado: "activo", fecha_inicio: "2026-10-01", tecnologias: ["Python", "Django", "Neo4j", "Cypher", "Vis.js"]});
 CREATE (:Proyecto {pid: "proy_fintech02", nombre: "Plataforma Fintech AI", descripcion: "Deteccion de patrones anomalos y analisis de comunidades en redes de pago.", estado: "activo", fecha_inicio: "2026-09-01", tecnologias: ["Python", "Docker", "Neo4j", "Machine Learning"]});
+CREATE (:Proyecto {pid: "proy_talento03", nombre: "Recomendador de Talento", descripcion: "Motor que cruza habilidades y conexiones para sugerir candidatos a vacantes abiertas.", estado: "activo", fecha_inicio: "2026-10-20", tecnologias: ["Python", "Neo4j", "React"]});
 
 // 6. Ofertas
 CREATE (:Oferta {oid: "ofr_dataeng01", titulo: "Senior Data Engineer", descripcion: "Buscamos especialista en modelos de grafos para optimizar almacenamiento y consultas analiticas.", salario_min: 8000000.0, salario_max: 12000000.0, modalidad: "remoto", ubicacion: "Colombia", estado: "abierta", fecha_publicacion: "2026-11-01"});
@@ -161,6 +162,9 @@ MATCH (a:Usuario {uid: "usr_luis004"}), (b:Proyecto {pid: "proy_graph01"}) CREAT
 MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Proyecto {pid: "proy_graph01"}) CREATE (a)-[:PARTICIPA_EN {rol: "Database DBA", fecha_inicio: "2026-10-15", activo: true}]->(b);
 MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Proyecto {pid: "proy_fintech02"}) CREATE (a)-[:PARTICIPA_EN {rol: "Data Architect", fecha_inicio: "2026-09-05", activo: true}]->(b);
 MATCH (a:Usuario {uid: "usr_andres015"}), (b:Proyecto {pid: "proy_fintech02"}) CREATE (a)-[:PARTICIPA_EN {rol: "Lead Data Scientist", fecha_inicio: "2026-09-10", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Proyecto {pid: "proy_talento03"}) CREATE (a)-[:PARTICIPA_EN {rol: "Graph Engineer", fecha_inicio: "2026-10-20", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Proyecto {pid: "proy_talento03"}) CREATE (a)-[:PARTICIPA_EN {rol: "Data Architect", fecha_inicio: "2026-10-20", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_miguel010"}), (b:Proyecto {pid: "proy_talento03"}) CREATE (a)-[:PARTICIPA_EN {rol: "Frontend Developer", fecha_inicio: "2026-10-25", activo: true}]->(b);
 
 // 11. Publicacion de ofertas [:PUBLICA]
 MATCH (a:Empresa {eid: "emp_nexus01"}), (b:Oferta {oid: "ofr_dataeng01"}) CREATE (a)-[:PUBLICA {fecha_publicacion: "2026-11-01"}]->(b);
