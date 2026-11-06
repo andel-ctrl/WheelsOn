@@ -29,6 +29,8 @@ from core.services import (
     PostulacionService,
 )
 from core.graph_queries import GraphAnalyticsService
+from core.recommendations import RecommendationEngine
+from core.analytics import NetworkAnalyticsService
 from core.forms import (
     UsuarioForm,
     EmpresaForm,
@@ -606,6 +608,138 @@ class AdvancedGraphQueriesTest(TestCase):
 
         res_cand = self.client.get(reverse("core:consultas_index") + f"?query_type=candidatos_oferta&oid={self.ofr.oid}")
         self.assertEqual(res_cand.status_code, 200)
+
+
+class RecommendationEngineTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.u1 = UsuarioService.create(nombre="Alvaro", apellido="Vega", email="alvaro@test.com", titulo_profesional="Senior Backend")
+        self.u2 = UsuarioService.create(nombre="Beatriz", apellido="Paz", email="beatriz@test.com", titulo_profesional="Data Scientist")
+        self.u3 = UsuarioService.create(nombre="Camilo", apellido="Torres", email="camilo@test.com", titulo_profesional="DevOps Lead")
+        self.emp = EmpresaService.create(nombre="DataWave", industria="Big Data", tamano="grande")
+        self.h_py = HabilidadService.create(nombre="Python", categoria="tecnica")
+        self.h_sql = HabilidadService.create(nombre="SQL", categoria="tecnica")
+        self.h_gcp = HabilidadService.create(nombre="GCP", categoria="tecnica")
+        self.proy = ProyectoService.create(nombre="Lakehouse Migration", estado="activo", tecnologias="Python, GCP")
+        self.ofr = OfertaService.create(titulo="Data Engineer", modalidad="remoto", estado="abierta")
+        PublicacionOfertaService.vincular(self.emp.eid, self.ofr.oid)
+
+    def test_recomendar_contactos_amigos_de_amigos(self):
+        ConexionService.conectar(self.u1.uid, self.u2.uid)
+        ConexionService.conectar(self.u2.uid, self.u3.uid)
+
+        recs = RecommendationEngine.recomendar_contactos(self.u1.uid)
+        self.assertGreaterEqual(len(recs), 1)
+        uids_recomendados = [r["usuario"].uid for r in recs]
+        self.assertIn(self.u3.uid, uids_recomendados)
+        self.assertNotIn(self.u2.uid, uids_recomendados)
+        self.assertNotIn(self.u1.uid, uids_recomendados)
+
+    def test_recomendar_empleos_por_habilidades(self):
+        RequisitoOfertaService.vincular(self.ofr.oid, self.h_py.hid, nivel_minimo="intermedio", prioridad="obligatoria")
+        RequisitoOfertaService.vincular(self.ofr.oid, self.h_sql.hid, nivel_minimo="basico", prioridad="deseable")
+
+        HabilidadUsuarioService.vincular(self.u1.uid, self.h_py.hid, nivel="avanzado")
+
+        recs = RecommendationEngine.recomendar_empleos(self.u1.uid)
+        self.assertEqual(len(recs), 1)
+        self.assertEqual(recs[0]["oferta"].oid, self.ofr.oid)
+        self.assertEqual(recs[0]["match_porcentaje"], 50.0)
+        self.assertIn("Python", recs[0]["habilidades_match"])
+        self.assertIn("SQL", recs[0]["habilidades_faltantes"])
+
+        PostulacionService.postular(self.u1.uid, self.ofr.oid)
+        recs_post = RecommendationEngine.recomendar_empleos(self.u1.uid)
+        self.assertEqual(len(recs_post), 0)
+
+    def test_recomendar_colaboradores_proyecto(self):
+        ParticipacionProyectoService.vincular(self.u1.uid, self.proy.pid, rol="Tech Lead")
+        HabilidadUsuarioService.vincular(self.u2.uid, self.h_gcp.hid)
+        ConexionService.conectar(self.u2.uid, self.u1.uid)
+
+        recs = RecommendationEngine.recomendar_colaboradores_proyecto(self.proy.pid)
+        self.assertGreaterEqual(len(recs), 1)
+        self.assertEqual(recs[0]["usuario"].uid, self.u2.uid)
+        self.assertIn("GCP", recs[0]["habilidades_match"])
+        self.assertGreaterEqual(recs[0]["conexiones_equipo"], 1)
+
+    def test_recomendar_candidatos_para_empresa(self):
+        RequisitoOfertaService.vincular(self.ofr.oid, self.h_py.hid)
+        HabilidadUsuarioService.vincular(self.u1.uid, self.h_py.hid)
+
+        recs = RecommendationEngine.recomendar_candidatos_para_empresa(self.emp.eid)
+        self.assertGreaterEqual(len(recs), 1)
+        self.assertEqual(recs[0]["usuario"].uid, self.u1.uid)
+
+    def test_recomendaciones_views(self):
+        res = self.client.get(reverse("core:recomendaciones_index"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Recomendaciones Inteligentes")
+
+        res_cont = self.client.get(reverse("core:recomendaciones_index") + f"?tab=contactos&uid={self.u1.uid}")
+        self.assertEqual(res_cont.status_code, 200)
+
+        res_emp = self.client.get(reverse("core:recomendaciones_index") + f"?tab=empleos&uid={self.u1.uid}")
+        self.assertEqual(res_emp.status_code, 200)
+
+        res_colab = self.client.get(reverse("core:recomendaciones_index") + f"?tab=colaboradores&pid={self.proy.pid}")
+        self.assertEqual(res_colab.status_code, 200)
+
+        res_tal = self.client.get(reverse("core:recomendaciones_index") + f"?tab=talento&eid={self.emp.eid}")
+        self.assertEqual(res_tal.status_code, 200)
+
+    def test_analytics_metricas_globales(self):
+        ConexionService.conectar(self.u1.uid, self.u2.uid)
+        metricas = NetworkAnalyticsService.metricas_red_globales()
+        self.assertGreaterEqual(metricas["total_usuarios"], 2)
+        self.assertGreaterEqual(metricas["total_conexiones"], 1)
+        self.assertGreaterEqual(metricas["densidad_raw"], 0.0)
+        self.assertGreaterEqual(metricas["grado_promedio"], 0.0)
+        self.assertIn("clustering_coef", metricas)
+        self.assertIn("diametro", metricas)
+
+    def test_analytics_centralidad_y_pagerank(self):
+        ConexionService.conectar(self.u1.uid, self.u2.uid)
+        centralidad = NetworkAnalyticsService.ranking_centralidad_grado(limit=5)
+        self.assertGreaterEqual(len(centralidad), 2)
+        self.assertEqual(centralidad[0]["ranking"], 1)
+        self.assertGreaterEqual(centralidad[0]["grado"], 1)
+
+        pagerank = NetworkAnalyticsService.ranking_pagerank(limit=5)
+        self.assertGreaterEqual(len(pagerank), 2)
+        self.assertGreaterEqual(pagerank[0]["score"], 0.0)
+        self.assertEqual(pagerank[0]["ranking"], 1)
+
+    def test_analytics_comunidades_y_mercado(self):
+        HabilidadUsuarioService.vincular(self.u1.uid, self.h_py.hid)
+        RequisitoOfertaService.vincular(self.ofr.oid, self.h_py.hid, prioridad="obligatoria")
+        
+        comunidades = NetworkAnalyticsService.deteccion_comunidades()
+        self.assertGreaterEqual(len(comunidades), 1)
+        self.assertIn("nombre", comunidades[0])
+        self.assertGreaterEqual(comunidades[0]["tamano"], 1)
+
+        balance = NetworkAnalyticsService.analisis_oferta_demanda_habilidades()
+        self.assertGreaterEqual(balance["total_habilidades"], 1)
+        self.assertGreaterEqual(len(balance["habilidades"]), 1)
+
+        graficos = NetworkAnalyticsService.preparar_datos_graficos()
+        self.assertIn("influencia", graficos)
+        self.assertIn("comunidades", graficos)
+        self.assertIn("habilidades", graficos)
+
+    def test_analytics_view_endpoint(self):
+        res = self.client.get(reverse("core:analitica_dashboard"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Panel de Analítica de Grafos")
+        self.assertIn("metricas", res.context)
+        self.assertIn("centralidad", res.context)
+        self.assertIn("pagerank", res.context)
+        self.assertIn("comunidades", res.context)
+        self.assertIn("habilidades_balance", res.context)
+        self.assertIn("chart_data_json", res.context)
+
+
 
 
 

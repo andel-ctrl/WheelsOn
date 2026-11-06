@@ -70,4 +70,10 @@ urlpatterns = [
 
     # Consultas Avanzadas de Grafo (Fase 6)
     path("consultas/", views.consultas_index, name="consultas_index"),
+
+    # Motor de Recomendaciones (Fase 7)
+    path("recomendaciones/", views.recomendaciones_index, name="recomendaciones_index"),
+
+    # Panel de Analítica de Grafos (Fase 8)
+    path("analitica/", views.analitica_dashboard, name="analitica_dashboard"),
 ]

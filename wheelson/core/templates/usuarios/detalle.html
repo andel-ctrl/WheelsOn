@@ -1,287 +1,327 @@
 {% extends "base.html" %}
 
-{% block title %}{{ usuario.nombre_completo }} | Perfil WheelsOn{% endblock %}
-{% block page_title %}Perfil Profesional{% endblock %}
+{% block title %}{{ usuario.nombre_completo }} | Perfil Bento WheelsOn{% endblock %}
+{% block page_title %}{{ usuario.nombre_completo }}{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'sobre_mi', copied: false, showSkillModal: false, showJobModal: false }">
+<div class="max-w-6xl mx-auto space-y-6 animate-fade-in-up"
+     x-data="{
+        activeTab: 'bento',
+        copied: false,
+        showSkillModal: false,
+        showJobModal: false,
+        showConnectModal: false,
+        showProjectModal: false
+     }">
 
-    <!-- Profile Banner & Hero Card -->
-    <div class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl">
-        <div class="h-32 sm:h-40 bg-gradient-to-r from-primary/30 via-secondary/20 to-accent/30 relative">
-            <div class="absolute top-4 right-4 flex gap-2">
-                <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="btn btn-xs btn-accent shadow rounded-lg gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    Ver en Red de Grafos
-                </a>
-                <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-xs btn-secondary shadow rounded-lg gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    Editar
-                </a>
-                <a href="{% url 'core:usuario_eliminar' uid=usuario.uid %}" class="btn btn-xs btn-error btn-outline shadow rounded-lg">Eliminar</a>
+    <!-- ========================================================================= -->
+    <!-- BENTO GRID CONTAINER (INSPIRADO EN BENTO.ME Y READ.CV) -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+
+        <!-- ===================================================================== -->
+        <!-- 1. HERO BENTO: TARJETA PRINCIPAL DE IDENTIDAD (8 COLS) -->
+        <!-- ===================================================================== -->
+        <div class="md:col-span-8 bento-box p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group">
+            <!-- Glow background sutil -->
+            <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+
+            <div class="space-y-5 relative z-10">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="avatar placeholder">
+                            <div class="bg-gradient-to-tr from-emerald-500 to-cyan-500 text-white font-black rounded-3xl w-20 h-20 text-2xl shadow-xl ring-2 ring-emerald-500/30">
+                                {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-black text-base-content tracking-tight">
+                                    {{ usuario.nombre_completo }}
+                                </h1>
+                            </div>
+                            <span class="text-xs font-mono text-emerald-400 font-bold block">
+                                @{{ usuario.nombre|lower }}.{{ usuario.apellido|lower }}
+                            </span>
+                            <p class="text-sm font-semibold text-base-content/80 mt-0.5">
+                                {{ usuario.titulo_profesional|default:"Ingeniero de Software" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-end gap-1.5">
+                        <span class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] uppercase tracking-wider py-2 px-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#00b84c] inline-block mr-1"></span> Open to Work
+                        </span>
+                        <!-- Quick Actions de Administracion -->
+                        <div class="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition pt-1">
+                            <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-ghost btn-xs text-[10px] rounded-lg">Editar</a>
+                            <span class="text-base-content/20">&bull;</span>
+                            <a href="{% url 'core:usuario_eliminar' uid=usuario.uid %}" class="btn btn-ghost btn-xs text-error text-[10px] rounded-lg">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bio & Localizacion -->
+                <p class="text-xs sm:text-sm text-base-content/70 leading-relaxed font-normal">
+                    {{ usuario.biografia|default:"Profesional apasionado por el diseno de software, arquitecturas escalables y analisis de datos sobre grafos. Construyendo activamente en WheelsOn." }}
+                </p>
+
+                <div class="flex flex-wrap items-center gap-4 text-xs text-base-content/50 pt-1">
+                    <span class="flex items-center gap-1.5">
+                        <span>{{ usuario.ubicacion|default:"Medellín, Colombia" }}</span>
+                    </span>
+                    <span>&bull;</span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="font-mono text-[11px]">{{ usuario.email }}</span>
+                    </span>
+                    <span>&bull;</span>
+                    <span class="flex items-center gap-1.5">
+                        <span>Miembro desde {{ usuario.fecha_registro|default:"2026" }}</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Botones de Accion Social -->
+            <div class="pt-6 mt-4 border-t border-base-content/5 flex flex-wrap items-center justify-between gap-3 relative z-10">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button @click="showConnectModal = true" class="btn btn-primary btn-sm rounded-2xl gap-1.5 font-bold shadow-md shadow-primary/20 text-xs">
+                        <span>Conectar</span>
+                    </button>
+                    <a href="{% url 'core:consultas_index' %}?tab=camino&uid1={{ current_user.uid }}&uid2={{ usuario.uid }}"
+                       class="btn btn-ghost btn-sm rounded-2xl gap-1 text-xs font-semibold hover:bg-base-100 border border-base-content/10">
+                        <span>Calcular Ruta</span>
+                    </a>
+                    <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}"
+                       class="btn btn-ghost btn-sm rounded-2xl gap-1 text-xs font-semibold hover:bg-base-100 border border-base-content/10">
+                        <span>Ver en Grafo</span>
+                    </a>
+                </div>
+
+                <!-- UID Copiable en Modo Dev -->
+                <button type="button" @click="navigator.clipboard.writeText('{{ usuario.uid }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                        class="btn btn-ghost btn-xs font-mono text-[10px] text-base-content/40 hover:text-base-content rounded-xl">
+                    <span x-show="!copied">UID: {{ usuario.uid|slice:":12" }}...</span>
+                    <span x-show="copied" class="text-success font-bold" style="display: none;">¡Copiado!</span>
+                </button>
             </div>
         </div>
 
-        <div class="card-body p-6 sm:p-8 pt-0 relative">
-            <div class="flex flex-col sm:flex-row items-center sm:items-end gap-5 -mt-16 sm:-mt-20 mb-4">
-                <div class="avatar placeholder ring ring-base-100 ring-offset-4 ring-offset-base-200 rounded-3xl shadow-2xl">
-                    <div class="bg-gradient-to-tr from-primary to-secondary text-primary-content font-black rounded-3xl w-24 h-24 sm:w-28 sm:h-28 text-3xl flex items-center justify-center">
-                        {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
-                    </div>
+        <!-- ===================================================================== -->
+        <!-- 2. MINI METRICAS SOCIALES (4 COLS) -->
+        <!-- ===================================================================== -->
+        <div class="md:col-span-4 bento-box p-6 flex flex-col justify-between gap-4">
+            <h3 class="font-black text-xs uppercase tracking-wider text-base-content/50 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                Presencia en el Grafo
+            </h3>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
+                    <span class="font-black text-xl text-emerald-400 block">{{ conexiones_rel|length }}</span>
+                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Conexiones</span>
                 </div>
-
-                <div class="flex-1 text-center sm:text-left space-y-1">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <h2 class="text-2xl sm:text-3xl font-black text-base-content">{{ usuario.nombre_completo }}</h2>
-                        <button type="button" @click="navigator.clipboard.writeText('{{ usuario.uid }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                                class="btn btn-xs btn-ghost gap-1 font-mono text-[11px] self-center sm:self-auto border border-base-300 rounded-lg">
-                            <span x-show="!copied">UID: {{ usuario.uid|slice:":10" }}...</span>
-                            <span x-show="copied" style="display: none;">¡Copiado!</span>
-                        </button>
-                    </div>
-
-                    <p class="text-sm sm:text-base font-semibold text-primary">{{ usuario.titulo_profesional|default:"Profesional" }}</p>
-
-                    <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 text-xs text-base-content/70 pt-1">
-                        <span class="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {{ usuario.ubicacion|default:"No especificada" }}
-                        </span>
-                        <span>&bull;</span>
-                        <span class="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            {{ usuario.email }}
-                        </span>
-                    </div>
+                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
+                    <span class="font-black text-xl text-cyan-400 block">{{ habilidades_rel|length }}</span>
+                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Habilidades</span>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
+                    <span class="font-black text-xl text-primary block">{{ proyectos_rel|length }}</span>
+                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Proyectos</span>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
+                    <span class="font-black text-xl text-secondary block">{{ empleos_rel|length }}</span>
+                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Experiencias</span>
                 </div>
             </div>
 
-            <!-- Profile Nav Tabs -->
-            <div class="tabs tabs-bordered mt-6 border-b border-base-300">
-                <button type="button" @click="activeTab = 'sobre_mi'" :class="activeTab === 'sobre_mi' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Sobre Mí
-                </button>
-                <button type="button" @click="activeTab = 'habilidades'" :class="activeTab === 'habilidades' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Habilidades ({{ habilidades_rel|length }})
-                </button>
-                <button type="button" @click="activeTab = 'empleo'" :class="activeTab === 'empleo' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Trayectoria ({{ empleos_rel|length }})
-                </button>
-                <button type="button" @click="activeTab = 'proyectos'" :class="activeTab === 'proyectos' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Proyectos ({{ proyectos_rel|length }})
-                </button>
-                <button type="button" @click="activeTab = 'red'" :class="activeTab === 'red' ? 'tab-active font-bold text-primary border-primary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Conexiones ({{ conexiones_rel|length }})
+            <!-- Enlace rapido a contactos mutuos -->
+            <a href="{% url 'core:consultas_index' %}?tab=comun&uid1={{ current_user.uid }}&uid2={{ usuario.uid }}"
+               class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-bold text-center hover:bg-emerald-500/20 transition block">
+                ¿Contactos en Común con {{ current_user.nombre }}? &rarr;
+            </a>
+        </div>
+
+        <!-- ===================================================================== -->
+        <!-- 3. SKILLS BENTO: STACK TECNICO & COMPETENCIAS (6 COLS) -->
+        <!-- ===================================================================== -->
+        <div class="md:col-span-6 bento-box p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
+                        Stack Técnico & Habilidades
+                    </h3>
+                    <p class="text-[11px] text-base-content/50">Cápsulas interactivas con nivel de maestría técnica.</p>
+                </div>
+                <button @click="showSkillModal = true" class="btn btn-ghost btn-xs text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 rounded-xl">
+                    + Añadir Skill
                 </button>
             </div>
 
-            <!-- Tab Content -->
-            <div class="py-6">
-                <!-- 1. Sobre Mi Tab -->
-                <div x-show="activeTab === 'sobre_mi'" class="space-y-4">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Biografía Profesional</h3>
-                    {% if usuario.biografia %}
-                    <p class="text-sm leading-relaxed text-base-content/80 whitespace-pre-line bg-base-300/30 p-5 rounded-2xl border border-base-300">
-                        {{ usuario.biografia }}
-                    </p>
-                    {% else %}
-                    <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/50">Este profesional aún no ha agregado su biografía profesional.</p>
-                        <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-xs btn-primary btn-outline mt-3">Completar Biografía</a>
+            <div class="flex flex-wrap gap-2 pt-1">
+                {% for item in habilidades_rel %}
+                <div class="group relative px-3 py-2 rounded-2xl bg-base-100/70 border border-base-content/10 hover:border-emerald-500/40 transition flex items-center gap-2">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-xs text-base-content">{{ item.habilidad.nombre }}</span>
+                        <div class="flex items-center gap-1.5 text-[9px] text-base-content/50">
+                            <span class="text-emerald-400 font-bold uppercase">{{ item.nivel|default:"Intermedio" }}</span>
+                            {% if item.anios_experiencia %}
+                            <span>&bull;</span>
+                            <span>{{ item.anios_experiencia }} años</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endif %}
+                    <form method="POST" action="{% url 'core:usuario_habilidad_eliminar' uid=usuario.uid hid=item.habilidad.hid %}" class="opacity-0 group-hover:opacity-100 transition">
+                        {% csrf_token %}
+                        <button type="submit" class="text-error hover:text-red-400 text-xs ml-1 font-bold" title="Desvincular">×</button>
+                    </form>
                 </div>
-
-                <!-- 2. Habilidades Tab -->
-                <div x-show="activeTab === 'habilidades'" style="display: none;" class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Competencias del Perfil (:Habilidad)</h3>
-                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-primary font-mono">[:TIENE_HABILIDAD]</code> con nivel y años de experiencia.</p>
-                        </div>
-                        <button type="button" @click="showSkillModal = true" class="btn btn-xs btn-primary rounded-xl font-bold">+ Vincular Habilidad</button>
-                    </div>
-
-                    {% if habilidades_rel %}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {% for item in habilidades_rel %}
-                        <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center justify-between">
-                            <div class="space-y-1">
-                                <span class="font-bold text-sm text-base-content">{{ item.habilidad.nombre }}</span>
-                                <div class="flex items-center gap-2">
-                                    <span class="badge badge-xs uppercase font-bold
-                                        {% if item.nivel == 'experto' %}badge-accent
-                                        {% elif item.nivel == 'avanzado' %}badge-primary
-                                        {% elif item.nivel == 'intermedio' %}badge-secondary
-                                        {% else %}badge-ghost{% endif %}">
-                                        {{ item.nivel }}
-                                    </span>
-                                    <span class="text-[10px] text-base-content/60">{{ item.anios_experiencia }} año(s) exp.</span>
-                                </div>
-                            </div>
-                            <form method="POST" action="{% url 'core:usuario_habilidad_eliminar' uid=usuario.uid hid=item.habilidad.hid %}"
-                                  onsubmit="return confirm('¿Quitar habilidad {{ item.habilidad.nombre }}?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg" title="Quitar">✕</button>
-                            </form>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
-                        <p class="text-xs text-base-content/60">Aún no se han vinculado habilidades a este perfil.</p>
-                        <button type="button" @click="showSkillModal = true" class="btn btn-xs btn-primary font-bold">Añadir Primera Habilidad</button>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- 3. Empleo Tab -->
-                <div x-show="activeTab === 'empleo'" style="display: none;" class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Trayectoria Laboral (:Empresa)</h3>
-                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-secondary font-mono">[:TRABAJA_EN]</code> con cargo y vigencia.</p>
-                        </div>
-                        <button type="button" @click="showJobModal = true" class="btn btn-xs btn-secondary rounded-xl font-bold">+ Agregar Experiencia</button>
-                    </div>
-
-                    {% if empleos_rel %}
-                    <div class="space-y-3">
-                        {% for emp in empleos_rel %}
-                        <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-base text-base-content">{{ emp.cargo }}</span>
-                                    {% if emp.actual %}
-                                    <span class="badge badge-xs badge-success text-success-content font-bold">Actual</span>
-                                    {% endif %}
-                                </div>
-                                <a href="{% url 'core:empresa_detalle' eid=emp.empresa.eid %}" class="text-xs font-semibold text-secondary hover:underline">
-                                    🏢 {{ emp.empresa.nombre }} ({{ emp.empresa.industria }})
-                                </a>
-                                <p class="text-[11px] text-base-content/50">
-                                    {{ emp.fecha_inicio|default:"Inicio N/A" }} &rarr; {% if emp.actual %}Presente{% else %}{{ emp.fecha_fin|default:"Fin N/A" }}{% endif %}
-                                </p>
-                            </div>
-                            <form method="POST" action="{% url 'core:usuario_experiencia_eliminar' uid=usuario.uid eid=emp.empresa.eid %}"
-                                  onsubmit="return confirm('¿Eliminar experiencia laboral en {{ emp.empresa.nombre }}?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-xs btn-error btn-outline rounded-lg">Eliminar</button>
-                            </form>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
-                        <p class="text-xs text-base-content/60">No hay experiencia laboral registrada aún en el grafo.</p>
-                        <button type="button" @click="showJobModal = true" class="btn btn-xs btn-secondary font-bold">Registrar Empleo</button>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- 4. Proyectos Tab -->
-                <div x-show="activeTab === 'proyectos'" style="display: none;" class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Iniciativas y Proyectos (:Proyecto)</h3>
-                        <span class="badge badge-info badge-outline text-xs">Arista [:PARTICIPA_EN]</span>
-                    </div>
-
-                    {% if proyectos_rel %}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {% for proy in proyectos_rel %}
-                        <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm space-y-2">
-                            <div class="flex justify-between items-start">
-                                <a href="{% url 'core:proyecto_detalle' pid=proy.proyecto.pid %}" class="font-bold text-sm text-base-content hover:text-info">
-                                    {{ proy.proyecto.nombre }}
-                                </a>
-                                <span class="badge badge-xs badge-info font-bold">{{ proy.rol }}</span>
-                            </div>
-                            <p class="text-xs text-base-content/60 line-clamp-2">{{ proy.proyecto.descripcion|default:"Sin descripción" }}</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">Este usuario aún no figura como participante en proyectos.</p>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- 5. Red Tab -->
-                <div x-show="activeTab === 'red'" style="display: none;" class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Contactos Directos (:Usuario)</h3>
-                            <p class="text-xs text-base-content/50">Arista simétrica <code class="text-accent font-mono">[:CONECTA_CON]</code>.</p>
-                        </div>
-                        <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="btn btn-xs btn-accent rounded-xl font-bold">Explorar Red Completa &rarr;</a>
-                    </div>
-
-                    {% if conexiones_rel %}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {% for c in conexiones_rel %}
-                        <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center gap-3">
-                            <div class="avatar placeholder">
-                                <div class="bg-accent/20 text-accent font-bold rounded-xl w-10 h-10 text-xs">
-                                    {{ c.usuario.nombre|slice:":1" }}{{ c.usuario.apellido|slice:":1" }}
-                                </div>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <a href="{% url 'core:usuario_detalle' uid=c.usuario.uid %}" class="font-bold text-xs text-base-content hover:text-accent truncate block">
-                                    {{ c.usuario.nombre_completo }}
-                                </a>
-                                <span class="text-[10px] text-base-content/60 truncate block">{{ c.usuario.titulo_profesional|default:"Profesional" }}</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
-                        <p class="text-xs text-base-content/60">No hay conexiones registradas para este perfil.</p>
-                        <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="btn btn-xs btn-accent font-bold">Conectar Contactos</a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card-actions justify-start pt-4 border-t border-base-300">
-                <a href="{% url 'core:usuarios_lista' %}" class="btn btn-sm btn-ghost gap-2">
-                    &larr; Volver al Directorio
-                </a>
+                {% empty %}
+                <p class="text-xs text-base-content/40 py-4 text-center w-full">Sin habilidades vinculadas al perfil.</p>
+                {% endfor %}
             </div>
         </div>
+
+        <!-- ===================================================================== -->
+        <!-- 4. SHOWCASE BENTO: PROYECTOS DESTACADOS (PROOF OF WORK) (6 COLS) -->
+        <!-- ===================================================================== -->
+        <div class="md:col-span-6 bento-box p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
+                        Proyectos (Proof of Work)
+                    </h3>
+                    <p class="text-[11px] text-base-content/50">Creaciones reales con código, stacks y colaboradores.</p>
+                </div>
+                <button @click="showProjectModal = true" class="btn btn-ghost btn-xs text-xs font-bold text-primary hover:bg-primary/10 rounded-xl">
+                    + Vincular
+                </button>
+            </div>
+
+            <div class="space-y-2.5">
+                {% for item in proyectos_rel %}
+                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 hover:border-primary/30 transition flex items-start justify-between gap-3">
+                    <div class="space-y-1 min-w-0">
+                        <a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" class="font-black text-xs text-base-content hover:text-primary transition truncate block">
+                            {{ item.proyecto.nombre }}
+                        </a>
+                        <p class="text-[11px] text-base-content/60 line-clamp-1">
+                            Rol: <span class="font-bold text-base-content">{{ item.rol }}</span>
+                        </p>
+                        {% if item.proyecto.tecnologias %}
+                        <div class="flex flex-wrap gap-1 pt-1">
+                            {% for tech in item.proyecto.tecnologias_lista|default:item.proyecto.tecnologias %}
+                            <span class="badge badge-ghost badge-xs text-[9px] font-mono">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <form method="POST" action="{% url 'core:proyecto_colaborador_eliminar' pid=item.proyecto.pid uid=usuario.uid %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-ghost btn-xs text-error hover:bg-error/10 rounded-lg text-xs" title="Desvincular">×</button>
+                    </form>
+                </div>
+                {% empty %}
+                <p class="text-xs text-base-content/40 py-4 text-center">Sin proyectos registrados.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ===================================================================== -->
+        <!-- 5. EXPERIENCE BENTO: TRAYECTORIA LABORAL (6 COLS) -->
+        <!-- ===================================================================== -->
+        <div class="md:col-span-6 bento-box p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
+                        Trayectoria Profesional
+                    </h3>
+                    <p class="text-[11px] text-base-content/50">Empresas y organizaciones en la red.</p>
+                </div>
+                <button @click="showJobModal = true" class="btn btn-ghost btn-xs text-xs font-bold text-secondary hover:bg-secondary/10 rounded-xl">
+                    + Añadir
+                </button>
+            </div>
+
+            <div class="space-y-2.5">
+                {% for item in empleos_rel %}
+                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 hover:border-secondary/30 transition flex items-start justify-between gap-3">
+                    <div class="space-y-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-xs text-base-content">{{ item.cargo }}</span>
+                            {% if item.actual %}
+                            <span class="badge badge-xs badge-success text-[9px]">Actual</span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'core:empresa_detalle' eid=item.empresa.eid %}" class="text-[11px] text-secondary font-semibold hover:underline block truncate">
+                            {{ item.empresa.nombre }}
+                        </a>
+                    </div>
+                    <form method="POST" action="{% url 'core:usuario_experiencia_eliminar' uid=usuario.uid eid=item.empresa.eid %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-ghost btn-xs text-error hover:bg-error/10 rounded-lg text-xs" title="Eliminar">×</button>
+                    </form>
+                </div>
+                {% empty %}
+                <p class="text-xs text-base-content/40 py-4 text-center">Sin experiencia laboral registrada.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ===================================================================== -->
+        <!-- 6. CONSTELLATION BENTO: RED INTERACTIVA VIS.JS (6 COLS) -->
+        <!-- ===================================================================== -->
+        <div class="md:col-span-6 bento-box p-6 space-y-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
+                        Constelación de Conexiones
+                    </h3>
+                    <p class="text-[11px] text-base-content/50">Mini-lienzo estelar interactivo con sus colegas de 1er grado.</p>
+                </div>
+                <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="text-[10px] text-emerald-400 font-bold hover:underline">
+                    Expandir &rarr;
+                </a>
+            </div>
+
+            <!-- Canvas Vis.js Container -->
+            <div id="user-constellation-network" class="w-full h-52 rounded-2xl bg-base-100/80 border border-base-content/5 relative overflow-hidden">
+                <div class="absolute inset-0 flex items-center justify-center text-xs text-base-content/40 pointer-events-none" id="network-loading">
+                    Cargando constelación de red...
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] text-base-content/50">
+                <span>{{ conexiones_rel|length }} colegas conectados directamente</span>
+                <span class="font-mono">Neo4j :CONECTA_CON</span>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Modal Vincular Habilidad -->
-    <div x-show="showSkillModal" class="modal modal-open" style="display: none;">
-        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
-            <h3 class="font-black text-lg text-base-content">Vincular Habilidad a {{ usuario.nombre_completo }}</h3>
-            <p class="text-xs text-base-content/70">Crea la relación orientada <code class="text-primary font-mono">(:Usuario)-[:TIENE_HABILIDAD]->(:Habilidad)</code>.</p>
+    <!-- ========================================================================= -->
+    <!-- MODALES ALPINE.JS PARA VINCULACION RAPIDA -->
+    <!-- ========================================================================= -->
 
-            <form method="POST" action="{% url 'core:usuario_habilidad_agregar' uid=usuario.uid %}" class="space-y-3">
+    <!-- MODAL AÑADIR HABILIDAD -->
+    <div x-show="showSkillModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+        <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
+            <h3 class="font-black text-sm text-base-content">Vincular Nueva Habilidad</h3>
+            <form method="POST" action="{% url 'core:usuario_habilidad_agregar' uid=usuario.uid %}" class="space-y-3 mt-3">
                 {% csrf_token %}
                 <div>
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Seleccionar Habilidad:</span></label>
-                    <select name="hid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
-                        <option value="">-- Elige una habilidad --</option>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Habilidad:</span></label>
+                    <select name="hid" class="select select-sm select-bordered w-full rounded-xl" required>
+                        <option value="">Seleccione una habilidad...</option>
                         {% for h in todas_habilidades %}
                         <option value="{{ h.hid }}">{{ h.nombre }} ({{ h.categoria }})</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="label py-1"><span class="label-text text-xs font-bold">Nivel de Dominio:</span></label>
-                        <select name="nivel" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Nivel:</span></label>
+                        <select name="nivel" class="select select-sm select-bordered w-full rounded-xl">
                             <option value="basico">Básico</option>
                             <option value="intermedio" selected>Intermedio</option>
                             <option value="avanzado">Avanzado</option>
@@ -289,64 +329,166 @@
                         </select>
                     </div>
                     <div>
-                        <label class="label py-1"><span class="label-text text-xs font-bold">Años de Exp.:</span></label>
-                        <input type="number" name="anios_experiencia" value="1" min="0" max="40" class="input input-sm input-bordered w-full rounded-xl bg-base-100" />
+                        <label class="label py-1"><span class="label-text text-xs font-bold">Años exp.:</span></label>
+                        <input type="number" name="anios_experiencia" value="1" min="0" max="40" class="input input-sm input-bordered w-full rounded-xl">
                     </div>
                 </div>
-
-                <div class="modal-action">
-                    <button type="button" @click="showSkillModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-primary rounded-xl font-bold">Guardar Habilidad</button>
+                <div class="modal-action pt-2">
+                    <button type="button" @click="showSkillModal = false" class="btn btn-sm btn-ghost rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-xl text-xs font-bold">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Agregar Experiencia Laboral -->
-    <div x-show="showJobModal" class="modal modal-open" style="display: none;">
-        <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
-            <h3 class="font-black text-lg text-base-content">Añadir Experiencia Laboral</h3>
-            <p class="text-xs text-base-content/70">Crea la relación orientada <code class="text-secondary font-mono">(:Usuario)-[:TRABAJA_EN]->(:Empresa)</code>.</p>
+    <!-- MODAL CONECTAR -->
+    <div x-show="showConnectModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+        <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
+            <h3 class="font-black text-sm text-base-content">Conectar con {{ usuario.nombre }}</h3>
+            <form method="POST" action="{% url 'core:conexion_conectar' %}" class="space-y-3 mt-3">
+                {% csrf_token %}
+                <input type="hidden" name="uid_origen" value="{{ current_user.uid }}">
+                <input type="hidden" name="uid_destino" value="{{ usuario.uid }}">
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Mensaje de invitación:</span></label>
+                    <textarea name="mensaje" rows="3" class="textarea textarea-bordered w-full rounded-xl text-xs" placeholder="Hola {{ usuario.nombre }}, vi tu trabajo en WheelsOn y me gustaría conectar."></textarea>
+                </div>
+                <div class="modal-action pt-2">
+                    <button type="button" @click="showConnectModal = false" class="btn btn-sm btn-ghost rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-xl text-xs font-bold">Enviar Solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            <form method="POST" action="{% url 'core:usuario_experiencia_agregar' uid=usuario.uid %}" class="space-y-3">
+    <!-- MODAL AÑADIR EXPERIENCIA -->
+    <div x-show="showJobModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+        <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
+            <h3 class="font-black text-sm text-base-content">Añadir Experiencia Laboral</h3>
+            <form method="POST" action="{% url 'core:usuario_experiencia_agregar' uid=usuario.uid %}" class="space-y-3 mt-3">
                 {% csrf_token %}
                 <div>
                     <label class="label py-1"><span class="label-text text-xs font-bold">Empresa:</span></label>
-                    <select name="eid" class="select select-sm select-bordered w-full rounded-xl bg-base-100" required>
-                        <option value="">-- Elige una empresa --</option>
-                        {% for emp in todas_empresas %}
-                        <option value="{{ emp.eid }}">{{ emp.nombre }} ({{ emp.industria }})</option>
+                    <select name="eid" class="select select-sm select-bordered w-full rounded-xl" required>
+                        <option value="">Seleccione una empresa...</option>
+                        {% for e in todas_empresas %}
+                        <option value="{{ e.eid }}">{{ e.nombre }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div>
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Cargo / Rol Ocupado:</span></label>
-                    <input type="text" name="cargo" placeholder="Ej. Senior Backend Developer" class="input input-sm input-bordered w-full rounded-xl bg-base-100" required />
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="label py-1"><span class="label-text text-xs font-bold">Fecha Inicio:</span></label>
-                        <input type="date" name="fecha_inicio" class="input input-sm input-bordered w-full rounded-xl bg-base-100" />
-                    </div>
-                    <div>
-                        <label class="label py-1"><span class="label-text text-xs font-bold">Fecha Fin:</span></label>
-                        <input type="date" name="fecha_fin" class="input input-sm input-bordered w-full rounded-xl bg-base-100" />
-                    </div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Cargo / Rol:</span></label>
+                    <input type="text" name="cargo" placeholder="ej. Senior Backend Engineer" class="input input-sm input-bordered w-full rounded-xl" required>
                 </div>
                 <div class="form-control">
-                    <label class="label cursor-pointer justify-start gap-2">
-                        <input type="checkbox" name="actual" checked class="checkbox checkbox-sm checkbox-secondary rounded-lg" />
-                        <span class="label-text text-xs font-semibold">Es mi empleo actual</span>
+                    <label class="cursor-pointer label justify-start gap-2 py-1">
+                        <input type="checkbox" name="actual" checked class="checkbox checkbox-sm checkbox-primary rounded">
+                        <span class="label-text text-xs">Es mi empleo actual</span>
                     </label>
                 </div>
+                <div class="modal-action pt-2">
+                    <button type="button" @click="showJobModal = false" class="btn btn-sm btn-ghost rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-secondary rounded-xl text-xs font-bold">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                <div class="modal-action">
-                    <button type="button" @click="showJobModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-secondary rounded-xl font-bold">Vincular Trayectoria</button>
+    <!-- MODAL VINCULAR A PROYECTO -->
+    <div x-show="showProjectModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+        <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
+            <h3 class="font-black text-sm text-base-content">Vincular a Proyecto</h3>
+            <form method="POST" id="form-vincular-proyecto" class="space-y-3 mt-3">
+                {% csrf_token %}
+                <input type="hidden" name="uid" value="{{ usuario.uid }}">
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Proyecto:</span></label>
+                    <select id="select-pid" class="select select-sm select-bordered w-full rounded-xl" required onchange="document.getElementById('form-vincular-proyecto').action='/proyectos/' + this.value + '/colaboradores/agregar/'">
+                        <option value="">Seleccione un proyecto...</option>
+                        {% for p in todos_proyectos %}
+                        <option value="{{ p.pid }}">{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="label py-1"><span class="label-text text-xs font-bold">Rol en el proyecto:</span></label>
+                    <input type="text" name="rol" value="Colaborador Técnico" class="input input-sm input-bordered w-full rounded-xl" required>
+                </div>
+                <div class="modal-action pt-2">
+                    <button type="button" @click="showProjectModal = false" class="btn btn-sm btn-ghost rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-xl text-xs font-bold">Vincular</button>
                 </div>
             </form>
         </div>
     </div>
 
 </div>
+
+<!-- SCRIPT DE CONSTELLATION VIS.JS INTERACTIVA -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("user-constellation-network");
+    const loading = document.getElementById("network-loading");
+    if (!container) return;
+
+    const nodesData = [
+        {
+            id: "{{ usuario.uid }}",
+            label: "{{ usuario.nombre }}",
+            shape: "circularImage",
+            image: "https://api.dicebear.com/7.x/bottts/svg?seed={{ usuario.uid }}",
+            color: { background: "#10b981", border: "#34d399" },
+            size: 26,
+            font: { color: "#ffffff", size: 12, strokeWidth: 3, strokeColor: "#0f172a" }
+        }
+    ];
+
+    const edgesData = [];
+
+    {% for rel in conexiones_rel %}
+    nodesData.push({
+        id: "{{ rel.usuario.uid }}",
+        label: "{{ rel.usuario.nombre }}",
+        color: { background: "#06b6d4", border: "#22d3ee" },
+        size: 16,
+        font: { color: "#94a3b8", size: 10, strokeWidth: 2, strokeColor: "#0f172a" }
+    });
+    edgesData.push({
+        from: "{{ usuario.uid }}",
+        to: "{{ rel.usuario.uid }}",
+        color: { color: "rgba(16, 185, 129, 0.4)", highlight: "#10b981" },
+        width: 1.5,
+        smooth: { type: "continuous" }
+    });
+    {% endfor %}
+
+    if (loading) loading.style.display = "none";
+
+    const data = {
+        nodes: new vis.DataSet(nodesData),
+        edges: new vis.DataSet(edgesData)
+    };
+
+    const options = {
+        physics: {
+            solver: "forceAtlas2Based",
+            forceAtlas2Based: {
+                gravitationalConstant: -26,
+                centralGravity: 0.015,
+                springLength: 75,
+                springConstant: 0.1
+            },
+            maxVelocity: 30,
+            minVelocity: 0.1
+        },
+        interaction: {
+            hover: true,
+            zoomView: false,
+            dragView: true
+        }
+    };
+
+    new vis.Network(container, data, options);
+});
+</script>
 {% endblock %}

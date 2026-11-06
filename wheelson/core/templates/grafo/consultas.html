@@ -6,125 +6,124 @@
 {% block content %}
 <div class="space-y-6 animate-fade-in-up">
 
-    <!-- Header Hero Banner -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-info/20 via-primary/15 to-secondary/20 p-6 sm:p-8 border border-base-300 shadow-xl">
-        <div class="space-y-2 max-w-3xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-base-100/80 border border-base-300 text-xs font-semibold">
-                <span class="w-2 h-2 rounded-full bg-info animate-ping"></span>
-                <span>Motor Analítico Cypher & Traversal de Red</span>
-            </div>
-            <h1 class="text-2xl sm:text-4xl font-black text-base-content tracking-tight">
-                Explorador de Consultas Avanzadas
-            </h1>
-            <p class="text-xs sm:text-sm text-base-content/70 leading-relaxed">
-                Ejecuta algoritmos de grafos sobre la red profesional: caminos mínimos (Dijkstra/BFS), contactos mutuos, afinidad de competencias, rutas de referidos y análisis de demanda laboral.
-            </p>
+    <!-- Header Hero Banner (Camuflado al fondo oscuro) -->
+    <div class="peer-card p-6 sm:p-7 rounded-2xl bg-[#0e1116] border border-[#181c24] space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#090b0e] border border-[#1a1e27] text-[11px] font-mono text-[#00b84c]">
+            <span class="w-2 h-2 rounded-full bg-[#00b84c] animate-pulse"></span>
+            <span>Motor Analítico Cypher & Traversal de Red Neo4j</span>
         </div>
+        <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Explorador de Consultas Avanzadas
+        </h1>
+        <p class="text-xs text-gray-400 max-w-2xl leading-relaxed">
+            Ejecuta algoritmos de grafos sobre la red profesional: caminos mínimos (BFS / Dijkstra), contactos mutuos, afinidad de competencias, rutas de referidos y análisis de demanda laboral.
+        </p>
     </div>
 
-    <!-- Navigation Tabs -->
-    <div class="tabs tabs-boxed bg-base-200 p-1.5 rounded-2xl border border-base-300 flex flex-wrap gap-1">
+    <!-- Navigation Tabs (Píldoras redondeadas exactas a ejemplo.png) -->
+    <div class="inline-flex rounded-full bg-[#12151b] border border-[#1e232d] p-1 text-xs font-semibold flex-wrap gap-1">
         <a href="?tab=camino{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if uid2 %}&uid2={{ uid2 }}{% endif %}"
-           class="tab text-xs font-bold rounded-xl transition {% if tab == 'camino' %}tab-active !bg-primary !text-primary-content{% endif %}">
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'camino' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
             1. Ruta más Corta (Shortest Path)
         </a>
         <a href="?tab=comun{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if uid2 %}&uid2={{ uid2 }}{% endif %}"
-           class="tab text-xs font-bold rounded-xl transition {% if tab == 'comun' %}tab-active !bg-primary !text-primary-content{% endif %}">
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'comun' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
             2. Contactos en Común
         </a>
         <a href="?tab=similares{% if uid1 %}&uid1={{ uid1 }}{% endif %}"
-           class="tab text-xs font-bold rounded-xl transition {% if tab == 'similares' %}tab-active !bg-primary !text-primary-content{% endif %}">
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'similares' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
             3. Habilidades Similares
         </a>
         <a href="?tab=ruta_empresa{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if eid %}&eid={{ eid }}{% endif %}"
-           class="tab text-xs font-bold rounded-xl transition {% if tab == 'ruta_empresa' %}tab-active !bg-primary !text-primary-content{% endif %}">
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'ruta_empresa' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
             4. Ruta a Empresa (Networking)
         </a>
         <a href="?tab=demandadas"
-           class="tab text-xs font-bold rounded-xl transition {% if tab == 'demandadas' %}tab-active !bg-primary !text-primary-content{% endif %}">
-            5. Habilidades más Demandadas
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'demandadas' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
+            5. Habilidades Demandadas
         </a>
         <a href="?tab=candidatos{% if oid %}&oid={{ oid }}{% endif %}"
-           class="tab text-xs font-bold rounded-xl transition {% if tab == 'candidatos' %}tab-active !bg-primary !text-primary-content{% endif %}">
+           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'candidatos' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
             6. Match para Oferta
         </a>
     </div>
 
     <!-- TAB 1: RUTA MAS CORTA (SHORTEST PATH) -->
     {% if tab == 'camino' %}
-    <div class="space-y-6">
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h2 class="font-black text-lg text-base-content flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-info"></span>
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
                 Calcular Ruta Mínima entre Usuarios
             </h2>
 
             <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <input type="hidden" name="tab" value="camino">
                 <div class="md:col-span-5">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Usuario Origen:</span></label>
-                    <select name="uid1" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Usuario Origen:</label>
+                    <select name="uid1" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for u in usuarios %}
                         <option value="{{ u.uid }}" {% if uid1 == u.uid %}selected{% endif %}>{{ u.nombre_completo }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-5">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Usuario Destino:</span></label>
-                    <select name="uid2" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Usuario Destino:</label>
+                    <select name="uid2" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for u in usuarios %}
                         <option value="{{ u.uid }}" {% if uid2 == u.uid %}selected{% endif %}>{{ u.nombre_completo }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                    <button type="submit" class="btn btn-sm btn-info w-full rounded-xl font-bold">Trazar Ruta</button>
+                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Trazar Ruta</button>
                 </div>
             </form>
 
             <!-- Cypher Code Inspector -->
-            <div class="p-3 bg-base-300/40 rounded-2xl border border-base-300 font-mono text-[11px] text-base-content/80 overflow-x-auto">
-                <span class="text-accent font-bold">// Consulta Cypher Ejecutada:</span><br>
-                MATCH (u1:Usuario {uid: '{{ uid1 }}'}), (u2:Usuario {uid: '{{ uid2 }}'})<br>
-                MATCH p = shortestPath((u1)-[:CONECTA_CON*..6]-(u2))<br>
-                RETURN p, length(p) AS grados_separacion;
-            </div>
+            <details class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22]" {% if dev_mode %}open{% endif %}>
+                <summary class="cursor-pointer font-bold text-xs text-[#00b84c] flex items-center justify-between">
+                    <span>Consulta Cypher en el Grafo (Modo Dev)</span>
+                    <span class="text-[10px] font-mono text-gray-500">shortestPath()</span>
+                </summary>
+                <div class="mt-2 font-mono text-[11px] text-gray-400 overflow-x-auto">
+                    MATCH (u1:Usuario {uid: '{{ uid1 }}'}), (u2:Usuario {uid: '{{ uid2 }}'})<br>
+                    MATCH p = shortestPath((u1)-[:CONECTA_CON*..6]-(u2))<br>
+                    RETURN p, length(p) AS grados_separacion;
+                </div>
+            </details>
         </div>
 
         <!-- Result Box -->
         {% if res_camino and res_camino.encontrado %}
-        <div class="card bg-base-200 border border-info/40 p-6 sm:p-8 rounded-3xl shadow-lg space-y-5">
-            <div class="flex items-center justify-between border-b border-base-300 pb-3">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-6 sm:p-7 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-[#181c24] pb-3">
                 <div>
-                    <h3 class="font-black text-base text-base-content">Ruta Óptima Encontrada</h3>
-                    <p class="text-xs text-base-content/60">Camino más corto en la red de contactos.</p>
+                    <h3 class="font-bold text-sm text-white">Ruta Óptima Encontrada</h3>
+                    <p class="text-xs text-gray-400">Camino más corto en la red de contactos.</p>
                 </div>
-                <div class="text-right">
-                    <span class="badge badge-info badge-lg font-bold gap-1">
-                        {{ res_camino.grados }} Grado(s) de Separación
-                    </span>
-                </div>
+                <span class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold text-xs">
+                    {{ res_camino.grados }} Grado(s) de Separación
+                </span>
             </div>
 
             <!-- Path Visualization -->
             <div class="flex flex-wrap items-center justify-center gap-3 py-4">
                 {% for nodo in res_camino.camino %}
                 <div class="flex items-center gap-3">
-                    <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm text-center min-w-36">
-                        <div class="avatar placeholder mx-auto mb-1">
-                            <div class="bg-info/20 text-info font-black rounded-xl w-10 h-10 text-xs">
-                                {{ nodo.nombre|slice:":1" }}{{ nodo.apellido|slice:":1" }}
-                            </div>
+                    <div class="p-3 rounded-2xl bg-[#090b0e] border border-[#161a22] text-center min-w-36">
+                        <div class="w-9 h-9 rounded-xl bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs mx-auto mb-1 shadow">
+                            {{ nodo.nombre|slice:":1" }}{{ nodo.apellido|slice:":1" }}
                         </div>
-                        <a href="{% url 'core:usuario_detalle' uid=nodo.uid %}" class="font-bold text-xs text-base-content hover:text-info truncate block">
+                        <a href="{% url 'core:usuario_detalle' uid=nodo.uid %}" class="font-bold text-xs text-white hover:text-[#00b84c] truncate block">
                             {{ nodo.nombre_completo }}
                         </a>
-                        <span class="text-[10px] text-base-content/50 truncate block">{{ nodo.titulo_profesional|default:"Profesional" }}</span>
+                        <span class="text-[10px] text-gray-500 truncate block">{{ nodo.titulo_profesional|default:"Profesional" }}</span>
                     </div>
 
                     {% if not forloop.last %}
-                    <div class="text-info font-black text-xl flex flex-col items-center">
-                        <span class="text-[9px] uppercase font-mono text-base-content/40 tracking-widest">:CONECTA</span>
+                    <div class="text-[#00b84c] font-black text-xl flex flex-col items-center">
+                        <span class="text-[9px] uppercase font-mono text-gray-600 tracking-widest">:CONECTA</span>
                         &rarr;
                     </div>
                     {% endif %}
@@ -133,77 +132,75 @@
             </div>
         </div>
         {% elif res_camino %}
-        <div class="card bg-base-200 border border-base-300 p-8 text-center rounded-3xl">
-            <p class="text-xs text-base-content/60">No existe una cadena de conexiones directa entre estos dos usuarios dentro del radio de 6 grados de separación.</p>
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-8 text-center rounded-2xl">
+            <p class="text-xs text-gray-400">No existe una cadena de conexiones directa entre estos dos usuarios dentro del radio de 6 grados de separación.</p>
         </div>
         {% endif %}
     </div>
 
     <!-- TAB 2: CONTACTOS EN COMUN -->
     {% elif tab == 'comun' %}
-    <div class="space-y-6">
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h2 class="font-black text-lg text-base-content flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-accent"></span>
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
                 Identificar Contactos en Común (Mutual Friends)
             </h2>
 
             <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <input type="hidden" name="tab" value="comun">
                 <div class="md:col-span-5">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Primer Usuario:</span></label>
-                    <select name="uid1" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Primer Usuario:</label>
+                    <select name="uid1" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for u in usuarios %}
                         <option value="{{ u.uid }}" {% if uid1 == u.uid %}selected{% endif %}>{{ u.nombre_completo }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-5">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Segundo Usuario:</span></label>
-                    <select name="uid2" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Segundo Usuario:</label>
+                    <select name="uid2" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for u in usuarios %}
                         <option value="{{ u.uid }}" {% if uid2 == u.uid %}selected{% endif %}>{{ u.nombre_completo }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                    <button type="submit" class="btn btn-sm btn-accent w-full rounded-xl font-bold">Buscar Puente</button>
+                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Buscar Puente</button>
                 </div>
             </form>
 
-            <div class="p-3 bg-base-300/40 rounded-2xl border border-base-300 font-mono text-[11px] text-base-content/80 overflow-x-auto">
-                <span class="text-accent font-bold">// Consulta Cypher:</span><br>
+            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
+                <span class="text-[#00b84c] font-bold">// Consulta Cypher:</span><br>
                 MATCH (u1:Usuario {uid: '{{ uid1 }}'})-[:CONECTA_CON]-(comun:Usuario)-[:CONECTA_CON]-(u2:Usuario {uid: '{{ uid2 }}'})<br>
                 RETURN DISTINCT comun;
             </div>
         </div>
 
         {% if res_comun is not None %}
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h3 class="font-bold text-sm text-base-content">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h3 class="font-bold text-sm text-white">
                 Contactos Compartidos ({{ res_comun|length }})
             </h3>
 
             {% if res_comun %}
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {% for c in res_comun %}
-                <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm flex flex-row items-center gap-3">
-                    <div class="avatar placeholder">
-                        <div class="bg-accent/20 text-accent font-bold rounded-xl w-10 h-10 text-xs">
-                            {{ c.nombre|slice:":1" }}{{ c.apellido|slice:":1" }}
-                        </div>
+                <div class="p-3 rounded-xl bg-[#090b0e] border border-[#161a22] flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                        {{ c.nombre|slice:":1" }}{{ c.apellido|slice:":1" }}
                     </div>
                     <div class="min-w-0 flex-1">
-                        <a href="{% url 'core:usuario_detalle' uid=c.uid %}" class="font-bold text-xs text-base-content hover:text-accent truncate block">
+                        <a href="{% url 'core:usuario_detalle' uid=c.uid %}" class="font-bold text-xs text-white hover:text-[#00b84c] truncate block">
                             {{ c.nombre_completo }}
                         </a>
-                        <span class="text-[10px] text-base-content/60 truncate block">{{ c.titulo_profesional|default:"Profesional" }}</span>
+                        <span class="text-[10px] text-gray-500 truncate block">{{ c.titulo_profesional|default:"Profesional" }}</span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-xs text-base-content/50 italic py-4 text-center">No tienen contactos directos en común en el grafo actualmente.</p>
+            <p class="text-xs text-gray-500 italic py-4 text-center">No tienen contactos directos en común en el grafo actualmente.</p>
             {% endif %}
         </div>
         {% endif %}
@@ -211,74 +208,68 @@
 
     <!-- TAB 3: HABILIDADES SIMILARES -->
     {% elif tab == 'similares' %}
-    <div class="space-y-6">
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h2 class="font-black text-lg text-base-content flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
                 Descubrir Colegas con Habilidades Similares
             </h2>
 
             <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <input type="hidden" name="tab" value="similares">
                 <div class="md:col-span-9">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Seleccionar Profesional de Referencia:</span></label>
-                    <select name="uid1" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Seleccionar Profesional de Referencia:</label>
+                    <select name="uid1" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for u in usuarios %}
                         <option value="{{ u.uid }}" {% if uid1 == u.uid %}selected{% endif %}>{{ u.nombre_completo }} ({{ u.titulo_profesional }})</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-3">
-                    <button type="submit" class="btn btn-sm btn-primary w-full rounded-xl font-bold">Calcular Afinidad</button>
+                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Calcular Afinidad</button>
                 </div>
             </form>
 
-            <div class="p-3 bg-base-300/40 rounded-2xl border border-base-300 font-mono text-[11px] text-base-content/80 overflow-x-auto">
-                <span class="text-accent font-bold">// Consulta Cypher de Similitud Semántica:</span><br>
+            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
+                <span class="text-purple-400 font-bold">// Consulta Cypher de Similitud Semántica:</span><br>
                 MATCH (u1:Usuario {uid: '{{ uid1 }}'})-[:TIENE_HABILIDAD]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u2:Usuario)<br>
                 RETURN u2, count(h) AS compartidas, collect(h.nombre) AS habilidades ORDER BY compartidas DESC;
             </div>
         </div>
 
         {% if res_similares is not None %}
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h3 class="font-bold text-sm text-base-content">
-                Ranking de Afinidad Técnica
-            </h3>
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h3 class="font-bold text-sm text-white">Ranking de Afinidad Técnica</h3>
 
             {% if res_similares %}
-            <div class="space-y-3">
+            <div class="space-y-2.5">
                 {% for item in res_similares %}
-                <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <div class="avatar placeholder">
-                            <div class="bg-primary/20 text-primary font-bold rounded-xl w-11 h-11 text-xs">
-                                {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
-                            </div>
+                        <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
                         </div>
                         <div>
-                            <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-sm text-base-content hover:text-primary">
+                            <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-sm text-white hover:text-[#00b84c]">
                                 {{ item.usuario.nombre_completo }}
                             </a>
-                            <p class="text-xs text-base-content/60">{{ item.usuario.titulo_profesional }} &bull; {{ item.usuario.ubicacion }}</p>
-                            <div class="flex flex-wrap gap-1 mt-2">
+                            <p class="text-xs text-gray-400">{{ item.usuario.titulo_profesional }} &bull; {{ item.usuario.ubicacion }}</p>
+                            <div class="flex flex-wrap gap-1 mt-1.5">
                                 {% for hab in item.habilidades_comunes %}
-                                <span class="badge badge-xs badge-primary badge-outline">{{ hab }}</span>
+                                <span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-purple-300 font-mono">{{ hab }}</span>
                                 {% endfor %}
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-right">
-                        <span class="badge badge-primary badge-lg font-bold">
-                            {{ item.total_compartidas }} habilidad(es) compartida(s)
-                        </span>
-                    </div>
+                    <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs font-bold">
+                        {{ item.total_compartidas }} compartida(s)
+                    </span>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-xs text-base-content/50 italic py-4 text-center">No se encontraron otros profesionales que compartan habilidades con este usuario.</p>
+            <p class="text-xs text-gray-500 italic py-4 text-center">No se encontraron otros profesionales que compartan habilidades con este usuario.</p>
             {% endif %}
         </div>
         {% endif %}
@@ -286,38 +277,38 @@
 
     <!-- TAB 4: RUTA USUARIO -> EMPRESA (NETWORKING) -->
     {% elif tab == 'ruta_empresa' %}
-    <div class="space-y-6">
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h2 class="font-black text-lg text-base-content flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
                 Ruta de Networking hacia Empresa Objetivo
             </h2>
 
             <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <input type="hidden" name="tab" value="ruta_empresa">
                 <div class="md:col-span-5">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Usuario Solicitante:</span></label>
-                    <select name="uid1" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Usuario Solicitante:</label>
+                    <select name="uid1" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for u in usuarios %}
                         <option value="{{ u.uid }}" {% if uid1 == u.uid %}selected{% endif %}>{{ u.nombre_completo }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-5">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Empresa Destino:</span></label>
-                    <select name="eid" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Empresa Destino:</label>
+                    <select name="eid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for e in empresas %}
                         <option value="{{ e.eid }}" {% if eid == e.eid %}selected{% endif %}>{{ e.nombre }} ({{ e.industria }})</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                    <button type="submit" class="btn btn-sm btn-secondary w-full rounded-xl font-bold">Trazar Camino</button>
+                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Trazar Camino</button>
                 </div>
             </form>
 
-            <div class="p-3 bg-base-300/40 rounded-2xl border border-base-300 font-mono text-[11px] text-base-content/80 overflow-x-auto">
-                <span class="text-accent font-bold">// Consulta Cypher de Camino Heterogéneo:</span><br>
+            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
+                <span class="text-cyan-400 font-bold">// Consulta Cypher de Camino Heterogéneo:</span><br>
                 MATCH (u:Usuario {uid: '{{ uid1 }}'}), (e:Empresa {eid: '{{ eid }}'})<br>
                 MATCH p = shortestPath((u)-[*..6]-(e))<br>
                 RETURN p;
@@ -325,80 +316,80 @@
         </div>
 
         {% if res_empresa and res_empresa.encontrado %}
-        <div class="card bg-base-200 border border-secondary/40 p-6 sm:p-8 rounded-3xl shadow-lg space-y-4">
-            <h3 class="font-black text-base text-base-content">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-6 rounded-2xl space-y-4">
+            <h3 class="font-bold text-sm text-white">
                 Cadena de Contactos Encontrada ({{ res_empresa.longitud }} paso(s))
             </h3>
 
             <div class="flex flex-wrap items-center justify-center gap-3 py-4">
                 {% for paso in res_empresa.camino %}
                 <div class="flex items-center gap-3">
-                    <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm text-center min-w-36">
-                        <span class="badge badge-xs uppercase font-mono {% if paso.tipo == 'Empresa' %}badge-secondary{% else %}badge-primary{% endif %} mb-1">
+                    <div class="p-3 rounded-xl bg-[#090b0e] border border-[#161a22] text-center min-w-36">
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase {% if paso.tipo == 'Empresa' %}bg-cyan-500/20 text-cyan-400{% else %}bg-[#00b84c]/20 text-[#00b84c]{% endif %} mb-1 inline-block">
                             {{ paso.tipo }}
                         </span>
-                        <p class="font-bold text-xs text-base-content">{{ paso.nombre }}</p>
+                        <p class="font-bold text-xs text-white">{{ paso.nombre }}</p>
                     </div>
 
                     {% if not forloop.last %}
-                    <span class="text-secondary font-black text-xl">&rarr;</span>
+                    <span class="text-[#00b84c] font-black text-xl">&rarr;</span>
                     {% endif %}
                 </div>
                 {% endfor %}
             </div>
         </div>
         {% elif res_empresa %}
-        <div class="card bg-base-200 border border-base-300 p-8 text-center rounded-3xl">
-            <p class="text-xs text-base-content/60">No se encontró un camino de referidos entre el usuario y la empresa seleccionada dentro de 6 saltos.</p>
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-8 text-center rounded-2xl">
+            <p class="text-xs text-gray-400">No se encontró un camino de referidos entre el usuario y la empresa seleccionada dentro de 6 saltos.</p>
         </div>
         {% endif %}
     </div>
 
     <!-- TAB 5: HABILIDADES MAS DEMANDADAS -->
     {% elif tab == 'demandadas' %}
-    <div class="space-y-6">
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
-                    <h2 class="font-black text-lg text-base-content flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-warning"></span>
+                    <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                         Habilidades más Demandadas en el Ecosistema
                     </h2>
-                    <p class="text-xs text-base-content/60">Agregación en tiempo real de competencias exigidas por las ofertas abiertas.</p>
+                    <p class="text-[11px] text-gray-500 font-mono">Agregación en tiempo real de competencias exigidas por las ofertas abiertas.</p>
                 </div>
-                <span class="badge badge-warning badge-outline font-mono text-xs">Arista [:REQUIERE]</span>
+                <span class="text-[10px] font-mono text-[#00b84c] bg-[#090b0e] border border-[#161a22] px-2 py-0.5 rounded-full">Arista [:REQUIERE]</span>
             </div>
 
-            <div class="p-3 bg-base-300/40 rounded-2xl border border-base-300 font-mono text-[11px] text-base-content/80 overflow-x-auto">
-                <span class="text-accent font-bold">// Consulta Cypher de Agregación:</span><br>
+            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
+                <span class="text-amber-400 font-bold">// Consulta Cypher de Agregación:</span><br>
                 MATCH (h:Habilidad)<-[r:REQUIERE]-(o:Oferta {estado: 'abierta'})<br>
                 RETURN h.nombre, count(o) AS demanda ORDER BY demanda DESC;
             </div>
 
             <div class="overflow-x-auto mt-4">
-                <table class="table w-full">
-                    <thead class="bg-base-300/50 text-xs uppercase font-bold">
+                <table class="w-full text-left text-xs divide-y divide-[#181c24]">
+                    <thead class="bg-[#090b0e] text-[11px] uppercase font-bold text-gray-400">
                         <tr>
-                            <th>Ranking</th>
-                            <th>Habilidad</th>
-                            <th>Categoría</th>
-                            <th>Vacantes Abiertas</th>
-                            <th>Exigencia Obligatoria</th>
-                            <th>Deseables</th>
+                            <th class="py-3 px-4">Ranking</th>
+                            <th class="py-3 px-4">Habilidad</th>
+                            <th class="py-3 px-4">Categoría</th>
+                            <th class="py-3 px-4">Vacantes Abiertas</th>
+                            <th class="py-3 px-4">Exigencia Obligatoria</th>
+                            <th class="py-3 px-4">Deseables</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-base-300/40 text-xs">
+                    <tbody class="divide-y divide-[#181c24]">
                         {% for item in res_demandadas %}
-                        <tr class="hover:bg-base-100/50">
-                            <td class="font-black text-warning">#{{ forloop.counter }}</td>
-                            <td class="font-bold text-sm text-base-content">{{ item.habilidad }}</td>
-                            <td><span class="badge badge-xs uppercase badge-outline">{{ item.categoria }}</span></td>
-                            <td class="font-bold">{{ item.total_ofertas }}</td>
-                            <td><span class="badge badge-xs badge-error text-white font-bold">{{ item.obligatorias }}</span></td>
-                            <td><span class="badge badge-xs badge-ghost">{{ item.deseables }}</span></td>
+                        <tr class="hover:bg-[#11141b] transition">
+                            <td class="py-3 px-4 font-black text-amber-400">#{{ forloop.counter }}</td>
+                            <td class="py-3 px-4 font-bold text-white">{{ item.habilidad }}</td>
+                            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono uppercase">{{ item.categoria }}</span></td>
+                            <td class="py-3 px-4 font-bold text-white">{{ item.total_ofertas }}</td>
+                            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold text-[10px]">{{ item.obligatorias }}</span></td>
+                            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 text-[10px]">{{ item.deseables }}</span></td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6" class="text-center py-6 text-base-content/50">No hay datos de demanda registrados.</td></tr>
+                        <tr><td colspan="6" class="text-center py-6 text-gray-500">No hay datos de demanda registrados.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -408,74 +399,70 @@
 
     <!-- TAB 6: MATCH PARA OFERTA -->
     {% elif tab == 'candidatos' %}
-    <div class="space-y-6">
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h2 class="font-black text-lg text-base-content flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-accent"></span>
+    <div class="space-y-5">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
                 Recomendación de Candidatos para Vacante
             </h2>
 
             <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <input type="hidden" name="tab" value="candidatos">
                 <div class="md:col-span-9">
-                    <label class="label py-1"><span class="label-text text-xs font-bold">Seleccionar Vacante:</span></label>
-                    <select name="oid" class="select select-sm select-bordered w-full rounded-xl bg-base-100">
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Seleccionar Vacante:</label>
+                    <select name="oid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
                         {% for o in ofertas %}
                         <option value="{{ o.oid }}" {% if oid == o.oid %}selected{% endif %}>{{ o.titulo }} ({{ o.modalidad }})</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="md:col-span-3">
-                    <button type="submit" class="btn btn-sm btn-accent w-full rounded-xl font-bold">Buscar Candidatos</button>
+                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Buscar Candidatos</button>
                 </div>
             </form>
 
-            <div class="p-3 bg-base-300/40 rounded-2xl border border-base-300 font-mono text-[11px] text-base-content/80 overflow-x-auto">
-                <span class="text-accent font-bold">// Consulta Cypher de Match:</span><br>
+            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
+                <span class="text-[#00b84c] font-bold">// Consulta Cypher de Match:</span><br>
                 MATCH (o:Oferta {oid: '{{ oid }}'})-[:REQUIERE]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u:Usuario)<br>
                 RETURN u, count(h) AS match_skills ORDER BY match_skills DESC;
             </div>
         </div>
 
         {% if res_candidatos is not None %}
-        <div class="card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-md space-y-4">
-            <h3 class="font-bold text-sm text-base-content">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <h3 class="font-bold text-sm text-white">
                 Candidatos con Mejor Compatibilidad
             </h3>
 
             {% if res_candidatos %}
-            <div class="space-y-3">
+            <div class="space-y-2.5">
                 {% for cand in res_candidatos %}
-                <div class="card bg-base-100 border border-base-300 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <div class="avatar placeholder">
-                            <div class="bg-accent/20 text-accent font-bold rounded-xl w-11 h-11 text-xs">
-                                {{ cand.usuario.nombre|slice:":1" }}{{ cand.usuario.apellido|slice:":1" }}
-                            </div>
+                        <div class="w-9 h-9 rounded-xl bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            {{ cand.usuario.nombre|slice:":1" }}{{ cand.usuario.apellido|slice:":1" }}
                         </div>
                         <div>
-                            <a href="{% url 'core:usuario_detalle' uid=cand.usuario.uid %}" class="font-bold text-sm text-base-content hover:text-accent">
+                            <a href="{% url 'core:usuario_detalle' uid=cand.usuario.uid %}" class="font-bold text-sm text-white hover:text-[#00b84c]">
                                 {{ cand.usuario.nombre_completo }}
                             </a>
-                            <p class="text-xs text-base-content/60">{{ cand.usuario.titulo_profesional }} &bull; {{ cand.usuario.ubicacion }}</p>
-                            <div class="flex flex-wrap gap-1 mt-2">
+                            <p class="text-xs text-gray-400">{{ cand.usuario.titulo_profesional }} &bull; {{ cand.usuario.ubicacion }}</p>
+                            <div class="flex flex-wrap gap-1 mt-1.5">
                                 {% for h in cand.habilidades_match %}
-                                <span class="badge badge-xs badge-accent badge-outline">{{ h }}</span>
+                                <span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ h }}</span>
                                 {% endfor %}
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-right">
-                        <span class="badge badge-accent badge-lg font-bold">
-                            {{ cand.total_coincidencias }} requisito(s) cubierto(s)
-                        </span>
-                    </div>
+                    <span class="px-3 py-1 rounded-full bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 text-xs font-bold">
+                        {{ cand.total_coincidencias }} requisito(s) cubierto(s)
+                    </span>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-xs text-base-content/50 italic py-4 text-center">No se encontraron candidatos con habilidades coincidentes para esta oferta.</p>
+            <p class="text-xs text-gray-500 italic py-4 text-center">No se encontraron candidatos con habilidades coincidentes para esta oferta.</p>
             {% endif %}
         </div>
         {% endif %}

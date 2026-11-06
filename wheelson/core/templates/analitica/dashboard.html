@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+
+{% block title %}Analítica de Grafos | WheelsOn{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-6 space-y-6" x-data="{ activeTab: 'centralidad' }">
+
+    <!-- Header Principal -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#181c24]">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#00b84c]/15 text-[#00b84c] border border-[#00b84c]/30 uppercase tracking-wider">
+                    Graph Analytics Engine
+                </span>
+                <span class="text-xs text-gray-500 font-mono">Topología & Métricas de Red</span>
+            </div>
+            <h1 class="text-xl font-black text-white tracking-tight mt-1">Panel de Analítica de Grafos</h1>
+            <p class="text-xs text-gray-400 mt-0.5">
+                Evaluación estructural de la red social, centralidad de influencia, clustering de comunidades y equilibrio del mercado de talento.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#12151b] border border-[#1e232d] text-xs font-mono text-gray-400">
+                <span class="w-2 h-2 rounded-full bg-[#00b84c] animate-pulse"></span>
+                <span>Grafo Activo</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- KPIS GLOBALES DE TOPOLOGÍA DE GRAFO -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <!-- KPI: Total Nodos Usuarios -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-3.5 rounded-2xl">
+            <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Usuarios (N)</span>
+            <div class="flex items-baseline justify-between mt-1">
+                <span class="text-xl font-black text-white font-mono">{{ metricas.total_usuarios }}</span>
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </div>
+            <span class="text-[10px] text-gray-500 mt-1 block truncate">Nodos activos en red</span>
+        </div>
+
+        <!-- KPI: Conexiones Sociales (E) -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-3.5 rounded-2xl">
+            <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Conexiones (E)</span>
+            <div class="flex items-baseline justify-between mt-1">
+                <span class="text-xl font-black text-[#00b84c] font-mono">{{ metricas.total_conexiones }}</span>
+                <svg class="w-4 h-4 text-[#00b84c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            </div>
+            <span class="text-[10px] text-gray-500 mt-1 block truncate">:CONECTA_CON mutuas</span>
+        </div>
+
+        <!-- KPI: Densidad de Red -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-3.5 rounded-2xl">
+            <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Densidad (D)</span>
+            <div class="flex items-baseline justify-between mt-1">
+                <span class="text-xl font-black text-white font-mono">{{ metricas.densidad_pct }}%</span>
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            </div>
+            <span class="text-[10px] text-gray-500 mt-1 block truncate">2E / (N·(N-1))</span>
+        </div>
+
+        <!-- KPI: Grado Medio -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-3.5 rounded-2xl">
+            <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Grado Medio</span>
+            <div class="flex items-baseline justify-between mt-1">
+                <span class="text-xl font-black text-white font-mono">{{ metricas.grado_promedio }}</span>
+                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <span class="text-[10px] text-gray-500 mt-1 block truncate">Amigos prom. por nodo</span>
+        </div>
+
+        <!-- KPI: Clustering Coef -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-3.5 rounded-2xl">
+            <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Clustering</span>
+            <div class="flex items-baseline justify-between mt-1">
+                <span class="text-xl font-black text-white font-mono">{{ metricas.clustering_coef }}</span>
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
+            </div>
+            <span class="text-[10px] text-gray-500 mt-1 block truncate">Triangulación social</span>
+        </div>
+
+        <!-- KPI: Diámetro / Geodésica -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-3.5 rounded-2xl">
+            <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Diámetro</span>
+            <div class="flex items-baseline justify-between mt-1">
+                <span class="text-xl font-black text-white font-mono">{{ metricas.diametro }}</span>
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            </div>
+            <span class="text-[10px] text-gray-500 mt-1 block truncate">Dist. máxima (saltos)</span>
+        </div>
+    </div>
+
+    <!-- Navegación por Pestañas (Minimalista) -->
+    <div class="flex items-center gap-2 border-b border-[#181c24] pb-2 text-xs font-semibold overflow-x-auto">
+        <button @click="activeTab = 'centralidad'"
+                :class="activeTab === 'centralidad' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
+                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span>Centralidad & PageRank</span>
+        </button>
+
+        <button @click="activeTab = 'comunidades'"
+                :class="activeTab === 'comunidades' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
+                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span>Comunidades & Clústeres</span>
+        </button>
+
+        <button @click="activeTab = 'habilidades'"
+                :class="activeTab === 'habilidades' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
+                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Oferta vs Demanda de Talento</span>
+        </button>
+
+        <button @click="activeTab = 'formulas'"
+                :class="activeTab === 'formulas' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
+                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            <span>Fundamentos Matemáticos</span>
+        </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: CENTRALIDAD Y PAGERANK -->
+    <!-- ========================================================================= -->
+    <div x-show="activeTab === 'centralidad'" class="space-y-6">
+
+        <!-- Gráfico Centralidad e Influencia -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-sm text-white">Comparativa de Influencia: Grado vs PageRank</h3>
+                    <p class="text-xs text-gray-500">Volumen directo de conexiones vs centralidad estructural iterativa</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-mono">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#00b84c]"></span> Conexiones</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span> PageRank (%)</span>
+                </div>
+            </div>
+            <div class="h-64 relative">
+                <canvas id="chartInfluencia"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Ranking PageRank -->
+            <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-[#181c24]">
+                    <div>
+                        <h4 class="font-bold text-sm text-white">Top Influenciadores (PageRank)</h4>
+                        <p class="text-[11px] text-gray-500">Nodos con mayor autoridad estructural (d=0.85)</p>
+                    </div>
+                    <span class="text-[10px] font-mono text-[#00b84c] bg-[#00b84c]/10 px-2 py-0.5 rounded border border-[#00b84c]/20">Iterativo</span>
+                </div>
+
+                <div class="divide-y divide-[#181c24]">
+                    {% for item in pagerank %}
+                    <div class="py-2.5 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-5 text-center font-mono font-bold text-xs {% if item.ranking == 1 %}text-[#00b84c]{% elif item.ranking <= 3 %}text-white{% else %}text-gray-500{% endif %}">
+                                #{{ item.ranking }}
+                            </span>
+                            <div class="w-8 h-8 rounded-full bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
+                            </div>
+                            <div class="min-w-0">
+                                <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-xs text-white hover:text-[#00b84c] transition truncate block">
+                                    {{ item.usuario.nombre_completo }}
+                                </a>
+                                <span class="text-[10px] text-gray-500 block truncate">{{ item.usuario.titulo_profesional }}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-right flex-shrink-0">
+                            <span class="font-mono text-xs font-black text-[#00b84c]">{{ item.score }}</span>
+                            <div class="w-16 bg-[#161a22] h-1.5 rounded-full overflow-hidden mt-1">
+                                <div class="bg-[#00b84c] h-full rounded-full" style="width: {{ item.score_pct }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-gray-500 py-4 text-center">Sin datos de conexiones aún.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Ranking Degree Centrality -->
+            <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-[#181c24]">
+                    <div>
+                        <h4 class="font-bold text-sm text-white">Centralidad de Grado (Degree)</h4>
+                        <p class="text-[11px] text-gray-500">Nodos más populares por número de conexiones directas</p>
+                    </div>
+                    <span class="text-[10px] font-mono text-gray-400 bg-[#161a22] px-2 py-0.5 rounded border border-[#222731]">deg(v)</span>
+                </div>
+
+                <div class="divide-y divide-[#181c24]">
+                    {% for item in centralidad %}
+                    <div class="py-2.5 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-5 text-center font-mono font-bold text-xs {% if item.ranking == 1 %}text-blue-400{% elif item.ranking <= 3 %}text-white{% else %}text-gray-500{% endif %}">
+                                #{{ item.ranking }}
+                            </span>
+                            <div class="w-8 h-8 rounded-full bg-[#161a22] border border-[#222731] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
+                            </div>
+                            <div class="min-w-0">
+                                <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-xs text-white hover:text-blue-400 transition truncate block">
+                                    {{ item.usuario.nombre_completo }}
+                                </a>
+                                <span class="text-[10px] text-gray-500 block truncate">{{ item.usuario.titulo_profesional }}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-right flex-shrink-0">
+                            <span class="font-mono text-xs font-bold text-white">{{ item.grado }} conex.</span>
+                            <span class="text-[10px] font-mono text-gray-500 block">Norm: {{ item.grado_normalizado }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-gray-500 py-4 text-center">Sin datos de conexiones aún.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Betweenness Centrality (Puentes) -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-[#181c24]">
+                <div>
+                    <h4 class="font-bold text-sm text-white">Nodos Puente (Betweenness Centrality)</h4>
+                    <p class="text-[11px] text-gray-500">Usuarios estratégicos que controlan los caminos de información entre sub-redes</p>
+                </div>
+                <span class="text-[10px] font-mono text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Brandes BFS</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {% for item in intermediacion|slice:":6" %}
+                <div class="p-3 rounded-xl bg-[#090b0e] border border-[#161a22] flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-purple-900/40 border border-purple-800/40 text-purple-300 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            #{{ item.ranking }}
+                        </div>
+                        <div class="min-w-0">
+                            <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-xs text-white hover:text-purple-400 truncate block">
+                                {{ item.usuario.nombre_completo }}
+                            </a>
+                            <span class="text-[10px] text-gray-500 truncate block">{{ item.usuario.titulo_profesional }}</span>
+                        </div>
+                    </div>
+                    <span class="font-mono text-xs font-bold text-purple-300">{{ item.score }}</span>
+                </div>
+                {% empty %}
+                <p class="text-xs text-gray-500 py-2 col-span-3 text-center">Red en fase inicial para cálculo de intermediación.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: COMUNIDADES Y CLÚSTERES -->
+    <!-- ========================================================================= -->
+    <div x-show="activeTab === 'comunidades'" class="space-y-6" style="display: none;">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Gráfico Donut de Comunidades -->
+            <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+                <div>
+                    <h3 class="font-bold text-sm text-white">Distribución de Comunidades</h3>
+                    <p class="text-xs text-gray-500">Agrupación por propagación de etiquetas y afinidad de competencias</p>
+                </div>
+                <div class="h-56 relative flex items-center justify-center">
+                    <canvas id="chartComunidades"></canvas>
+                </div>
+                <div class="p-3 rounded-xl bg-[#090b0e] border border-[#161a22] text-[11px] text-gray-400 space-y-1">
+                    <span class="font-bold text-white block">Algoritmo de Detección:</span>
+                    <p>Propagación modular que maximiza la densidad interna de interacciones y similitud de habilidades.</p>
+                </div>
+            </div>
+
+            <!-- Listado de Clústeres Detectados -->
+            <div class="lg:col-span-2 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-[#181c24]">
+                    <div>
+                        <h4 class="font-bold text-sm text-white">Clústeres Profesionales Identificados</h4>
+                        <p class="text-[11px] text-gray-500">{{ comunidades|length }} comunidades activas en la red</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {% for cluster in comunidades %}
+                    <div class="peer-card bg-[#0e1116] border border-[#181c24] p-4 rounded-2xl space-y-3 flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#131720] text-gray-300 border border-[#222731]">
+                                    {{ cluster.tamano }} miembros
+                                </span>
+                                <span class="text-[10px] font-mono text-[#00b84c]">
+                                    Densidad: {{ cluster.densidad_interna_pct }}%
+                                </span>
+                            </div>
+
+                            <h5 class="font-bold text-sm text-white">{{ cluster.nombre }}</h5>
+
+                            <!-- Habilidades Dominantes -->
+                            <div class="flex flex-wrap gap-1 pt-1">
+                                {% for hab in cluster.habilidades_top %}
+                                <span class="px-1.5 py-0.5 rounded bg-[#090b0e] text-[#00b84c] border border-[#161a22] text-[9px] font-mono">
+                                    {{ hab }}
+                                </span>
+                                {% empty %}
+                                <span class="text-[10px] text-gray-500">General</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Miembros del Cluster -->
+                        <div class="pt-3 border-t border-[#181c24] flex items-center justify-between">
+                            <div class="flex -space-x-1.5 overflow-hidden">
+                                {% for m in cluster.miembros|slice:":4" %}
+                                <div class="w-6 h-6 rounded-full bg-[#00b84c] text-white font-bold flex items-center justify-center text-[9px] border-2 border-[#0e1116]" title="{{ m.nombre_completo }}">
+                                    {{ m.nombre|slice:":1" }}{{ m.apellido|slice:":1" }}
+                                </div>
+                                {% endfor %}
+                                {% if cluster.tamano > 4 %}
+                                <div class="w-6 h-6 rounded-full bg-[#181c24] text-gray-400 font-bold flex items-center justify-center text-[9px] border-2 border-[#0e1116]">
+                                    +{{ cluster.tamano|add:"-4" }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <span class="text-[10px] text-gray-500 font-mono">Clúster consolidado</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-gray-500 py-6 text-center col-span-2">No se han detectado comunidades aún.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: OFERTA VS DEMANDA DE TALENTO -->
+    <!-- ========================================================================= -->
+    <div x-show="activeTab === 'habilidades'" class="space-y-6" style="display: none;">
+
+        <!-- Gráfico Comparativo Oferta vs Demanda -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-sm text-white">Equilibrio del Mercado de Competencias</h3>
+                    <p class="text-xs text-gray-500">Talento disponible en la red social vs requisitos en ofertas laborales activas</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-mono">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span> Oferta (Candidatos)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#00b84c]"></span> Demanda (Empresas)</span>
+                </div>
+            </div>
+            <div class="h-64 relative">
+                <canvas id="chartHabilidades"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabla Detallada de Brecha de Talento -->
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-[#181c24]">
+                <div>
+                    <h4 class="font-bold text-sm text-white">Índice de Brecha de Habilidades (Skills Gap Index)</h4>
+                    <p class="text-[11px] text-gray-500">Métricas cuantitativas de déficit o superávit para planeación estratégica</p>
+                </div>
+                <span class="text-[10px] font-mono text-gray-400 bg-[#161a22] px-2 py-0.5 rounded border border-[#222731]">
+                    {{ habilidades_balance.total_habilidades }} Habilidades monitoreadas
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead>
+                        <tr class="text-gray-500 border-b border-[#181c24] text-[10px] uppercase">
+                            <th class="py-2.5 px-3">Competencia</th>
+                            <th class="py-2.5 px-3 text-center">Oferta (N)</th>
+                            <th class="py-2.5 px-3 text-center">Demanda (N)</th>
+                            <th class="py-2.5 px-3 text-center">Obligatoria</th>
+                            <th class="py-2.5 px-3 text-center">Ratio Dem/Of</th>
+                            <th class="py-2.5 px-3 text-right">Diagnóstico</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#181c24]">
+                        {% for item in habilidades_balance.habilidades %}
+                        <tr class="hover:bg-[#12151b] transition">
+                            <td class="py-2.5 px-3 font-bold text-white flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full {% if item.estado == 'deficit' %}bg-rose-500{% elif item.estado == 'equilibrado' %}bg-[#00b84c]{% else %}bg-blue-400{% endif %}"></span>
+                                <span>{{ item.habilidad.nombre }}</span>
+                                <span class="text-[10px] text-gray-500 font-normal">({{ item.habilidad.categoria }})</span>
+                            </td>
+                            <td class="py-2.5 px-3 text-center text-gray-300">{{ item.oferta }}</td>
+                            <td class="py-2.5 px-3 text-center text-[#00b84c] font-bold">{{ item.demanda }}</td>
+                            <td class="py-2.5 px-3 text-center text-gray-400">{{ item.demanda_obligatoria }}</td>
+                            <td class="py-2.5 px-3 text-center font-bold {% if item.ratio > 1 %}text-rose-400{% else %}text-gray-300{% endif %}">
+                                {{ item.ratio }}x
+                            </td>
+                            <td class="py-2.5 px-3 text-right">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase {% if item.estado == 'deficit' %}bg-rose-500/15 text-rose-400 border border-rose-500/30{% elif item.estado == 'equilibrado' %}bg-[#00b84c]/15 text-[#00b84c] border border-[#00b84c]/30{% elif item.estado == 'superavit' %}bg-blue-500/15 text-blue-400 border border-blue-500/30{% else %}bg-gray-800 text-gray-500{% endif %}">
+                                    {{ item.texto_estado }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: FUNDAMENTOS MATEMÁTICOS DE GRAFOS (DOCUMENTACIÓN TÉCNICA) -->
+    <!-- ========================================================================= -->
+    <div x-show="activeTab === 'formulas'" class="space-y-4" style="display: none;">
+        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-6 rounded-2xl space-y-6">
+            <div>
+                <h3 class="text-base font-bold text-white">Fundamentación Algorítmica y Fórmulas de Teoría de Grafos</h3>
+                <p class="text-xs text-gray-400 mt-1">
+                    Base conceptual de las métricas aplicadas en WheelsOn según los requerimientos del proyecto de investigación.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <!-- Card Fórmula: Densidad -->
+                <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] space-y-2">
+                    <span class="text-[10px] uppercase font-bold text-[#00b84c] tracking-wider block">Densidad de Red No Dirigida</span>
+                    <p class="font-mono text-sm text-white bg-[#12151b] p-2 rounded border border-[#1e232d]">
+                        D = 2E / (N · (N - 1))
+                    </p>
+                    <p class="text-gray-400 leading-relaxed">
+                        Mide la proporción de conexiones existentes respecto al número total teórico de conexiones posibles. Una densidad alta indica un tejido social estrechamente interconectado.
+                    </p>
+                </div>
+
+                <!-- Card Fórmula: PageRank -->
+                <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] space-y-2">
+                    <span class="text-[10px] uppercase font-bold text-[#3b82f6] tracking-wider block">PageRank Iterativo (Brin & Page)</span>
+                    <p class="font-mono text-sm text-white bg-[#12151b] p-2 rounded border border-[#1e232d]">
+                        PR(v) = (1-d)/N + d · &sum; (PR(u) / deg(u))
+                    </p>
+                    <p class="text-gray-400 leading-relaxed">
+                        Evalúa la autoridad de un nodo en función de la autoridad de sus vecinos. Con factor de amortiguación d=0.85, premia las recomendaciones provenientes de usuarios influyentes.
+                    </p>
+                </div>
+
+                <!-- Card Fórmula: Coeficiente de Agrupamiento -->
+                <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] space-y-2">
+                    <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">Coeficiente de Agrupamiento (Clustering)</span>
+                    <p class="font-mono text-sm text-white bg-[#12151b] p-2 rounded border border-[#1e232d]">
+                        C(v) = 2 · e_v / (k_v · (k_v - 1))
+                    </p>
+                    <p class="text-gray-400 leading-relaxed">
+                        Cuantifica la tendencia de los contactos de un nodo a conocerse entre sí (clausura triádica: "el amigo de mi amigo es mi amigo"). Fundamental para medir cohesión de comunidades.
+                    </p>
+                </div>
+
+                <!-- Card Fórmula: Betweenness Centrality -->
+                <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] space-y-2">
+                    <span class="text-[10px] uppercase font-bold text-purple-400 tracking-wider block">Centralidad de Intermediación (Brandes)</span>
+                    <p class="font-mono text-sm text-white bg-[#12151b] p-2 rounded border border-[#1e232d]">
+                        C_B(v) = &sum; (&sigma;_st(v) / &sigma;_st)
+                    </p>
+                    <p class="text-gray-400 leading-relaxed">
+                        Calcula la fracción de caminos más cortos entre pares de nodos que transitan a través de v. Detecta los "gatekeepers" o puentes que intercomunican sectores disjuntos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts de Inicialización Chart.js con Dark Theme -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rawData = {{ chart_data_json|safe }};
+    
+    // Configuración visual dark mode compartida
+    Chart.defaults.color = '#9ca3af';
+    Chart.defaults.font.family = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+    Chart.defaults.font.size = 11;
+
+    // 1. Gráfico Influencia (Grado vs PageRank)
+    const ctxInf = document.getElementById('chartInfluencia');
+    if (ctxInf && rawData.influencia) {
+        new Chart(ctxInf, {
+            type: 'bar',
+            data: {
+                labels: rawData.influencia.labels,
+                datasets: [
+                    {
+                        label: 'Conexiones Directas',
+                        data: rawData.influencia.grado,
+                        backgroundColor: '#00b84c',
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                    },
+                    {
+                        label: 'PageRank Relativo (%)',
+                        data: rawData.influencia.pagerank,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#6b7280' }
+                    },
+                    y: {
+                        grid: { color: '#181c24' },
+                        ticks: { color: '#6b7280' }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Gráfico Donut Comunidades
+    const ctxCom = document.getElementById('chartComunidades');
+    if (ctxCom && rawData.comunidades) {
+        new Chart(ctxCom, {
+            type: 'doughnut',
+            data: {
+                labels: rawData.comunidades.labels,
+                datasets: [{
+                    data: rawData.comunidades.datos,
+                    backgroundColor: [
+                        '#00b84c', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'
+                    ],
+                    borderColor: '#0e1116',
+                    borderWidth: 3,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 10, padding: 12, color: '#9ca3af' }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    // 3. Gráfico Balance Habilidades (Oferta vs Demanda)
+    const ctxHab = document.getElementById('chartHabilidades');
+    if (ctxHab && rawData.habilidades) {
+        new Chart(ctxHab, {
+            type: 'bar',
+            data: {
+                labels: rawData.habilidades.labels,
+                datasets: [
+                    {
+                        label: 'Oferta (Candidatos)',
+                        data: rawData.habilidades.oferta,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                    },
+                    {
+                        label: 'Demanda (Empresas)',
+                        data: rawData.habilidades.demanda,
+                        backgroundColor: '#00b84c',
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#6b7280' }
+                    },
+                    y: {
+                        grid: { color: '#181c24' },
+                        ticks: { color: '#6b7280', stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

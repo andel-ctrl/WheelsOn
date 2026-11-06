@@ -163,7 +163,9 @@
                         <form method="POST" action="{% url 'core:proyecto_colaborador_eliminar' pid=proyecto.pid uid=m.usuario.uid %}"
                               onsubmit="return confirm('¿Quitar a {{ m.usuario.nombre_completo }} del proyecto?');">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg">✕</button>
+                            <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg" title="Quitar">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
                         </form>
                     </div>
                     {% endfor %}

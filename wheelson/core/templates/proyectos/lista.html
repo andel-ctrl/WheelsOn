@@ -1,101 +1,75 @@
 {% extends "base.html" %}
 
-{% block title %}Proyectos | WheelsOn{% endblock %}
-{% block page_title %}Directorio de Proyectos{% endblock %}
+{% block title %}Launchpad & Proyectos | WheelsOn{% endblock %}
+{% block page_title %}Launchpad de Proyectos{% endblock %}
 
 {% block content %}
 <div class="space-y-6 animate-fade-in-up" x-data="{ viewMode: 'grid', filterStatus: 'todos' }">
 
-    <!-- KPI & Header Stats Banner -->
+    <!-- KPI & Header Stats Banner (Estilo Peerlist Dark) -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
-            <div class="stat-figure text-info">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-            </div>
-            <div class="stat-title text-xs font-semibold text-base-content/60">Total Proyectos</div>
-            <div class="stat-value text-xl font-black text-info">{{ proyectos|length }}</div>
-            <div class="stat-desc text-[11px] text-base-content/50">En el ecosistema WheelsOn</div>
+        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
+            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Total Proyectos</span>
+            <div class="text-2xl font-black text-white">{{ proyectos|length }}</div>
+            <p class="text-[10px] text-gray-500 font-mono">Proof of work en red</p>
         </div>
 
-        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
-            <div class="stat-figure text-success">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-            </div>
-            <div class="stat-title text-xs font-semibold text-base-content/60">En Curso</div>
-            <div class="stat-value text-xl font-black text-success">
+        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
+            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">En Desarrollo</span>
+            <div class="text-2xl font-black text-[#00b84c]">
                 {% for p in proyectos %}{% if p.estado == 'activo' %}x{% endif %}{% endfor %}
             </div>
-            <div class="stat-desc text-[11px] text-base-content/50">Iniciativas abiertas</div>
+            <p class="text-[10px] text-gray-500 font-mono">Lanzamientos activos</p>
         </div>
 
-        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
-            <div class="stat-figure text-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </div>
-            <div class="stat-title text-xs font-semibold text-base-content/60">Completados</div>
-            <div class="stat-value text-xl font-black text-primary">
+        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
+            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Completados</span>
+            <div class="text-2xl font-black text-cyan-400">
                 {% for p in proyectos %}{% if p.estado == 'completado' %}x{% endif %}{% endfor %}
             </div>
-            <div class="stat-desc text-[11px] text-base-content/50">Éxito en producción</div>
+            <p class="text-[10px] text-gray-500 font-mono">Éxito en producción</p>
         </div>
 
-        <div class="stat bg-base-200 border border-base-300 rounded-2xl p-4 shadow-sm">
-            <div class="stat-figure text-warning">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-            </div>
-            <div class="stat-title text-xs font-semibold text-base-content/60">Tecnologías</div>
-            <div class="stat-value text-xl font-black text-warning">Multi</div>
-            <div class="stat-desc text-[11px] text-base-content/50">Stack tecnológico</div>
+        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
+            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Stack Grafo</span>
+            <div class="text-2xl font-black text-amber-400">Multi</div>
+            <p class="text-[10px] text-gray-500 font-mono">Neo4j, Cypher, Py</p>
         </div>
     </div>
 
     <!-- Search, Filters and Layout Toolbar -->
-    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 bg-base-200 p-4 rounded-2xl border border-base-300 shadow-sm">
+    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 bg-[#0e1116] p-3.5 rounded-2xl border border-[#181c24]">
         <form method="GET" class="flex-1 flex gap-2 max-w-lg">
             <div class="relative w-full">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-base-content/40">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-500">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </span>
                 <input type="text" name="q" value="{{ query|default:'' }}"
                        placeholder="Buscar por título, tecnología o descripción..."
-                       class="input input-sm input-bordered w-full pl-9 rounded-xl bg-base-100" />
+                       class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] rounded-full pl-10 pr-4 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none" />
             </div>
-            <button type="submit" class="btn btn-sm btn-info rounded-xl px-4">Buscar</button>
+            <button type="submit" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">Buscar</button>
             {% if query %}
-            <a href="{% url 'core:proyectos_lista' %}" class="btn btn-sm btn-ghost rounded-xl">Limpiar</a>
+            <a href="{% url 'core:proyectos_lista' %}" class="px-3 py-1.5 rounded-full text-xs text-gray-400 hover:text-white transition">Limpiar</a>
             {% endif %}
         </form>
 
-        <div class="flex items-center gap-2 self-end md:self-auto">
+        <div class="flex items-center gap-2.5 self-end md:self-auto">
             <!-- View Mode Switcher -->
-            <div class="btn-group bg-base-300 p-0.5 rounded-xl border border-base-300 flex">
-                <button type="button" @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'btn-active btn-info' : 'btn-ghost'" class="btn btn-xs rounded-lg px-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
+            <div class="inline-flex rounded-full bg-[#12151b] border border-[#1e232d] p-0.5 text-xs">
+                <button type="button" @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-[#1c212b] text-white' : 'text-gray-400 hover:text-white'" class="px-3 py-1 rounded-full transition text-[11px] font-bold">
+                    Cuadrícula
                 </button>
-                <button type="button" @click="viewMode = 'table'" :class="viewMode === 'table' ? 'btn-active btn-info' : 'btn-ghost'" class="btn btn-xs rounded-lg px-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                    </svg>
+                <button type="button" @click="viewMode = 'table'" :class="viewMode === 'table' ? 'bg-[#1c212b] text-white' : 'text-gray-400 hover:text-white'" class="px-3 py-1 rounded-full transition text-[11px] font-bold">
+                    Tabla
                 </button>
             </div>
 
-            <a href="{% url 'core:proyecto_crear' %}" class="btn btn-sm btn-info rounded-xl gap-2 shadow-sm font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Nuevo Proyecto
+            <a href="{% url 'core:proyecto_crear' %}" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold shadow-sm flex items-center gap-1.5">
+                <span>+</span>
+                <span>Nuevo Proyecto</span>
             </a>
         </div>
     </div>
@@ -103,64 +77,58 @@
     <!-- Main Content Area -->
     {% if proyectos %}
 
-    <!-- 1. Grid View -->
-    <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <!-- 1. Grid View (Cards camufladas al fondo) -->
+    <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for p in proyectos %}
-        <div class="card bg-base-200 border border-base-300 shadow-md hover:shadow-xl hover:border-info/50 transition-all duration-300 rounded-3xl flex flex-col justify-between overflow-hidden">
-            <div class="p-6 space-y-4">
+        <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] transition-all duration-200 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
                 <div class="flex items-start justify-between gap-3">
                     <div class="space-y-1 flex-1 min-w-0">
-                        <span class="badge badge-info badge-outline font-mono text-[10px] py-1 px-2">PID: {{ p.pid|slice:":8" }}</span>
-                        <h3 class="font-bold text-lg text-base-content hover:text-info transition truncate">
+                        <span class="text-[10px] font-mono text-gray-500 bg-[#090b0e] border border-[#161a22] px-2 py-0.5 rounded-md">PID: {{ p.pid|slice:":8" }}</span>
+                        <h3 class="font-bold text-sm text-white hover:text-[#00b84c] transition truncate pt-1">
                             <a href="{% url 'core:proyecto_detalle' pid=p.pid %}">{{ p.nombre }}</a>
                         </h3>
                     </div>
-                    <span class="badge badge-sm font-bold uppercase text-[10px] px-2.5 py-1.5 {% if p.estado == 'activo' %}badge-success text-success-content{% elif p.estado == 'completado' %}badge-info text-info-content{% else %}badge-warning text-warning-content{% endif %}">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {% if p.estado == 'activo' %}bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30{% elif p.estado == 'completado' %}bg-cyan-500/20 text-cyan-400 border border-cyan-500/30{% else %}bg-amber-500/20 text-amber-400 border border-amber-500/30{% endif %}">
                         {{ p.estado|default:"activo" }}
                     </span>
                 </div>
 
-                <p class="text-xs text-base-content/70 line-clamp-3 leading-relaxed">
+                <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">
                     {{ p.descripcion|default:"Iniciativa tecnológica sin descripción detallada registrada." }}
                 </p>
 
                 <!-- Stack Tecnológico Chips -->
-                <div class="space-y-1.5">
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-base-content/40">Stack de Tecnologías</span>
+                <div class="space-y-1">
                     <div class="flex flex-wrap gap-1.5">
                         {% for tech in p.tecnologias %}
-                        <span class="badge badge-sm badge-outline border-base-300 text-[11px] font-medium bg-base-100/50">{{ tech }}</span>
+                        <span class="px-2 py-0.5 rounded-md bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ tech }}</span>
                         {% empty %}
-                        <span class="text-[11px] text-base-content/40 italic">Sin tecnologías especificadas</span>
+                        <span class="text-[10px] text-gray-500 italic">Sin tecnologías especificadas</span>
                         {% endfor %}
                     </div>
                 </div>
 
                 <!-- Timeline Info -->
-                <div class="pt-2 flex items-center justify-between text-[11px] text-base-content/50 border-t border-base-300/60">
-                    <span class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {{ p.fecha_inicio|default:"Inicio N/A" }}
-                    </span>
+                <div class="pt-2 flex items-center justify-between text-[11px] text-gray-500 border-t border-[#181c24]">
+                    <span>{{ p.fecha_inicio|default:"Inicio N/A" }}</span>
                     <span>&rarr;</span>
                     <span>{{ p.fecha_fin|default:"En curso" }}</span>
                 </div>
             </div>
 
             <!-- Card Bottom Bar -->
-            <div class="px-6 py-3.5 bg-base-300/30 border-t border-base-300 flex items-center justify-between">
-                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="btn btn-xs btn-info rounded-xl font-semibold gap-1">
+            <div class="pt-3 border-t border-[#181c24] flex items-center justify-between">
+                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="text-xs font-bold text-[#00b84c] hover:underline flex items-center gap-1">
                     Ver Detalles &rarr;
                 </a>
-                <div class="flex items-center gap-1">
-                    <a href="{% url 'core:proyecto_editar' pid=p.pid %}" class="btn btn-xs btn-ghost rounded-lg hover:bg-base-200" title="Editar">
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'core:proyecto_editar' pid=p.pid %}" class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#161a22] transition" title="Editar">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                     </a>
-                    <a href="{% url 'core:proyecto_eliminar' pid=p.pid %}" class="btn btn-xs btn-ghost text-error rounded-lg hover:bg-error/10" title="Eliminar">
+                    <a href="{% url 'core:proyecto_eliminar' pid=p.pid %}" class="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-900/20 transition" title="Eliminar">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -172,49 +140,46 @@
     </div>
 
     <!-- 2. Table View -->
-    <div x-show="viewMode === 'table'" class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl" style="display: none;">
+    <div x-show="viewMode === 'table'" class="peer-card bg-[#0e1116] border border-[#181c24] overflow-hidden rounded-2xl" style="display: none;">
         <div class="overflow-x-auto">
-            <table class="table w-full">
-                <thead class="bg-base-300/60 text-xs uppercase font-bold text-base-content/70">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-[#090b0e] text-[11px] uppercase font-bold text-gray-400 border-b border-[#181c24]">
                     <tr>
-                        <th class="py-4 pl-6">Proyecto</th>
-                        <th>Estado</th>
-                        <th>Stack Tecnológico</th>
-                        <th>Periodo</th>
-                        <th class="text-right pr-6">Acciones</th>
+                        <th class="py-3 px-4">Proyecto</th>
+                        <th class="py-3 px-4">Estado</th>
+                        <th class="py-3 px-4">Stack Tecnológico</th>
+                        <th class="py-3 px-4">Fechas</th>
+                        <th class="py-3 px-4 text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-base-300/40 text-sm">
+                <tbody class="divide-y divide-[#181c24]">
                     {% for p in proyectos %}
-                    <tr class="hover:bg-base-100/50 transition">
-                        <td class="pl-6 py-4">
-                            <div class="font-bold text-base-content hover:text-info transition">
-                                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}">{{ p.nombre }}</a>
-                            </div>
-                            <span class="text-[10px] font-mono text-base-content/50">PID: {{ p.pid|slice:":10" }}</span>
+                    <tr class="hover:bg-[#11141b] transition">
+                        <td class="py-3 px-4">
+                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="font-bold text-white hover:text-[#00b84c] block">
+                                {{ p.nombre }}
+                            </a>
+                            <span class="text-[10px] text-gray-500 font-mono">PID: {{ p.pid }}</span>
                         </td>
-                        <td>
-                            <span class="badge badge-sm font-bold uppercase text-[10px] {% if p.estado == 'activo' %}badge-success text-success-content{% elif p.estado == 'completado' %}badge-info text-info-content{% else %}badge-warning text-warning-content{% endif %}">
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {% if p.estado == 'activo' %}bg-[#00b84c]/20 text-[#00b84c]{% elif p.estado == 'completado' %}bg-cyan-500/20 text-cyan-400{% else %}bg-amber-500/20 text-amber-400{% endif %}">
                                 {{ p.estado }}
                             </span>
                         </td>
-                        <td>
+                        <td class="py-3 px-4">
                             <div class="flex flex-wrap gap-1 max-w-xs">
-                                {% for tech in p.tecnologias|slice:":3" %}
-                                <span class="badge badge-xs badge-outline">{{ tech }}</span>
+                                {% for tech in p.tecnologias %}
+                                <span class="px-1.5 py-0.2 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ tech }}</span>
+                                {% empty %}
+                                <span class="text-gray-500 italic text-[11px]">N/A</span>
                                 {% endfor %}
-                                {% if p.tecnologias|length > 3 %}
-                                <span class="badge badge-xs badge-ghost">+{{ p.tecnologias|length|add:"-3" }}</span>
-                                {% endif %}
                             </div>
                         </td>
-                        <td class="text-xs text-base-content/60">
-                            {{ p.fecha_inicio|default:"N/A" }} &rarr; {{ p.fecha_fin|default:"Actual" }}
+                        <td class="py-3 px-4 text-gray-400 font-mono text-[11px]">
+                            {{ p.fecha_inicio|default:"N/A" }} &rarr; {{ p.fecha_fin|default:"En curso" }}
                         </td>
-                        <td class="text-right pr-6 space-x-1">
-                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="btn btn-xs btn-ghost rounded-lg">Ver</a>
-                            <a href="{% url 'core:proyecto_editar' pid=p.pid %}" class="btn btn-xs btn-info btn-outline rounded-lg">Editar</a>
-                            <a href="{% url 'core:proyecto_eliminar' pid=p.pid %}" class="btn btn-xs btn-error btn-outline rounded-lg">Eliminar</a>
+                        <td class="py-3 px-4 text-right">
+                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="text-[#00b84c] font-bold hover:underline">Ver &rarr;</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -224,29 +189,12 @@
     </div>
 
     {% else %}
-    <!-- Empty State -->
-    <div class="card bg-base-200 border border-base-300 p-12 text-center rounded-3xl shadow-sm">
-        <div class="max-w-md mx-auto space-y-4">
-            <div class="w-16 h-16 rounded-full bg-info/10 text-info mx-auto flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-            </div>
-            <h3 class="text-xl font-black text-base-content">No se encontraron proyectos</h3>
-            <p class="text-xs text-base-content/60 leading-relaxed">
-                {% if query %}
-                No hay resultados que coincidan con la búsqueda "<span class="text-info font-semibold">{{ query }}</span>".
-                {% else %}
-                Aún no hay proyectos registrados en el grafo. Añade el primer proyecto colaborativo para conectar profesionales y tecnologías.
-                {% endif %}
-            </p>
-            <div class="pt-2 flex justify-center gap-3">
-                {% if query %}
-                <a href="{% url 'core:proyectos_lista' %}" class="btn btn-sm btn-ghost rounded-xl">Restablecer Búsqueda</a>
-                {% endif %}
-                <a href="{% url 'core:proyecto_crear' %}" class="btn btn-sm btn-info rounded-xl font-bold shadow-md">Crear Proyecto</a>
-            </div>
-        </div>
+    <div class="peer-card p-12 text-center bg-[#0e1116] border border-[#181c24] rounded-2xl space-y-3">
+        <p class="text-white font-bold text-sm">No se encontraron proyectos</p>
+        <p class="text-xs text-gray-500">Publica el primer proyecto de tu equipo o ajusta tus filtros de búsqueda.</p>
+        <a href="{% url 'core:proyecto_crear' %}" class="peer-btn-green px-5 py-2 rounded-full text-xs font-bold inline-block shadow-md">
+            + Crear Proyecto
+        </a>
     </div>
     {% endif %}
 

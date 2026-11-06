@@ -49,7 +49,7 @@
                     <h1 class="text-2xl sm:text-3xl font-black text-base-content tracking-tight">{{ oferta.titulo }}</h1>
                     {% if empresa_rel %}
                     <p class="text-sm font-semibold text-accent flex items-center gap-1.5">
-                        <span>🏢 Publicado por:</span>
+                        <span>Publicado por:</span>
                         <a href="{% url 'core:empresa_detalle' eid=empresa_rel.eid %}" class="hover:underline text-accent font-bold">
                             {{ empresa_rel.nombre }} ({{ empresa_rel.industria }})
                         </a>
@@ -166,7 +166,9 @@
                         <form method="POST" action="{% url 'core:oferta_requisito_eliminar' oid=oferta.oid hid=req.habilidad.hid %}"
                               onsubmit="return confirm('¿Quitar requisito {{ req.habilidad.nombre }}?');">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg">✕</button>
+                            <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg" title="Quitar">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
                         </form>
                     </div>
                     {% endfor %}

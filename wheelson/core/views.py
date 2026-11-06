@@ -1,3 +1,4 @@
+from datetime import date
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from core.forms import (
@@ -29,25 +30,140 @@ from core.services import (
     PostulacionService,
 )
 from core.graph_queries import GraphAnalyticsService
+from core.recommendations import RecommendationEngine
+from core.analytics import NetworkAnalyticsService
+import json
 
 
 def dashboard(request):
-    total_usuarios = len(UsuarioService.all())
+    all_users = UsuarioService.all()
+    active_uid = request.session.get("active_user_uid")
+    current_user = UsuarioService.get(active_uid) if active_uid else (UsuarioService.get("usr_carlos001") or (all_users[0] if all_users else None))
+    uid_ref = current_user.uid if current_user else ""
+
+    if request.method == "POST":
+        descripcion = request.POST.get("descripcion", "").strip()
+        nombre = request.POST.get("nombre", "").strip()
+        tecnologias = request.POST.get("tecnologias", "").strip()
+
+        if descripcion:
+            if not nombre:
+                nombre = f"Publicación de {current_user.nombre if current_user else 'WheelsOn'}"
+            proyecto = ProyectoService.create(
+                nombre=nombre,
+                descripcion=descripcion,
+                fecha_inicio=date.today(),
+                estado="activo",
+                tecnologias=tecnologias,
+            )
+            if current_user and proyecto:
+                try:
+                    ParticipacionProyectoService.vincular(
+                        uid=current_user.uid,
+                        pid=proyecto.pid,
+                        rol="Lead Creator",
+                        fecha_inicio=date.today(),
+                        activo=True,
+                    )
+                except Exception:
+                    pass
+            messages.success(request, f"¡Tu publicación '{nombre}' ya está en el feed social!")
+        else:
+            messages.error(request, "Por favor incluye una descripción sobre qué estás trabajando.")
+        return redirect("core:dashboard")
+
+    total_usuarios = len(all_users)
     total_empresas = len(EmpresaService.all())
     total_ofertas = len(OfertaService.all())
     total_proyectos = len(ProyectoService.all())
     total_habilidades = len(HabilidadService.all())
 
+    # Construccion del Muro de Novedades (Feed Social Dinamico de Eventos del Grafo)
+    feed_items = []
+
+    # 1. Novedades de Proyectos (Proof of Work)
+    proyectos = ProyectoService.all()
+    for p in proyectos:
+        colabs = ParticipacionProyectoService.listar_por_proyecto(p.pid)
+        autor = colabs[0]["usuario"] if colabs else None
+        tech_raw = getattr(p, "tecnologias", "") or ""
+        if isinstance(tech_raw, list):
+            tech_list = [str(t).strip() for t in tech_raw if str(t).strip()]
+        else:
+            tech_list = [t.strip() for t in str(tech_raw).replace(";", ",").split(",") if t.strip()]
+
+        feed_items.append({
+            "tipo": "proyecto",
+            "proyecto": p,
+            "autor": autor,
+            "colaboradores": [c["usuario"] for c in colabs],
+            "tecnologias": tech_list,
+            "fecha": getattr(p, "fecha_inicio", "") or "Reciente",
+            "orden": 1,
+        })
+
+    # 2. Oportunidades Laborales con Match de Habilidades
+    mis_habilidades = set()
+    if uid_ref:
+        mis_habilidades = {
+            str(h["habilidad"].hid)
+            for h in HabilidadUsuarioService.listar_por_usuario(uid_ref)
+        }
+
+    ofertas = OfertaService.all()
+    for o in ofertas:
+        if o.estado == "abierta":
+            empresa = PublicacionOfertaService.obtener_empresa(o.oid)
+            reqs = RequisitoOfertaService.listar_por_oferta(o.oid)
+            match_count = sum(1 for r in reqs if str(r["habilidad"].hid) in mis_habilidades)
+            match_pct = round((match_count / len(reqs)) * 100, 1) if reqs else 0
+            feed_items.append({
+                "tipo": "oferta",
+                "oferta": o,
+                "empresa": empresa,
+                "requisitos": reqs,
+                "match_count": match_count,
+                "match_pct": match_pct,
+                "fecha": getattr(o, "fecha_publicacion", "") or "Reciente",
+                "orden": 2 if match_pct > 0 else 4,
+            })
+
+    # 3. Hitos de Conexion en la Red
+    for u in all_users[:4]:
+        conns = ConexionService.listar(u.uid)
+        for c in conns[:1]:
+            if str(u.uid) < str(c["usuario"].uid):  # Evitar duplicar arista bidireccional
+                feed_items.append({
+                    "tipo": "conexion",
+                    "u1": u,
+                    "u2": c["usuario"],
+                    "mensaje": c.get("mensaje", ""),
+                    "fecha": c.get("fecha", "Reciente"),
+                    "orden": 3,
+                })
+
+    # Ordenar feed intercalado
+    feed_items.sort(key=lambda x: x.get("orden", 5))
+
+    # Widgets de Descubrimiento de Grafo para la columna derecha
+    colegas_sugeridos = RecommendationEngine.recomendar_contactos(uid_ref, limit=4) if uid_ref else []
+    empleos_sugeridos = RecommendationEngine.recomendar_empleos(uid_ref, limit=3) if uid_ref else []
+    habilidades_trending = GraphAnalyticsService.habilidades_mas_demandadas(limit=6)
+
     context = {
         "app_name": "WheelsOn",
-        "page_title": "Dashboard",
+        "page_title": "Feed Social | WheelsOn",
         "total_usuarios": total_usuarios,
         "total_empresas": total_empresas,
         "total_ofertas": total_ofertas,
         "total_proyectos": total_proyectos,
         "total_habilidades": total_habilidades,
-        "usuarios_recientes": UsuarioService.all(limit=5),
-        "ofertas_recientes": OfertaService.all(limit=5),
+        "usuarios_recientes": all_users[:5],
+        "ofertas_recientes": ofertas[:5],
+        "feed_items": feed_items,
+        "colegas_sugeridos": colegas_sugeridos,
+        "empleos_sugeridos": empleos_sugeridos,
+        "habilidades_trending": habilidades_trending,
     }
     return render(request, "dashboard.html", context)
 
@@ -646,5 +762,75 @@ def consultas_index(request):
         "res_candidatos": res_candidatos,
     }
     return render(request, "grafo/consultas.html", context)
+
+
+def recomendaciones_index(request):
+    tab = request.GET.get("tab", "contactos")
+    usuarios = UsuarioService.all()
+    proyectos = ProyectoService.all()
+    empresas = EmpresaService.all()
+
+    uid = request.GET.get("uid") or (usuarios[0].uid if len(usuarios) > 0 else "")
+    pid = request.GET.get("pid") or (proyectos[0].pid if len(proyectos) > 0 else "")
+    eid = request.GET.get("eid") or (empresas[0].eid if len(empresas) > 0 else "")
+
+    usuario_sel = UsuarioService.get(uid) if uid else None
+    proyecto_sel = ProyectoService.get(pid) if pid else None
+    empresa_sel = EmpresaService.get(eid) if eid else None
+
+    rec_contactos = []
+    rec_empleos = []
+    rec_colaboradores = []
+    rec_talento = []
+
+    if tab == "contactos" and uid:
+        rec_contactos = RecommendationEngine.recomendar_contactos(uid, limit=12)
+    elif tab == "empleos" and uid:
+        rec_empleos = RecommendationEngine.recomendar_empleos(uid, limit=12)
+    elif tab == "colaboradores" and pid:
+        rec_colaboradores = RecommendationEngine.recomendar_colaboradores_proyecto(pid, limit=12)
+    elif tab == "talento" and eid:
+        rec_talento = RecommendationEngine.recomendar_candidatos_para_empresa(eid, limit=12)
+
+    context = {
+        "tab": tab,
+        "usuarios": usuarios,
+        "proyectos": proyectos,
+        "empresas": empresas,
+        "uid": uid,
+        "pid": pid,
+        "eid": eid,
+        "usuario_sel": usuario_sel,
+        "proyecto_sel": proyecto_sel,
+        "empresa_sel": empresa_sel,
+        "rec_contactos": rec_contactos,
+        "rec_empleos": rec_empleos,
+        "rec_colaboradores": rec_colaboradores,
+        "rec_talento": rec_talento,
+    }
+    return render(request, "recomendaciones/index.html", context)
+
+
+def analitica_dashboard(request):
+    metricas = NetworkAnalyticsService.metricas_red_globales()
+    centralidad = NetworkAnalyticsService.ranking_centralidad_grado(limit=10)
+    pagerank = NetworkAnalyticsService.ranking_pagerank(limit=10)
+    intermediacion = NetworkAnalyticsService.ranking_intermediacion(limit=10)
+    comunidades = NetworkAnalyticsService.deteccion_comunidades()
+    habilidades_balance = NetworkAnalyticsService.analisis_oferta_demanda_habilidades()
+    chart_data = NetworkAnalyticsService.preparar_datos_graficos()
+
+    context = {
+        "metricas": metricas,
+        "centralidad": centralidad,
+        "pagerank": pagerank,
+        "intermediacion": intermediacion,
+        "comunidades": comunidades,
+        "habilidades_balance": habilidades_balance,
+        "chart_data_json": json.dumps(chart_data),
+    }
+    return render(request, "analitica/dashboard.html", context)
+
+
 
 

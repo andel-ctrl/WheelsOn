@@ -1,10 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es" data-theme="business" x-data="themeManager()" :data-theme="currentTheme">
+<html lang="es" data-theme="business" x-data="themeManager()" :data-theme="currentTheme" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ page_title|default:"Dashboard" }}{% endblock %} | WheelsOn</title>
+    <title>{% block title %}{{ page_title|default:"Feed" }}{% endblock %} | WheelsOn</title>
 
     <!-- DaisyUI Components & Themes -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
@@ -18,269 +18,298 @@
     <link href="https://unpkg.com/vis-network@9.1.9/styles/vis-network.min.css" rel="stylesheet" type="text/css" />
 
     <style>
+        :root {
+            --p-bg: #0d0f12;
+            --p-card: #0e1116;
+            --p-card-hover: #12151c;
+            --p-border: #181c24;
+            --p-green: #00b84c;
+            --p-green-hover: #00a042;
+            --p-text: #f0f6fc;
+            --p-muted: #7d8590;
+        }
+
+        body {
+            background-color: var(--p-bg);
+            color: var(--p-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .peer-sidebar {
+            background-color: #0b0d10;
+            border-right: 1px solid var(--p-border);
+        }
+
+        .peer-border {
+            border-color: var(--p-border);
+        }
+
+        .peer-card {
+            background-color: var(--p-card);
+            border: 1px solid var(--p-border);
+            border-radius: 1rem;
+            transition: all 0.15s ease-in-out;
+        }
+        .peer-card:hover {
+            border-color: #242b38;
+        }
+
+        .peer-input {
+            background-color: #090b0e;
+            border: 1px solid var(--p-border);
+            color: var(--p-text);
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+        .peer-input:focus {
+            border-color: var(--p-green);
+        }
+
+        .peer-btn-green {
+            background-color: var(--p-green);
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            transition: all 0.15s ease;
+        }
+        .peer-btn-green:hover {
+            background-color: var(--p-green-hover);
+        }
+
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator { display: inline-block; }
         .htmx-request.htmx-indicator { display: inline-block; }
-        .htmx-swapping { opacity: 0; transition: opacity 0.2s ease-out; }
 
-        ::-webkit-scrollbar { width: 7px; height: 7px; }
-        ::-webkit-scrollbar-track { background: oklch(var(--b2)); }
-        ::-webkit-scrollbar-thumb { background: oklch(var(--p) / 0.4); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: oklch(var(--p)); }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #222731; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #303744; }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in-up {
-            animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .glass-panel {
-            background: oklch(var(--b2) / 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid oklch(var(--bc) / 0.1);
+            animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="min-h-screen bg-base-100 text-base-content antialiased" x-data="{ sidebarOpen: true, mobileMenuOpen: false }">
+<body class="min-h-screen antialiased flex text-[13px] text-gray-200" x-data="{ mobileMenuOpen: false }">
 
-    <div class="flex h-screen overflow-hidden">
+    <!-- ========================================================================= -->
+    <!-- LEFT SIDEBAR: NAVEGACION MINIMALISTA PEERLIST (EXACTO A EJEMPLO.PNG) -->
+    <!-- ========================================================================= -->
+    <aside class="peer-sidebar w-60 flex-shrink-0 hidden md:flex flex-col justify-between p-5 sticky top-0 h-screen z-40 select-none">
 
-        <!-- Mobile Drawer Backdrop -->
-        <div x-show="mobileMenuOpen"
-             x-transition.opacity
-             @click="mobileMenuOpen = false"
-             class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-             style="display: none;"></div>
+        <!-- Top: Logo + Nav Items -->
+        <div class="space-y-7">
+            <!-- Brand Logo -->
+            <a href="{% url 'core:dashboard' %}" class="flex items-center gap-2.5 px-2 group">
+                <div class="w-8 h-8 rounded-xl bg-[#00b84c] flex items-center justify-center font-black text-white text-base shadow-lg shadow-emerald-900/30 group-hover:scale-105 transition">
+                    W
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-lg font-bold tracking-tight text-white">WheelsOn</span>
+                </div>
+            </a>
 
-        <!-- Sidebar -->
-        <aside class="fixed inset-y-0 left-0 z-50 flex flex-col bg-base-200 border-r border-base-300 transition-all duration-300 lg:static"
-               :class="{
-                   'translate-x-0': mobileMenuOpen,
-                   '-translate-x-full lg:translate-x-0': !mobileMenuOpen,
-                   'w-64': sidebarOpen,
-                   'w-20': !sidebarOpen
-               }">
-
-            <div class="flex items-center justify-between px-4 py-4 border-b border-base-300">
-                <a href="{% url 'core:dashboard' %}" class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-content" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                    </div>
-                    <div class="flex flex-col transition-opacity duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">
-                        <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">WheelsOn</span>
-                        <span class="text-[10px] uppercase font-bold tracking-widest opacity-50">Graph Network</span>
-                    </div>
+            <!-- Minimalist Nav Items (Icon + Label) -->
+            <nav class="space-y-1 font-medium">
+                <!-- Scroll (Feed Principal) -->
+                <a href="{% url 'core:dashboard' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if request.path == '/' %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {% if request.path == '/' %}text-[#00b84c]{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span>Scroll</span>
                 </a>
-                <button @click="mobileMenuOpen = false" class="btn btn-ghost btn-xs btn-square lg:hidden">✕</button>
-            </div>
 
-            <!-- Nav Links -->
-            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
-                <div>
-                    <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-base-content/40" x-show="sidebarOpen">Principal</span>
-                    <ul class="menu gap-1 mt-1 p-0">
-                        <li>
-                            <a href="{% url 'core:dashboard' %}"
-                               class="{% if request.resolver_match.url_name == 'dashboard' %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Dashboard</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <!-- Launchpad (Proyectos / Proof of Work) -->
+                <a href="{% url 'core:proyectos_lista' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/proyectos/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    <span>Launchpad</span>
+                </a>
 
-                <div>
-                    <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-base-content/40" x-show="sidebarOpen">Nodos de la Red</span>
-                    <ul class="menu gap-1 mt-1 p-0">
-                        <li>
-                            <a href="{% url 'core:usuarios_lista' %}"
-                               class="{% if 'usuarios' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Usuarios</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'core:empresas_lista' %}"
-                               class="{% if 'empresas' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Empresas</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'core:ofertas_lista' %}"
-                               class="{% if 'ofertas' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Ofertas Laborales</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'core:proyectos_lista' %}"
-                               class="{% if 'proyectos' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Proyectos</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'core:habilidades_lista' %}"
-                               class="{% if 'habilidades' in request.path %}active font-bold{% endif %} flex items-center gap-3 rounded-lg py-2.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Habilidades</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <!-- Jobs (Empleos & Match) -->
+                <a href="{% url 'core:ofertas_lista' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/ofertas/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>Jobs</span>
+                </a>
 
-                <div>
-                    <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-base-content/40" x-show="sidebarOpen">Inteligencia de Grafo</span>
-                    <ul class="menu gap-1 mt-1 p-0 opacity-80">
-                        <li>
-                            <a href="{% url 'core:conexiones_red' %}" class="flex items-center gap-3 rounded-lg py-2.5 {% if '/conexiones/' in request.path %}bg-primary text-primary-content font-bold{% else %}hover:bg-base-300{% endif %}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Red de Conexiones</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'core:consultas_index' %}" class="flex items-center gap-3 rounded-lg py-2.5 {% if '/consultas/' in request.path %}bg-primary text-primary-content font-bold{% else %}hover:bg-base-300{% endif %}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Consultas de Grafo</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center gap-3 rounded-lg py-2.5 cursor-not-allowed">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Recomendaciones (Fase 7)</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center gap-3 rounded-lg py-2.5 cursor-not-allowed">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Analitica (Fase 8)</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center gap-3 rounded-lg py-2.5 cursor-not-allowed">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                                </svg>
-                                <span :class="sidebarOpen ? '' : 'hidden'">Explorador Grafo (Fase 9)</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <!-- Search (Buscador & Profesionales) -->
+                <a href="{% url 'core:usuarios_lista' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/usuarios/' in request.path and not 'usr_' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span>Search</span>
+                </a>
+
+                <!-- Network (Mi Red & Conexiones) -->
+                <a href="{% url 'core:conexiones_red' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/conexiones/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Network</span>
+                </a>
+
+                <!-- Recommendations (Sugerencias Grafo) -->
+                <a href="{% url 'core:recomendaciones_index' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/recomendaciones/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                    <span>Suggestions</span>
+                </a>
+
+                <!-- Analytics (Métricas y Topología de Red) -->
+                <a href="{% url 'core:analitica_dashboard' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/analitica/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {% if '/analitica/' in request.path %}text-[#00b84c]{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Analytics</span>
+                </a>
+
+                <!-- Analytics / Cypher (Modo Dev) -->
+                <a href="{% url 'core:consultas_index' %}"
+                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl transition {% if '/consultas/' in request.path %}bg-[#161a22] text-white font-bold{% else %}text-gray-400 hover:text-white hover:bg-[#12151b]{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>Graph Cypher</span>
+                </a>
             </nav>
+        </div>
 
-            <!-- Bottom Theme Switcher -->
-            <div class="p-3 border-t border-base-300">
-                <button @click="toggleTheme()"
-                        class="btn btn-ghost btn-sm w-full justify-between items-center rounded-lg">
-                    <span class="flex items-center gap-2 text-xs" :class="sidebarOpen ? '' : 'hidden'">
-                        <span class="w-2 h-2 rounded-full" :class="isDark ? 'bg-primary' : 'bg-warning'"></span>
-                        <span x-text="isDark ? 'Tema Oscuro' : 'Tema Claro'"></span>
-                    </span>
-                    <span x-show="!sidebarOpen" class="text-xs">🌓</span>
-                    <span class="badge badge-sm badge-outline text-[10px]" :class="sidebarOpen ? '' : 'hidden'" x-text="currentTheme"></span>
+        <!-- Bottom: User Profile Card + Footer Links -->
+        <div class="space-y-4 pt-4 border-t border-[#1e232d]">
+
+            <!-- Active User Mini Bar (Perspective Switcher) -->
+            {% if current_user %}
+            <div class="dropdown dropdown-top w-full">
+                <label tabindex="0" class="flex items-center justify-between p-2 rounded-xl hover:bg-[#161a22] cursor-pointer transition w-full">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-full bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            {{ current_user.nombre|slice:":1" }}{{ current_user.apellido|slice:":1" }}
+                        </div>
+                        <div class="min-w-0 text-left">
+                            <span class="font-bold text-xs text-white block truncate">{{ current_user.nombre_completo }}</span>
+                            <span class="text-[11px] text-gray-400 block font-mono truncate">{{ current_user_handle }}</span>
+                        </div>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                    </svg>
+                </label>
+                <ul tabindex="0" class="dropdown-content menu p-2 shadow-2xl bg-[#161a22] border border-[#222731] rounded-2xl w-56 text-xs mb-2 z-50">
+                    <li class="menu-title px-3 py-1 font-bold text-[10px] uppercase text-gray-500">Cambiar perspectiva:</li>
+                    {% for u in all_users_for_switch %}
+                    <li>
+                        <a href="?as_user={{ u.uid }}" class="flex items-center justify-between py-1.5 rounded-lg {% if u.uid == current_user.uid %}active !bg-[#00b84c]/20 !text-[#00b84c] font-bold{% endif %}">
+                            <span class="truncate">{{ u.nombre_completo }}</span>
+                            {% if u.uid == current_user.uid %}<span class="text-[10px]">Tú</span>{% endif %}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    <li class="border-t border-[#222731] mt-1 pt-1">
+                        <a href="{% url 'core:usuario_detalle' uid=current_user.uid %}" class="text-[#00b84c] font-bold">
+                            Ver Perfil Completo
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Footer Peerlist exact text -->
+            <div class="text-[11px] text-gray-500 px-2 space-y-1">
+                <div class="flex items-center gap-2">
+                    <a href="#" class="hover:underline">Blog</a>
+                    <span>•</span>
+                    <a href="#" class="hover:underline">Help</a>
+                    <span>•</span>
+                    <a href="#" class="hover:underline">Support</a>
+                    <span>•</span>
+                    <button @click="toggleTheme()" class="hover:text-white" title="Cambiar tema">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-[10px] text-gray-600">&copy; 2026 WheelsOn, Inc.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Top Navigation Header -->
+    <div class="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#0b0d10] border-b border-[#1e232d] z-50 flex items-center justify-between px-4">
+        <a href="{% url 'core:dashboard' %}" class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs">W</div>
+            <span class="font-bold text-white text-base">WheelsOn</span>
+        </a>
+        <button @click="mobileMenuOpen = !mobileMenuOpen" class="btn btn-ghost btn-sm text-white p-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div x-show="mobileMenuOpen" class="fixed inset-0 bg-black/80 z-50 md:hidden" @click="mobileMenuOpen = false" style="display: none;">
+        <div class="w-64 bg-[#0b0d10] h-full p-5 space-y-4" @click.stop>
+            <div class="flex justify-between items-center pb-3 border-b border-[#1e232d]">
+                <span class="font-bold text-white text-lg">WheelsOn</span>
+                <button @click="mobileMenuOpen = false" class="btn btn-ghost btn-xs text-white p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-        </aside>
-
-        <!-- Main Wrapper -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-
-            <!-- Navbar -->
-            <header class="glass-panel sticky top-0 z-30 px-4 sm:px-6 py-3 border-b border-base-300">
-                <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <button @click="mobileMenuOpen = true" class="btn btn-ghost btn-sm btn-square lg:hidden">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-
-                        <button @click="sidebarOpen = !sidebarOpen" class="btn btn-ghost btn-sm btn-square hidden lg:flex">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
-                            </svg>
-                        </button>
-
-                        <div class="flex flex-col">
-                            <h1 class="text-base sm:text-lg font-bold text-base-content leading-tight">
-                                {% block page_title %}{{ page_title|default:"Dashboard" }}{% endblock %}
-                            </h1>
-                            <span class="text-[10px] text-base-content/50 uppercase tracking-widest hidden sm:inline">WheelsOn Platform</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 sm:gap-3">
-                        <a href="{% url 'core:usuario_crear' %}" class="btn btn-primary btn-sm gap-1 text-xs hidden sm:inline-flex">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            <span>Nuevo</span>
-                        </a>
-
-                        <div class="avatar placeholder">
-                            <div class="bg-gradient-to-tr from-primary to-secondary text-primary-content rounded-xl w-8 h-8 shadow">
-                                <span class="text-xs font-bold">WO</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <!-- Messages Container -->
-                {% if messages %}
-                <div class="space-y-2 mb-6">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags|default:'info' }} shadow-sm animate-fade-in-up flex justify-between items-center rounded-xl border border-base-content/10"
-                         x-data="{ show: true }" x-show="show" x-transition>
-                        <div class="flex items-center gap-2 text-xs sm:text-sm">
-                            <span>{{ message }}</span>
-                        </div>
-                        <button @click="show = false" class="btn btn-ghost btn-xs btn-circle">✕</button>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                <!-- HTMX Loading Indicator -->
-                <div class="htmx-indicator fixed top-0 left-0 right-0 z-50">
-                    <div class="h-1 bg-gradient-to-r from-primary via-secondary to-accent animate-pulse"></div>
-                </div>
-
-                <div id="main-content">
-                    {% block content %}{% endblock %}
-                </div>
-            </main>
+            <ul class="space-y-2 text-sm font-medium">
+                <li><a href="{% url 'core:dashboard' %}" class="block py-1.5 text-white">Scroll</a></li>
+                <li><a href="{% url 'core:proyectos_lista' %}" class="block py-1.5 text-gray-400">Launchpad</a></li>
+                <li><a href="{% url 'core:ofertas_lista' %}" class="block py-1.5 text-gray-400">Jobs</a></li>
+                <li><a href="{% url 'core:usuarios_lista' %}" class="block py-1.5 text-gray-400">Search</a></li>
+                <li><a href="{% url 'core:conexiones_red' %}" class="block py-1.5 text-gray-400">Network</a></li>
+                <li><a href="{% url 'core:recomendaciones_index' %}" class="block py-1.5 text-gray-400">Suggestions</a></li>
+                <li><a href="{% url 'core:analitica_dashboard' %}" class="block py-1.5 text-gray-400">Analytics</a></li>
+                <li><a href="{% url 'core:consultas_index' %}" class="block py-1.5 text-gray-400">Graph Cypher</a></li>
+            </ul>
         </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MAIN CONTENT AREA -->
+    <!-- ========================================================================= -->
+    <div class="flex-1 min-w-0 pt-14 md:pt-0">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="max-w-2xl mx-auto px-4 pt-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} rounded-xl text-xs py-2 bg-[#161a22] border border-[#222731]">
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- HTMX Indicator -->
+        <div class="htmx-indicator fixed top-0 left-0 right-0 z-50">
+            <div class="h-0.5 bg-[#00b84c] animate-pulse"></div>
+        </div>
+
+        <main id="main-content">
+            {% block content %}{% endblock %}
+        </main>
     </div>
 
     <!-- Alpine Theme Manager -->
@@ -302,7 +331,6 @@
             }
         }
     </script>
-
     {% block extra_js %}{% endblock %}
 </body>
 </html>
