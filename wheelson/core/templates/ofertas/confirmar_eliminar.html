@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Eliminar Oferta | WheelsOn{% endblock %}
-{% block page_title %}Confirmar Eliminacion{% endblock %}
+{% block page_title %}Confirmar Eliminación{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto space-y-6 animate-fade-in-up">
@@ -14,19 +14,21 @@
                 </svg>
             </div>
 
-            <h3 class="font-bold text-lg text-base-content">¿Eliminar esta Oferta Laboral?</h3>
+            <h3 class="font-bold text-lg text-base-content">¿Eliminar esta Empleo?</h3>
             <p class="text-xs text-base-content/70 mt-1">
-                Esta accion eliminara el nodo de la vacante y las postulaciones asociadas del grafo.
+                Esta acción eliminará el empleo y sus postulaciones. Quienes ya contrataste siguen en tu equipo.
             </p>
 
             <div class="bg-base-300 p-3 rounded-lg my-4 text-xs font-semibold">
                 {{ objeto.titulo }}
             </div>
 
+            {% if total_postulaciones %}<p class="text-xs my-3">También se eliminarán sus postulaciones ({{ total_postulaciones }}).</p>{% endif %}
+
             <form method="POST" class="flex justify-center gap-2">
                 {% csrf_token %}
                 <a href="javascript:history.back()" class="btn btn-sm btn-ghost">Cancelar</a>
-                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminacion</button>
+                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminación</button>
             </form>
         </div>
     </div>

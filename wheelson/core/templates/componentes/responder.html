@@ -1,0 +1,6 @@
+{# Aceptar o rechazar una solicitud. Siempre responde quien tiene la sesión. #}
+<form method="POST" action="{{ url }}" class="flex items-center gap-2">
+    {% csrf_token %}
+    <button type="submit" name="accion" value="aceptar" class="ws-btn ws-btn--primario" style="min-height:32px">Aceptar</button>
+    <button type="submit" name="accion" value="rechazar" class="ws-btn ws-btn--secundario" style="min-height:32px">Rechazar</button>
+</form>

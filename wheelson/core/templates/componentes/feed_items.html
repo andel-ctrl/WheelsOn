@@ -1,0 +1,130 @@
+{% load static l10n wheelson_ui %}
+{% for item in feed_items %}
+
+{% if item.tipo == 'publicacion' %}
+<article class="ws-hito ws-hito--publicacion" id="pub-{{ item.publicacion.pubid }}">
+    {% if item.empresa %}
+    <span class="ws-hito__nodo ws-hito__nodo--empresa" aria-hidden="true">{{ item.empresa.nombre|slice:":2"|upper }}</span>
+    {% else %}
+    <span class="ws-hito__nodo ws-hito__nodo--persona" aria-hidden="true">{{ item.autor.nombre|slice:":1" }}{{ item.autor.apellido|slice:":1" }}</span>
+    {% endif %}
+    <div class="ws-hito__cabecera">
+        <p class="ws-hito__linea">
+            {% if item.empresa %}
+            <a class="ws-hito__quien" href="{% url 'core:empresa_detalle' eid=item.empresa.eid %}">{{ item.empresa.nombre }}</a>
+            {% else %}
+            <a class="ws-hito__quien" href="{% url 'core:usuario_detalle' uid=item.autor.uid %}">{{ item.autor.nombre_completo }}</a>
+            {% endif %}
+            <span>publicó · {{ item.fecha|date:"j \d\e F \d\e Y" }}</span>
+        </p>
+    </div>
+    <p class="ws-hito__texto" style="white-space:pre-line">{{ item.publicacion.texto }}</p>
+    {% include "componentes/percepcion.html" with p=item %}
+</article>
+{% endif %}
+
+{% if item.tipo == 'avance' %}
+<article class="ws-hito ws-hito--avance">
+    <span class="ws-hito__nodo ws-hito__nodo--avance" aria-hidden="true"></span>
+    <div class="ws-hito__cabecera">
+        <p class="ws-hito__linea">
+            <a class="ws-avance__proyecto" href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}">{{ item.proyecto.nombre }}</a>
+            <span>avanzó · {{ item.fecha|date:"j \d\e F \d\e Y" }}</span>
+        </p>
+        <span class="ws-estado ws-estado--{{ item.avance.estado }}">{{ item.estado_texto }}</span>
+    </div>
+    <p class="ws-hito__texto" style="white-space:pre-line">{{ item.avance.texto }}</p>
+    {% if item.autor %}<p class="ws-avance__autor">Lo registró <a href="{% url 'core:usuario_detalle' uid=item.autor.uid %}">{{ item.autor.nombre_completo }}</a></p>{% endif %}
+</article>
+{% endif %}
+
+{% if item.tipo == 'proyecto' %}
+<article class="ws-hito ws-hito--proyecto ws-expediente ws-expediente--{{ item.proyecto.estado|default:'activo' }}">
+    <p class="ws-expediente__pestana">Proyecto · {% if item.proyecto.estado == 'completado' %}Completado{% elif item.proyecto.estado == 'pausado' %}Pausado{% else %}En desarrollo{% endif %}</p>
+    <div class="ws-expediente__espalda" aria-hidden="true"></div>
+    {% if item.imagen %}
+    <a class="ws-expediente__foto" href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" tabindex="-1" aria-hidden="true">
+        <img src="{% static item.imagen %}" alt="" loading="lazy">
+    </a>
+    {% else %}
+    <div class="ws-expediente__hoja" aria-hidden="true"></div>
+    {% endif %}
+    <div class="ws-expediente__frente">
+        <span class="ws-hito__nodo ws-hito__nodo--persona" aria-hidden="true">{% if item.autor %}{{ item.autor.nombre|slice:":1" }}{{ item.autor.apellido|slice:":1" }}{% else %}WO{% endif %}</span>
+        {% if item.proyecto|editable_por:permisos %}
+        <div class="ws-menu ws-expediente__opciones" x-data="{ abierto: false }" @click.outside="abierto = false" @keydown.escape="abierto = false">
+            <button type="button" class="ws-btn ws-btn--icono ws-btn--fantasma" @click="abierto = !abierto" :aria-expanded="abierto.toString()" aria-label="Opciones del proyecto">{% icono "dots-three" "regular" 18 %}</button>
+            <div class="ws-menu__lista" x-show="abierto" x-cloak>
+                <a href="{% url 'core:proyecto_editar' pid=item.proyecto.pid %}">{% icono "pencil-simple" "regular" 16 %}Editar</a>
+                <a class="es-peligro" href="{% url 'core:proyecto_eliminar' pid=item.proyecto.pid %}">{% icono "trash" "regular" 16 %}Eliminar</a>
+            </div>
+        </div>
+        {% endif %}
+        <p class="ws-hito__linea">
+            {% if item.autor %}<a class="ws-hito__quien" href="{% url 'core:usuario_detalle' uid=item.autor.uid %}">{{ item.autor.nombre_completo }}</a>{% else %}<span class="ws-hito__quien">Comunidad WheelsOn</span>{% endif %}
+            <span>lanzó un proyecto · {{ item.fecha|date:"j \d\e F \d\e Y"|default:item.fecha }}</span>
+        </p>
+        <h2 class="ws-hito__titulo"><a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}">{{ item.proyecto.nombre }}</a></h2>
+        {% if item.proyecto.descripcion %}<p class="ws-hito__texto">{{ item.proyecto.descripcion|truncatewords:32 }}</p>{% endif %}
+        <div class="ws-hito__pie">
+            {% if item.tecnologias %}<span class="ws-chips" aria-label="Tecnologías">{% for t in item.tecnologias|slice:":6" %}<span class="ws-chip">{{ t }}</span>{% endfor %}</span>{% endif %}
+            <span class="ws-hito__pie-derecha">
+                <span class="ws-hito__dato">{{ item.colaboradores|length }} colaborador{{ item.colaboradores|length|pluralize:"es" }}</span>
+                <a class="ws-enlace ws-panel__enlace" href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}">Ver proyecto {% icono "arrow-right" "regular" 14 %}</a>
+            </span>
+        </div>
+    </div>
+</article>
+{% endif %}
+
+{% if item.tipo == 'oferta' %}
+<article class="ws-hito ws-hito--oferta">
+    <div class="ws-oferta">
+        <span class="ws-oferta__talon">Empleo</span>
+        <div class="ws-oferta__cuerpo">
+            <p class="ws-hito__linea">
+                <span class="ws-hito__quien">{{ item.empresa.nombre|default:"Empresa sin asignar" }}</span>
+                <span>está contratando · {{ item.oferta.get_modalidad_display|default:item.oferta.modalidad }} · {{ item.fecha|date:"j \d\e F \d\e Y"|default:item.fecha }}</span>
+            </p>
+            <h2 class="ws-hito__titulo"><a href="{% url 'core:oferta_detalle' oid=item.oferta.oid %}">{{ item.oferta.titulo }}</a></h2>
+            {% if item.requisitos %}
+            <ul class="ws-requisitos" aria-label="Habilidades requeridas">
+                {% for r in item.requisitos|slice:":5" %}
+                <li class="{% if r.tengo %}es-tuya{% endif %}">{% if r.tengo %}{% icono "check-circle" "duotone" 15 %}<span class="ws-oculto-visual">Tienes esta habilidad: </span>{% endif %}{{ r.habilidad.nombre }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="ws-oferta__acciones">
+                {% if item.ya_postulado %}<a class="ws-btn ws-btn--secundario" style="min-height:32px" href="{% url 'core:oferta_detalle' oid=item.oferta.oid %}">Ya te postulaste</a>{% elif item.oferta|editable_por:permisos %}<a class="ws-btn ws-btn--secundario" style="min-height:32px" href="{% url 'core:oferta_detalle' oid=item.oferta.oid %}">Gestionar empleo</a>{% else %}<a class="ws-btn ws-btn--primario" style="min-height:32px" href="{% url 'core:oferta_detalle' oid=item.oferta.oid %}">Postular</a>{% endif %}
+                {% if item.empresa and not item.es_propia %}
+                <a class="ws-post__referir" href="{% url 'core:consultas_index' %}?tab=ruta_empresa&uid1={{ current_user.uid }}&eid={{ item.empresa.eid }}">{% icono "graph" "duotone" 16 %}¿Quién te puede referir?</a>
+                {% endif %}
+            </div>
+        </div>
+        {% if item.requisitos %}
+        <div class="ws-medidor" style="--pct:{{ item.match_pct|unlocalize }}">
+            <span class="ws-medidor__valor">{{ item.match_pct }} %</span>
+            <span class="ws-medidor__texto">compatible</span>
+        </div>
+        {% endif %}
+    </div>
+</article>
+{% endif %}
+
+{% if item.tipo == 'conexion' %}
+<article class="ws-hito ws-hito--conexion">
+    <span class="ws-enlace-personas" aria-hidden="true">
+        <span class="ws-avatar ws-avatar--sm">{{ item.u1.nombre|slice:":1" }}{{ item.u1.apellido|slice:":1" }}</span>
+        <span class="ws-enlace-personas__union">{% icono "handshake" "duotone" 12 %}</span>
+        <span class="ws-avatar ws-avatar--sm">{{ item.u2.nombre|slice:":1" }}{{ item.u2.apellido|slice:":1" }}</span>
+    </span>
+    <p class="ws-hito__linea">
+        <a class="ws-hito__quien" href="{% url 'core:usuario_detalle' uid=item.u1.uid %}">{{ item.u1.nombre_completo }}</a>
+        <span>y</span>
+        <a class="ws-hito__quien" href="{% url 'core:usuario_detalle' uid=item.u2.uid %}">{{ item.u2.nombre_completo }}</a>
+        <span>se conectaron · {{ item.fecha|date:"j \d\e F \d\e Y"|default:item.fecha }}</span>
+    </p>
+</article>
+{% endif %}
+
+{% endfor %}

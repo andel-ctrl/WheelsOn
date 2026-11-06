@@ -37,7 +37,7 @@ class TieneHabilidadRel(StructuredRel):
     nivel = StringProperty(
         default="intermedio",
         choices={
-            "basico": "Basico",
+            "basico": "Básico",
             "intermedio": "Intermedio",
             "avanzado": "Avanzado",
             "experto": "Experto",
@@ -60,7 +60,7 @@ class RequiereRel(StructuredRel):
     nivel_minimo = StringProperty(
         default="basico",
         choices={
-            "basico": "Basico",
+            "basico": "Básico",
             "intermedio": "Intermedio",
             "avanzado": "Avanzado",
             "experto": "Experto",
@@ -72,18 +72,29 @@ class RequiereRel(StructuredRel):
     )
 
 
+ESTADOS_PROYECTO = {
+    "activo": "Activo",
+    "completado": "Completado",
+    "pausado": "Pausado",
+}
+
+ESTADOS_POSTULACION = {
+    "enviada": "Enviada",
+    "revision": "En revisión",
+    "entrevista": "Entrevista",
+    "aceptada": "Aceptada",
+    "rechazada": "Rechazada",
+    "no_seleccionada": "No seleccionada",
+}
+# La empresa todavía no decide. Las demás son definitivas.
+ESTADOS_EN_PROCESO = ("enviada", "revision", "entrevista")
+ESTADOS_FINALES = ("aceptada", "rechazada", "no_seleccionada")
+
+
 class PostulaARel(StructuredRel):
     fecha = DateProperty(default_now=True)
-    estado = StringProperty(
-        default="enviada",
-        choices={
-            "enviada": "Enviada",
-            "revision": "En Revision",
-            "entrevista": "Entrevista",
-            "aceptada": "Aceptada",
-            "rechazada": "Rechazada",
-        },
-    )
+    fecha_estado = DateProperty()
+    estado = StringProperty(default="enviada", choices=ESTADOS_POSTULACION)
     carta_presentacion = StringProperty()
 
 
@@ -98,12 +109,16 @@ class Usuario(StructuredNode):
     biografia = StringProperty()
     foto_url = StringProperty(default="/static/img/default-avatar.svg")
     fecha_registro = DateProperty(default_now=True)
+    rol = StringProperty(default="usuario", choices={"usuario": "Usuario", "admin": "Administrador"})
 
     conexiones = RelationshipTo("Usuario", "CONECTA_CON", model=ConectaConRel)
     empleos = RelationshipTo("Empresa", "TRABAJA_EN", model=TrabajaEnRel)
     habilidades = RelationshipTo("Habilidad", "TIENE_HABILIDAD", model=TieneHabilidadRel)
     proyectos = RelationshipTo("Proyecto", "PARTICIPA_EN", model=ParticipaEnRel)
     postulaciones = RelationshipTo("Oferta", "POSTULA_A", model=PostulaARel)
+    empresas_administradas = RelationshipTo("Empresa", "ADMINISTRA")
+    proyectos_liderados = RelationshipTo("Proyecto", "LIDERA")
+    publicaciones = RelationshipTo("Publicacion", "AUTOR_DE")
 
     @property
     def nombre_completo(self):
@@ -135,13 +150,14 @@ class Empresa(StructuredNode):
     tamano = StringProperty(
         default="mediana",
         choices={
-            "pequena": "Pequena (1-50)",
+            "pequena": "Pequeña (1-50)",
             "mediana": "Mediana (51-250)",
             "grande": "Grande (250+)",
         },
     )
 
     empleados = RelationshipFrom("Usuario", "TRABAJA_EN", model=TrabajaEnRel)
+    administradores = RelationshipFrom("Usuario", "ADMINISTRA")
     ofertas = RelationshipTo("Oferta", "PUBLICA", model=PublicaRel)
 
     def to_dict(self):
@@ -188,17 +204,12 @@ class Proyecto(StructuredNode):
     descripcion = StringProperty()
     fecha_inicio = DateProperty()
     fecha_fin = DateProperty()
-    estado = StringProperty(
-        default="activo",
-        choices={
-            "activo": "Activo",
-            "completado": "Completado",
-            "pausado": "Pausado",
-        },
-    )
+    estado = StringProperty(default="activo", choices=ESTADOS_PROYECTO)
     tecnologias = ArrayProperty(StringProperty(), default=list)
 
     miembros = RelationshipFrom("Usuario", "PARTICIPA_EN", model=ParticipaEnRel)
+    lideres = RelationshipFrom("Usuario", "LIDERA")
+    avances = RelationshipTo("Avance", "TIENE_AVANCE")
 
     def to_dict(self):
         return {
@@ -212,6 +223,30 @@ class Proyecto(StructuredNode):
         }
 
 
+class Publicacion(StructuredNode):
+    """Lo que una persona comparte en el feed. Las reacciones son relaciones PERCIBE."""
+
+    pubid = UniqueIdProperty()
+    texto = StringProperty(required=True)
+    fecha = DateProperty(default_now=True)
+    creada = FloatProperty(default=0.0)  # ordena las publicaciones de un mismo día
+
+    autor = RelationshipFrom("Usuario", "AUTOR_DE")
+
+
+class Avance(StructuredNode):
+    """Una novedad del proyecto, con el estado en que quedó en ese momento."""
+
+    aid = UniqueIdProperty()
+    texto = StringProperty(required=True)
+    estado = StringProperty(default="activo", choices=ESTADOS_PROYECTO)
+    fecha = DateProperty(default_now=True)
+    creada = FloatProperty(default=0.0)
+
+    proyecto = RelationshipFrom("Proyecto", "TIENE_AVANCE")
+    autor = RelationshipFrom("Usuario", "REGISTRA")
+
+
 class Oferta(StructuredNode):
     oid = UniqueIdProperty()
     titulo = StringProperty(required=True)
@@ -223,11 +258,12 @@ class Oferta(StructuredNode):
         choices={
             "remoto": "Remoto",
             "presencial": "Presencial",
-            "hibrido": "Hibrido",
+            "hibrido": "Híbrido",
         },
     )
     ubicacion = StringProperty(default="No especificada")
     fecha_publicacion = DateProperty(default_now=True)
+    cupos = IntegerProperty(default=1)
     estado = StringProperty(
         default="abierta",
         choices={"abierta": "Abierta", "cerrada": "Cerrada"},
@@ -247,5 +283,6 @@ class Oferta(StructuredNode):
             "modalidad": self.modalidad,
             "ubicacion": self.ubicacion,
             "fecha_publicacion": str(self.fecha_publicacion) if self.fecha_publicacion else None,
+            "cupos": self.cupos,
             "estado": self.estado,
         }

@@ -1,82 +1,82 @@
 {% extends "base.html" %}
+{% load static wheelson_ui %}
 
-{% block title %}Iniciar Sesión | WheelsOn{% endblock %}
+{% block title %}Iniciar Sesión{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col justify-center items-center py-10 px-4 animate-fade-in-up">
-
-    <!-- Card Principal de Login -->
-    <div class="w-full max-w-md bg-[#0e1116] border border-[#181c24] rounded-2xl p-7 shadow-2xl space-y-6">
-
-        <!-- Logo & Header -->
-        <div class="text-center space-y-2">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#00b84c] text-white font-black text-xl shadow-lg shadow-emerald-900/30">
-                W
+<div class="ws-acceso" data-ws-acceso>
+    <!-- La foto y el mensaje. El borde con el formulario es una ola: wheelson.js la dibuja -->
+    <section class="ws-acceso__visual" data-ws-ola-foto>
+        <img src="{% static 'img/acceso.webp' %}" alt="" class="ws-acceso__foto" fetchpriority="high">
+        <div class="ws-acceso__texto">
+            <span class="ws-acceso__logo" data-ws-logo-acceso>{% include "componentes/logo_completo.html" %}</span>
+            <div class="ws-acceso__mensaje">
+                <h2 class="ws-acceso__lema">Tu red<br><em>ya está en marcha.</em></h2>
+                <p class="ws-acceso__bajada">Personas, proyectos y empresas conectados en un grafo: descubre a quién tienes a un solo salto de distancia.</p>
+                <ul class="ws-acceso__cifras" aria-label="La red hoy">
+                    <li><strong>{{ total_personas }}</strong> persona{{ total_personas|pluralize }}</li>
+                    <li><strong>{{ total_empresas }}</strong> empresa{{ total_empresas|pluralize }}</li>
+                    <li><strong>{{ total_proyectos }}</strong> proyecto{{ total_proyectos|pluralize }}</li>
+                </ul>
             </div>
-            <h1 class="text-xl font-black text-white tracking-tight">Iniciar Sesión</h1>
-            <p class="text-xs text-gray-400">
-                Accede a tu cuenta en WheelsOn y navega tu red de grafos
-            </p>
         </div>
+    </section>
+    <svg class="ws-acceso__ola" aria-hidden="true" focusable="false">
+        <defs><linearGradient id="ola-trazo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF9F91"/><stop offset=".55" stop-color="#D9483B"/><stop offset="1" stop-color="#9B3096"/></linearGradient></defs>
+        <path class="ws-acceso__ola-eco" data-ws-ola-eco/>
+        <path class="ws-acceso__ola-linea" data-ws-ola-linea stroke="url(#ola-trazo)"/>
+    </svg>
 
-        <!-- Formulario -->
-        <form method="POST" class="space-y-4">
-            {% csrf_token %}
+    <!-- El formulario -->
+    <section class="ws-acceso__panel">
+        <div class="ws-acceso__tarjeta">
+            <h1 class="ws-acceso__titulo">Iniciar Sesión</h1>
+            <p class="ws-acceso__ayuda">Qué bueno verte de nuevo. Entra y sigue conectando.</p>
 
-            {% if form.non_field_errors %}
-            <div class="p-3 rounded-xl bg-rose-950/40 border border-rose-900/50 text-rose-300 text-xs">
+            <form method="POST" class="ws-acceso__form">
+                {% csrf_token %}
+
                 {% for err in form.non_field_errors %}
-                <p>{{ err }}</p>
+                <p class="ws-acceso__error" role="alert">{{ err }}</p>
                 {% endfor %}
-            </div>
+
+                <div class="ws-acceso__campo">
+                    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                    <div class="ws-acceso__caja">
+                        {% icono "envelope-simple" "regular" 18 %}
+                        {{ form.email }}
+                    </div>
+                    {% if form.email.errors %}<p class="ws-acceso__error">{{ form.email.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="ws-acceso__campo">
+                    <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                    <div class="ws-acceso__caja">
+                        {% icono "lock-simple" "regular" 18 %}
+                        {{ form.password }}
+                        <button type="button" class="ws-acceso__ver" data-ver-clave="{{ form.password.id_for_label }}" aria-label="Mostrar contraseña" aria-pressed="false">
+                            {% icono "eye" "regular" 18 %}
+                        </button>
+                    </div>
+                    {% if form.password.errors %}<p class="ws-acceso__error">{{ form.password.errors.0 }}</p>{% endif %}
+                </div>
+
+                <button type="submit" class="ws-btn ws-btn--primario ws-acceso__entrar">Entrar a mi red {% icono "arrow-right" "regular" 18 %}</button>
+            </form>
+
+            <p class="ws-acceso__registro">¿Aún no tienes cuenta? <a class="ws-enlace" href="{% url 'core:registro' %}">Crear una cuenta gratis</a></p>
+
+            {% if usuarios_demo %}
+            <details class="ws-acceso__demo">
+                <summary>Acceso Rápido <span>solo para la demo</span>{% icono "caret-down" "regular" 14 %}</summary>
+                <div class="ws-acceso__personas">
+                    {% for u in usuarios_demo %}
+                    <a href="{% url 'core:login' %}?quick_login={{ u.uid }}"><span class="ws-avatar ws-avatar--sm" aria-hidden="true">{{ u.nombre|slice:":1" }}{{ u.apellido|slice:":1" }}</span>{{ u.nombre }} {{ u.apellido|slice:":1" }}.</a>
+                    {% endfor %}
+                </div>
+            </details>
             {% endif %}
-
-            <div class="space-y-1">
-                <label class="block text-xs font-semibold text-gray-300">{{ form.email.label }}</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                <p class="text-[11px] text-rose-400 font-mono">{{ form.email.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div class="space-y-1">
-                <label class="block text-xs font-semibold text-gray-300">{{ form.password.label }}</label>
-                {{ form.password }}
-                {% if form.password.errors %}
-                <p class="text-[11px] text-rose-400 font-mono">{{ form.password.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <button type="submit" class="peer-btn-green w-full py-2.5 rounded-xl text-xs font-bold shadow-md transition-all duration-200 mt-2">
-                Iniciar Sesión
-            </button>
-        </form>
-
-        <!-- Enlace a Registro -->
-        <div class="pt-4 border-t border-[#181c24] text-center text-xs text-gray-400">
-            <span>¿Aún no tienes cuenta?</span>
-            <a href="{% url 'core:registro' %}" class="font-bold text-[#00b84c] hover:underline ml-1">
-                Crear una cuenta gratis
-            </a>
         </div>
-
-        <!-- Acceso Rápido -->
-        <div class="pt-3 border-t border-[#181c24] space-y-2">
-            <span class="text-[10px] font-mono uppercase font-bold text-gray-500 tracking-wider block text-center">
-                Acceso Rápido
-            </span>
-            <div class="flex flex-wrap gap-1.5 justify-center">
-                {% for u in usuarios_demo %}
-                <a href="{% url 'core:login' %}?quick_login={{ u.uid }}"
-                   class="px-2.5 py-1 rounded-lg bg-[#090b0e] hover:bg-[#161a22] border border-[#181c24] hover:border-[#00b84c]/50 text-[11px] font-mono text-gray-300 hover:text-white transition flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#00b84c]"></span>
-                    <span>{{ u.nombre }} {{ u.apellido|slice:":1" }}.</span>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-
-    </div>
-
+    </section>
 </div>
 {% endblock %}

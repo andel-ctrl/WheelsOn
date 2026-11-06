@@ -1,7 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Grafo Interactivo | WheelsOn{% endblock %}
 {% block page_title %}Explorador de Grafo Interactivo{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'vendor/vis-network-9.1.9.min.css' %}">
+    <script src="{% static 'vendor/vis-network-9.1.9.min.js' %}"></script>
+{% endblock %}
 
 {% block content %}
 <style>
@@ -39,26 +45,14 @@
 }
 </style>
 
-<div class="max-w-7xl mx-auto space-y-4 animate-fade-in-up" x-data="grafoManager()">
-
-    <!-- Header Principal Estilo Peerlist Dark -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#181c24]">
+<div class="ws-pagina" x-data="grafoManager()">
+    <header class="ws-seccion">
         <div>
-            <h1 class="text-xl font-black text-white tracking-tight">Explorador de Grafo Interactivo</h1>
-            <p class="text-xs text-gray-400 mt-0.5">
-                Navegación visual asociativa de los 15 miembros reales, habilidades, proyectos, empresas y relaciones semánticas.
-            </p>
+            <h1 class="ws-seccion__titulo">Grafo Interactivo</h1>
+            <p class="ws-seccion__bajada">La red tal como vive en Neo4j. Arrastra, acerca y filtra personas, habilidades, proyectos, empresas y empleos.</p>
         </div>
-
-        <div class="flex items-center gap-2 self-start sm:self-auto">
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0e1116] border border-[#181c24] text-xs font-mono text-gray-300">
-                <span class="w-2 h-2 rounded-full bg-[#00b84c] animate-pulse"></span>
-                <span>Nodos: <strong class="text-white" x-text="stats.total_nodos">34</strong></span>
-                <span class="text-gray-600">|</span>
-                <span>Aristas: <strong class="text-[#00b84c]" x-text="stats.total_aristas">101</strong></span>
-            </span>
-        </div>
-    </div>
+        <p class="ws-seccion__cifra"><strong x-text="stats.total_nodos">0</strong><span>nodos y <span x-text="stats.total_aristas">0</span> relaciones</span></p>
+    </header>
 
     <!-- Barra de Controles y Filtros Dinámicos -->
     <div class="bg-[#0e1116] border border-[#181c24] rounded-2xl p-4 space-y-3">
@@ -69,36 +63,31 @@
                 <span class="text-gray-500 font-bold text-[11px] uppercase tracking-wider mr-1">Filtrar:</span>
                 
                 <button type="button" @click="toggleTipo('Usuario')"
-                        :class="tiposSeleccionados.includes('Usuario') ? 'bg-[#00b84c]/20 text-[#00b84c] border-[#00b84c]/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
-                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
-                    <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
+                        :class="tiposSeleccionados.includes('Usuario') && 'is-activo'" :aria-pressed="tiposSeleccionados.includes('Usuario')" class="ws-tipo">
+                    <span class="w-2 h-2 rounded-full ws-bg-usuario"></span>
                     <span>Usuarios (<span x-text="stats.usuarios">15</span>)</span>
                 </button>
 
                 <button type="button" @click="toggleTipo('Empresa')"
-                        :class="tiposSeleccionados.includes('Empresa') ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
-                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                        :class="tiposSeleccionados.includes('Empresa') && 'is-activo'" :aria-pressed="tiposSeleccionados.includes('Empresa')" class="ws-tipo">
                     <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
                     <span>Empresas (<span x-text="stats.empresas">3</span>)</span>
                 </button>
 
                 <button type="button" @click="toggleTipo('Habilidad')"
-                        :class="tiposSeleccionados.includes('Habilidad') ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
-                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                        :class="tiposSeleccionados.includes('Habilidad') && 'is-activo'" :aria-pressed="tiposSeleccionados.includes('Habilidad')" class="ws-tipo">
                     <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                     <span>Habilidades (<span x-text="stats.habilidades">12</span>)</span>
                 </button>
 
                 <button type="button" @click="toggleTipo('Proyecto')"
-                        :class="tiposSeleccionados.includes('Proyecto') ? 'bg-purple-500/20 text-purple-400 border-purple-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
-                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                        :class="tiposSeleccionados.includes('Proyecto') && 'is-activo'" :aria-pressed="tiposSeleccionados.includes('Proyecto')" class="ws-tipo">
                     <span class="w-2 h-2 rounded-full bg-purple-400"></span>
                     <span>Proyectos (<span x-text="stats.proyectos">2</span>)</span>
                 </button>
 
                 <button type="button" @click="toggleTipo('Oferta')"
-                        :class="tiposSeleccionados.includes('Oferta') ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 font-bold' : 'bg-[#12151b] text-gray-500 border-[#1e232d]'"
-                        class="px-3 py-1 rounded-full border transition flex items-center gap-1.5 text-xs">
+                        :class="tiposSeleccionados.includes('Oferta') && 'is-activo'" :aria-pressed="tiposSeleccionados.includes('Oferta')" class="ws-tipo">
                     <span class="w-2 h-2 rounded-full bg-rose-400"></span>
                     <span>Empleos (<span x-text="stats.ofertas">2</span>)</span>
                 </button>
@@ -125,7 +114,7 @@
             
             <!-- Buscador en tiempo real con foco animado -->
             <div class="flex items-center gap-2 flex-1 max-w-sm">
-                <div class="relative w-full">
+                <div class="relative w-full ws-lupa">
                     <input type="text" x-model="textoBusqueda" @keyup.enter="buscarYEnfocar()"
                            placeholder="Buscar nodo (ej. Mateo, Python, Google)..."
                            class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] rounded-full pl-8 pr-4 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none" />
@@ -139,7 +128,7 @@
             </div>
 
             <!-- Botones de Acción sobre el Lienzo -->
-            <div class="flex items-center gap-2 text-xs">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
                 <!-- Toggle Física -->
                 <button type="button" @click="toggleFisica()"
                         :class="fisicaActiva ? 'bg-[#181c24] text-emerald-400 border-emerald-500/30' : 'bg-[#12151b] text-gray-400 border-[#1e232d]'"
@@ -191,7 +180,7 @@
         <!-- Indicador flotante en esquina inferior izquierda -->
         <div class="absolute bottom-4 left-4 z-10 bg-[#0e1116]/90 backdrop-blur-md border border-[#181c24] rounded-xl px-3 py-1.5 text-[11px] font-mono text-gray-400 flex items-center gap-3">
             <span class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
+                <span class="w-2 h-2 rounded-full ws-bg-usuario"></span>
                 <span>U: Usuario</span>
             </span>
             <span class="flex items-center gap-1.5">
@@ -228,7 +217,7 @@
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shadow flex-shrink-0"
                              :class="{
-                                'bg-[#00b84c] text-white': nodoSeleccionado?.group === 'Usuario',
+                                'ws-bg-usuario text-white': nodoSeleccionado?.group === 'Usuario',
                                 'bg-cyan-500 text-white': nodoSeleccionado?.group === 'Empresa',
                                 'bg-amber-500 text-white': nodoSeleccionado?.group === 'Habilidad',
                                 'bg-purple-500 text-white': nodoSeleccionado?.group === 'Proyecto',
@@ -239,7 +228,7 @@
                         <div class="min-w-0">
                             <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
                                   :class="{
-                                    'bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30': nodoSeleccionado?.group === 'Usuario',
+                                    'ws-chip-usuario border': nodoSeleccionado?.group === 'Usuario',
                                     'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30': nodoSeleccionado?.group === 'Empresa',
                                     'bg-amber-500/20 text-amber-400 border border-amber-500/30': nodoSeleccionado?.group === 'Habilidad',
                                     'bg-purple-500/20 text-purple-400 border border-purple-500/30': nodoSeleccionado?.group === 'Proyecto',
@@ -321,7 +310,7 @@
                                 <div class="flex items-center gap-2 min-w-0">
                                     <span class="w-2 h-2 rounded-full flex-shrink-0"
                                           :class="{
-                                            'bg-[#00b84c]': vecino.group === 'Usuario',
+                                            'ws-bg-usuario': vecino.group === 'Usuario',
                                             'bg-cyan-400': vecino.group === 'Empresa',
                                             'bg-amber-400': vecino.group === 'Habilidad',
                                             'bg-purple-400': vecino.group === 'Proyecto',
@@ -360,22 +349,25 @@
 </div>
 
 <!-- SCRIPT DE INICIALIZACION Y GESTION DE VIS.JS NETWORK -->
+{{ datos_grafo|json_script:"datos-grafo" }}
 <script>
+const DATOS_GRAFO = JSON.parse(document.getElementById('datos-grafo').textContent);
+
 function grafoManager() {
     return {
         network: null,
         datasetNodes: null,
         datasetEdges: null,
         tiposSeleccionados: ['Usuario', 'Empresa', 'Habilidad', 'Proyecto', 'Oferta'],
-        subgrafoSeleccionado: '{{ subgrafo_uid|default:"" }}',
-        textoBusqueda: '{{ busqueda|default:"" }}',
+        subgrafoSeleccionado: '{{ subgrafo_uid|default:""|escapejs }}',
+        textoBusqueda: '{{ busqueda|default:""|escapejs }}',
         fisicaActiva: true,
         layoutJerarquico: false,
         nodoSeleccionado: null,
         vecinosDelNodo: [],
         isFullscreen: false,
-        stats: {{ initial_data_json|safe }}.stats,
-        datosIniciales: {{ initial_data_json|safe }},
+        stats: DATOS_GRAFO.stats,
+        datosIniciales: DATOS_GRAFO,
 
         init() {
             this.inicializarRed(this.datosIniciales);
@@ -397,11 +389,17 @@ function grafoManager() {
             });
         },
 
+        // Con muchas relaciones, sus nombres vuelven ilegible el grafo: se ven al seleccionar un nodo.
+        aristasLegibles(aristas) {
+            if (aristas.length <= 150) { return aristas; }
+            return aristas.map((a) => ({ ...a, font: { ...(a.font || {}), size: 0 } }));
+        },
+
         inicializarRed(data) {
             const container = document.getElementById('vis-graph-canvas');
             
             this.datasetNodes = new vis.DataSet(data.nodes);
-            this.datasetEdges = new vis.DataSet(data.edges);
+            this.datasetEdges = new vis.DataSet(this.aristasLegibles(data.edges));
 
             const visData = {
                 nodes: this.datasetNodes,
@@ -412,7 +410,7 @@ function grafoManager() {
                 nodes: {
                     borderWidth: 1.5,
                     borderWidthSelected: 3,
-                    shadow: { enabled: true, color: 'rgba(0,0,0,0.5)', size: 8, x: 2, y: 3 },
+                    shadow: { enabled: true, color: 'rgba(42,26,46,0.22)', size: 8, x: 1, y: 3 },
                     font: { face: 'Helvetica', align: 'center' }
                 },
                 edges: {
@@ -426,14 +424,14 @@ function grafoManager() {
                     enabled: this.fisicaActiva,
                     solver: 'barnesHut',
                     barnesHut: {
-                        gravitationalConstant: -3500,
-                        centralGravity: 0.28,
-                        springLength: 110,
+                        gravitationalConstant: -4200,
+                        centralGravity: 0.55,
+                        springLength: 120,
                         springConstant: 0.04,
                         damping: 0.09,
                         avoidOverlap: 0.25
                     },
-                    stabilization: { iterations: 120, updateInterval: 25 }
+                    stabilization: { iterations: 260, updateInterval: 25, fit: true }
                 },
                 interaction: {
                     hover: true,
@@ -525,7 +523,7 @@ function grafoManager() {
                     this.datasetNodes.clear();
                     this.datasetEdges.clear();
                     this.datasetNodes.add(data.nodes);
-                    this.datasetEdges.add(data.edges);
+                    this.datasetEdges.add(this.aristasLegibles(data.edges));
                     this.fitNetwork();
                 })
                 .catch(err => console.error('Error cargando datos del grafo:', err));

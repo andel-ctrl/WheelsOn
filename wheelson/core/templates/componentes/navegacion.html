@@ -1,0 +1,17 @@
+{% load wheelson_ui %}
+{% with ruta=request.path %}
+<a href="{% url 'core:dashboard' %}" class="ws-nav__item {% if ruta == '/' %}is-activo{% endif %}" {% if ruta == '/' %}aria-current="page"{% endif %}>{% icono "house" %}<span>Inicio</span></a>
+<p class="ws-nav__grupo">Oportunidades</p>
+<a href="{% url 'core:proyectos_lista' %}" class="ws-nav__item {% if '/proyectos/' in ruta %}is-activo{% endif %}" {% if '/proyectos/' in ruta %}aria-current="page"{% endif %}>{% icono "rocket-launch" %}<span>Proyectos</span></a>
+<a href="{% url 'core:ofertas_lista' %}" class="ws-nav__item {% if '/ofertas/' in ruta %}is-activo{% endif %}" {% if '/ofertas/' in ruta %}aria-current="page"{% endif %}>{% icono "briefcase" %}<span>Empleos</span></a>
+<a href="{% url 'core:empresas_lista' %}" class="ws-nav__item {% if '/empresas/' in ruta %}is-activo{% endif %}" {% if '/empresas/' in ruta %}aria-current="page"{% endif %}>{% icono "buildings" %}<span>Empresas</span></a>
+<p class="ws-nav__grupo">Personas</p>
+<a href="{% url 'core:conexiones_red' %}" class="ws-nav__item {% if '/conexiones/' in ruta %}is-activo{% endif %}" {% if '/conexiones/' in ruta %}aria-current="page"{% endif %}>{% icono "users-three" %}<span>Mi Red</span></a>
+<a href="{% url 'core:recomendaciones_index' %}" class="ws-nav__item {% if '/recomendaciones/' in ruta %}is-activo{% endif %}" {% if '/recomendaciones/' in ruta %}aria-current="page"{% endif %}>{% icono "star" %}<span>Sugerencias</span></a>
+<a href="{% url 'core:usuarios_lista' %}" class="ws-nav__item {% if '/usuarios/' in ruta %}is-activo{% endif %}" {% if '/usuarios/' in ruta %}aria-current="page"{% endif %}>{% icono "magnifying-glass" %}<span>Explorar</span></a>
+<p class="ws-nav__grupo">El grafo</p>
+<a href="{% url 'core:analitica_dashboard' %}" class="ws-nav__item {% if '/analitica/' in ruta %}is-activo{% endif %}" {% if '/analitica/' in ruta %}aria-current="page"{% endif %}>{% icono "chart-bar" %}<span>Analítica</span></a>
+<a href="{% url 'core:grafo_interactivo' %}" class="ws-nav__item {% if '/grafo/' in ruta %}is-activo{% endif %}" {% if '/grafo/' in ruta %}aria-current="page"{% endif %}>{% icono "graph" %}<span>Grafo Interactivo</span></a>
+<a href="{% url 'core:consultas_index' %}" class="ws-nav__item {% if '/consultas/' in ruta %}is-activo{% endif %}" {% if '/consultas/' in ruta %}aria-current="page"{% endif %}>{% icono "lightning" %}<span>Consultas Cypher</span></a>
+{% if permisos.es_admin %}<a href="{% url 'core:habilidades_lista' %}" class="ws-nav__item {% if '/habilidades/' in ruta %}is-activo{% endif %}" {% if '/habilidades/' in ruta %}aria-current="page"{% endif %}>{% icono "sparkle" %}<span>Habilidades</span></a>{% endif %}
+{% endwith %}

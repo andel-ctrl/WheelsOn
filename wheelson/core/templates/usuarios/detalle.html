@@ -1,302 +1,204 @@
 {% extends "base.html" %}
+{% load static wheelson_ui %}
 
-{% block title %}{{ usuario.nombre_completo }} | Perfil Bento WheelsOn{% endblock %}
+{% block title %}{{ usuario.nombre_completo }} | WheelsOn{% endblock %}
 {% block page_title %}{{ usuario.nombre_completo }}{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'vendor/vis-network-9.1.9.min.css' %}">
+    <script src="{% static 'vendor/vis-network-9.1.9.min.js' %}"></script>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-6xl mx-auto space-y-6 animate-fade-in-up"
-     x-data="{
-        activeTab: 'bento',
-        copied: false,
-        showSkillModal: false,
-        showJobModal: false,
-        showConnectModal: false,
-        showProjectModal: false
-     }">
+<div class="ws-pagina" x-data="{ showSkillModal: false, showJobModal: false, showConnectModal: false, showProjectModal: false }">
 
-    <!-- ========================================================================= -->
-    <!-- BENTO GRID CONTAINER (INSPIRADO EN BENTO.ME Y READ.CV) -->
-    <!-- ========================================================================= -->
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
-
-        <!-- ===================================================================== -->
-        <!-- 1. HERO BENTO: TARJETA PRINCIPAL DE IDENTIDAD (8 COLS) -->
-        <!-- ===================================================================== -->
-        <div class="md:col-span-8 bento-box p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group">
-            <!-- Glow background sutil -->
-            <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
-
-            <div class="space-y-5 relative z-10">
-                <div class="flex flex-wrap items-start justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="avatar placeholder">
-                            <div class="bg-gradient-to-tr from-emerald-500 to-cyan-500 text-white font-black rounded-3xl w-20 h-20 text-2xl shadow-xl ring-2 ring-emerald-500/30">
-                                {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h1 class="text-2xl sm:text-3xl font-black text-base-content tracking-tight">
-                                    {{ usuario.nombre_completo }}
-                                </h1>
-                            </div>
-                            <span class="text-xs font-mono text-emerald-400 font-bold block">
-                                @{{ usuario.nombre|lower }}.{{ usuario.apellido|lower }}
-                            </span>
-                            <p class="text-sm font-semibold text-base-content/80 mt-0.5">
-                                {{ usuario.titulo_profesional|default:"Ingeniero de Software" }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col items-end gap-1.5">
-                        <span class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] uppercase tracking-wider py-2 px-3">
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#00b84c] inline-block mr-1"></span> Disponible para Trabajar
-                        </span>
-                        <!-- Quick Actions de Administracion -->
-                        <div class="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition pt-1">
-                            <a href="{% url 'core:usuario_editar' uid=usuario.uid %}" class="btn btn-ghost btn-xs text-[10px] rounded-lg">Editar</a>
-                            <span class="text-base-content/20">&bull;</span>
-                            <a href="{% url 'core:usuario_eliminar' uid=usuario.uid %}" class="btn btn-ghost btn-xs text-error text-[10px] rounded-lg">Eliminar</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bio & Localizacion -->
-                <p class="text-xs sm:text-sm text-base-content/70 leading-relaxed font-normal">
-                    {{ usuario.biografia|default:"Profesional apasionado por el diseno de software, arquitecturas escalables y analisis de datos sobre grafos. Construyendo activamente en WheelsOn." }}
-                </p>
-
-                <div class="flex flex-wrap items-center gap-4 text-xs text-base-content/50 pt-1">
-                    <span class="flex items-center gap-1.5">
-                        <span>{{ usuario.ubicacion|default:"Medellín, Colombia" }}</span>
-                    </span>
-                    <span>&bull;</span>
-                    <span class="flex items-center gap-1.5">
-                        <span class="font-mono text-[11px]">{{ usuario.email }}</span>
-                    </span>
-                    <span>&bull;</span>
-                    <span class="flex items-center gap-1.5">
-                        <span>Miembro desde {{ usuario.fecha_registro|default:"2026" }}</span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Botones de Accion Social -->
-            <div class="pt-6 mt-4 border-t border-base-content/5 flex flex-wrap items-center justify-between gap-3 relative z-10">
-                <div class="flex flex-wrap items-center gap-2">
-                    <button @click="showConnectModal = true" class="btn btn-primary btn-sm rounded-2xl gap-1.5 font-bold shadow-md shadow-primary/20 text-xs">
-                        <span>Conectar</span>
-                    </button>
-                    <a href="{% url 'core:consultas_index' %}?tab=camino&uid1={{ current_user.uid }}&uid2={{ usuario.uid }}"
-                       class="btn btn-ghost btn-sm rounded-2xl gap-1 text-xs font-semibold hover:bg-base-100 border border-base-content/10">
-                        <span>Calcular Ruta</span>
-                    </a>
-                    <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}"
-                       class="btn btn-ghost btn-sm rounded-2xl gap-1 text-xs font-semibold hover:bg-base-100 border border-base-content/10">
-                        <span>Ver en Grafo</span>
-                    </a>
-                </div>
-
-                <!-- UID Copiable en Modo Dev -->
-                <button type="button" @click="navigator.clipboard.writeText('{{ usuario.uid }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                        class="btn btn-ghost btn-xs font-mono text-[10px] text-base-content/40 hover:text-base-content rounded-xl">
-                    <span x-show="!copied">UID: {{ usuario.uid|slice:":12" }}...</span>
-                    <span x-show="copied" class="text-success font-bold" style="display: none;">¡Copiado!</span>
-                </button>
+    <section class="ws-perfil">
+        {% with p=usuario %}{% include "componentes/ola_persona.html" with clase="ws-perfil__ola" %}{% endwith %}
+        <span class="ws-perfil__foto" aria-hidden="true">{{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}</span>
+        <div class="ws-perfil__identidad">
+            <h1 class="ws-perfil__nombre">{{ usuario.nombre_completo }}</h1>
+            <p class="ws-perfil__alias">@{{ usuario.nombre|slugify }}.{{ usuario.apellido|slugify }}</p>
+            <p class="ws-perfil__cargo">{{ usuario.titulo_profesional|default:"Profesional" }}</p>
+            <p class="ws-perfil__datos">
+                {% if usuario.ubicacion %}<span>{{ usuario.ubicacion }}</span>{% endif %}
+                <span>{{ usuario.email }}</span>
+                {% if usuario.fecha_registro %}<span>En WheelsOn desde {{ usuario.fecha_registro|date:"F \d\e Y" }}</span>{% endif %}
+            </p>
+            {% if usuario.biografia %}<p class="ws-perfil__bio">{{ usuario.biografia }}</p>{% endif %}
+            <div class="ws-perfil__acciones">
+                {% if puede_conectar %}<button type="button" @click="showConnectModal = true" class="ws-btn ws-btn--primario">Conectar</button>{% endif %}
+                {% if solicitud_enviada %}<form method="POST" action="{% url 'core:conexion_solicitud_cancelar' uid_destino=usuario.uid %}">
+                    {% csrf_token %}
+                    <button type="submit" class="ws-btn ws-btn--secundario">Cancelar solicitud</button>
+                </form>{% endif %}
+                {% if solicitud_recibida %}
+                {% url 'core:conexion_solicitud_responder' uid_origen=usuario.uid as url_responder %}
+                {% include "componentes/responder.html" with url=url_responder %}
+                {% endif %}
+                {% if not es_propio %}
+                <a class="ws-btn ws-btn--secundario" href="{% url 'core:consultas_index' %}?tab=camino&uid1={{ current_user.uid }}&uid2={{ usuario.uid }}">Cómo llegar a {{ usuario.nombre }}</a>
+                <a class="ws-enlace" href="{% url 'core:consultas_index' %}?tab=comun&uid1={{ current_user.uid }}&uid2={{ usuario.uid }}">Contactos en común</a>
+                {% endif %}
+                {% if puede_editar %}
+                <span class="ws-ficha__admin">
+                    <a class="ws-enlace" href="{% url 'core:usuario_editar' uid=usuario.uid %}">Editar perfil</a>
+                    <a class="ws-enlace ws-persona__quitar" href="{% url 'core:usuario_eliminar' uid=usuario.uid %}">Eliminar</a>
+                </span>
+                {% endif %}
             </div>
         </div>
+        <dl class="ws-perfil__cifras">
+            <div><dd><a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}">{{ conexiones_rel|length }}</a></dd><dt>contacto{{ conexiones_rel|length|pluralize }}</dt></div>
+            <div><dd>{{ habilidades_rel|length }}</dd><dt>habilidad{{ habilidades_rel|length|pluralize:"es" }}</dt></div>
+            <div><dd>{{ proyectos_rel|length }}</dd><dt>proyecto{{ proyectos_rel|length|pluralize }}</dt></div>
+            <div><dd>{{ empleos_rel|length }}</dd><dt>empleo{{ empleos_rel|length|pluralize }}</dt></div>
+        </dl>
+    </section>
 
-        <!-- ===================================================================== -->
-        <!-- 2. MINI METRICAS SOCIALES (4 COLS) -->
-        <!-- ===================================================================== -->
-        <div class="md:col-span-4 bento-box p-6 flex flex-col justify-between gap-4">
-            <h3 class="font-black text-xs uppercase tracking-wider text-base-content/50 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                Presencia en el Grafo
-            </h3>
+    <div class="ws-ficha__columnas">
+        <div class="ws-ficha__principal">
+            <section class="ws-bloque" aria-label="Habilidades">
+                <div class="ws-bloque__cabecera">
+                    <h2 class="ws-bloque__titulo">Habilidades</h2>
+                    {% if puede_editar %}<button type="button" @click="showSkillModal = true" class="ws-enlace ws-bloque__accion">Añadir</button>{% endif %}
+                </div>
+                {% if habilidades_rel %}
+                <div x-data="{ todo: false }">
+                <ul class="ws-niveles ws-corta ws-corta--6" :class="todo && 'is-toda'">
+                    {% for item in habilidades_rel %}
+                    <li class="ws-nivel ws-nivel--{{ item.nivel|default:'intermedio'|lower }}">
+                        <span class="ws-nivel__nombre">{{ item.habilidad.nombre }}</span>
+                        <span class="ws-nivel__detalle">{{ item.nivel|default:"intermedio"|legible }}{% if item.anios_experiencia %} · {{ item.anios_experiencia }} año{{ item.anios_experiencia|pluralize }}{% endif %}</span>
+                        <span class="ws-nivel__barra" aria-hidden="true"><i></i></span>
+                        {% if puede_editar %}<form method="POST" action="{% url 'core:usuario_habilidad_eliminar' uid=usuario.uid hid=item.habilidad.hid %}">
+                            {% csrf_token %}
+                            <button type="submit" class="ws-quitar" title="Quitar {{ item.habilidad.nombre }}" aria-label="Quitar {{ item.habilidad.nombre }}">{% icono "x" "regular" 14 %}</button>
+                        </form>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% include "componentes/corta.html" with total=habilidades_rel|length limite=6 %}
+                </div>
+                {% else %}
+                <p class="ws-bloque__vacio">Sin habilidades en el perfil todavía.</p>
+                {% endif %}
+            </section>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
-                    <span class="font-black text-xl text-emerald-400 block">{{ conexiones_rel|length }}</span>
-                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Conexiones</span>
+            <section class="ws-bloque" aria-label="Trayectoria">
+                <div class="ws-bloque__cabecera">
+                    <h2 class="ws-bloque__titulo">Trayectoria</h2>
+                    {% if puede_editar %}<button type="button" @click="showJobModal = true" class="ws-enlace ws-bloque__accion">Añadir</button>{% endif %}
                 </div>
-                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
-                    <span class="font-black text-xl text-cyan-400 block">{{ habilidades_rel|length }}</span>
-                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Habilidades</span>
-                </div>
-                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
-                    <span class="font-black text-xl text-primary block">{{ proyectos_rel|length }}</span>
-                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Proyectos</span>
-                </div>
-                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 text-center">
-                    <span class="font-black text-xl text-secondary block">{{ empleos_rel|length }}</span>
-                    <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Experiencias</span>
-                </div>
-            </div>
-
-            <!-- Enlace rapido a contactos mutuos -->
-            <a href="{% url 'core:consultas_index' %}?tab=comun&uid1={{ current_user.uid }}&uid2={{ usuario.uid }}"
-               class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-bold text-center hover:bg-emerald-500/20 transition block">
-                ¿Contactos en Común con {{ current_user.nombre }}? &rarr;
-            </a>
-        </div>
-
-        <!-- ===================================================================== -->
-        <!-- 3. SKILLS BENTO: STACK TECNICO & COMPETENCIAS (6 COLS) -->
-        <!-- ===================================================================== -->
-        <div class="md:col-span-6 bento-box p-6 space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
-                        Stack Técnico & Habilidades
-                    </h3>
-                    <p class="text-[11px] text-base-content/50">Cápsulas interactivas con nivel de maestría técnica.</p>
-                </div>
-                <button @click="showSkillModal = true" class="btn btn-ghost btn-xs text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 rounded-xl">
-                    + Añadir Habilidad
-                </button>
-            </div>
-
-            <div class="flex flex-wrap gap-2 pt-1">
-                {% for item in habilidades_rel %}
-                <div class="group relative px-3 py-2 rounded-2xl bg-base-100/70 border border-base-content/10 hover:border-emerald-500/40 transition flex items-center gap-2">
-                    <div class="flex flex-col">
-                        <span class="font-bold text-xs text-base-content">{{ item.habilidad.nombre }}</span>
-                        <div class="flex items-center gap-1.5 text-[9px] text-base-content/50">
-                            <span class="text-emerald-400 font-bold uppercase">{{ item.nivel|default:"Intermedio" }}</span>
-                            {% if item.anios_experiencia %}
-                            <span>&bull;</span>
-                            <span>{{ item.anios_experiencia }} años</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <form method="POST" action="{% url 'core:usuario_habilidad_eliminar' uid=usuario.uid hid=item.habilidad.hid %}" class="opacity-0 group-hover:opacity-100 transition">
+                {% if empleos_rel %}
+                <ol class="ws-trayecto">
+                    {% for item in empleos_rel %}
+                    <li{% if item.actual %} class="es-actual"{% endif %}>
+                        <span class="ws-trayecto__cargo">{{ item.cargo }}</span>
+                        <a class="ws-enlace" href="{% url 'core:empresa_detalle' eid=item.empresa.eid %}">{{ item.empresa.nombre }}</a>
+                        <span class="ws-trayecto__cuando">{% if item.actual %}Actualmente{% else %}Anterior{% endif %}</span>
+                        {% if item.puede_quitar and item.actual %}<form class="ws-trayecto__salir" method="POST" action="{% url 'core:empresa_equipo_terminar' eid=item.empresa.eid uid=usuario.uid %}" data-confirmar="El empleo queda en la trayectoria como anterior. ¿Continuar?" onsubmit="return confirm(this.dataset.confirmar);">
+                            {% csrf_token %}
+                            <button type="submit" class="ws-enlace ws-persona__quitar">{% if es_propio %}Dejé este empleo{% else %}Quitar del equipo{% endif %}</button>
+                        </form>{% elif item.puede_quitar %}<form method="POST" action="{% url 'core:usuario_experiencia_eliminar' uid=usuario.uid eid=item.empresa.eid %}">
+                            {% csrf_token %}
+                            <button type="submit" class="ws-quitar" title="Borrar de la trayectoria" aria-label="Borrar de la trayectoria">{% icono "x" "regular" 14 %}</button>
+                        </form>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                <p class="ws-bloque__vacio">Sin empleos registrados todavía.</p>
+                {% endif %}
+                {% if empleos_pendientes %}
+                <h3 class="ws-bloque__subtitulo">Empleos por confirmar</h3>
+                <p class="ws-bloque__nota">Aparecerán en el perfil cuando la empresa los confirme. Solo tú los ves.</p>
+                {% for e in empleos_pendientes %}
+                <div class="ws-renglon">
+                    <span><strong>{{ e.cargo }}</strong> en <a class="ws-enlace" href="{% url 'core:empresa_detalle' eid=e.empresa.eid %}">{{ e.empresa.nombre }}</a></span>
+                    <form method="POST" action="{% url 'core:usuario_experiencia_cancelar' uid=usuario.uid eid=e.empresa.eid %}">
                         {% csrf_token %}
-                        <button type="submit" class="text-error hover:text-red-400 text-xs ml-1 font-bold" title="Desvincular">×</button>
+                        <button type="submit" class="ws-btn ws-btn--secundario ws-btn--sm">Cancelar solicitud</button>
                     </form>
                 </div>
-                {% empty %}
-                <p class="text-xs text-base-content/40 py-4 text-center w-full">Sin habilidades vinculadas al perfil.</p>
                 {% endfor %}
-            </div>
+                {% endif %}
+            </section>
+
+            {% if publicaciones_rel %}
+            <section class="ws-bloque" aria-label="Publicaciones">
+                <div class="ws-bloque__cabecera"><h2 class="ws-bloque__titulo">Publicaciones</h2></div>
+                <div x-data="{ todo: false }">
+                <div class="ws-corta ws-corta--3" :class="todo && 'is-toda'">
+                    {% for p in publicaciones_rel %}
+                    <div class="ws-entrada" id="pub-{{ p.publicacion.pubid }}">
+                        <p class="ws-entrada__fecha">{{ p.publicacion.fecha|date:"j \d\e F \d\e Y" }}</p>
+                        <p class="ws-entrada__texto">{{ p.publicacion.texto }}</p>
+                        {% include "componentes/percepcion.html" %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% include "componentes/corta.html" with total=publicaciones_rel|length limite=3 %}
+                </div>
+            </section>
+            {% endif %}
         </div>
 
-        <!-- ===================================================================== -->
-        <!-- 4. SHOWCASE BENTO: PROYECTOS DESTACADOS (PROOF OF WORK) (6 COLS) -->
-        <!-- ===================================================================== -->
-        <div class="md:col-span-6 bento-box p-6 space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
-                        Proyectos (Logros Técnicos)
-                    </h3>
-                    <p class="text-[11px] text-base-content/50">Creaciones reales con código, stacks y colaboradores.</p>
+        <aside class="ws-ficha__lateral">
+            <section class="ws-bloque" aria-label="Red de contactos">
+                <div class="ws-bloque__cabecera">
+                    <h2 class="ws-bloque__titulo">{% if es_propio %}Tu red{% else %}Su red{% endif %}</h2>
+                    <a class="ws-enlace ws-bloque__accion" href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}">Ver contactos</a>
                 </div>
-                <button @click="showProjectModal = true" class="btn btn-ghost btn-xs text-xs font-bold text-primary hover:bg-primary/10 rounded-xl">
-                    + Vincular
-                </button>
-            </div>
+                <div id="user-constellation-network" class="ws-constelacion">
+                    <div class="absolute inset-0 flex items-center justify-center text-xs text-base-content/40 pointer-events-none" id="network-loading">Cargando la red...</div>
+                </div>
+            </section>
 
-            <div class="space-y-2.5">
+            <section class="ws-bloque" aria-label="Proyectos">
+                <div class="ws-bloque__cabecera">
+                    <h2 class="ws-bloque__titulo">Proyectos</h2>
+                    {% if proyectos_vinculables %}<button type="button" @click="showProjectModal = true" class="ws-enlace ws-bloque__accion">Invitar a uno</button>{% endif %}
+                </div>
                 {% for item in proyectos_rel %}
-                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 hover:border-primary/30 transition flex items-start justify-between gap-3">
-                    <div class="space-y-1 min-w-0">
-                        <a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" class="font-black text-xs text-base-content hover:text-primary transition truncate block">
-                            {{ item.proyecto.nombre }}
-                        </a>
-                        <p class="text-[11px] text-base-content/60 line-clamp-1">
-                            Rol: <span class="font-bold text-base-content">{{ item.rol }}</span>
-                        </p>
-                        {% if item.proyecto.tecnologias %}
-                        <div class="flex flex-wrap gap-1 pt-1">
-                            {% for tech in item.proyecto.tecnologias_lista|default:item.proyecto.tecnologias %}
-                            <span class="badge badge-ghost badge-xs text-[9px] font-mono">{{ tech }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <form method="POST" action="{% url 'core:proyecto_colaborador_eliminar' pid=item.proyecto.pid uid=usuario.uid %}">
+                <div class="ws-renglon">
+                    <span class="ws-renglon__texto">
+                        <a class="ws-renglon__titulo" href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}">{{ item.proyecto.nombre }}</a>
+                        <span class="ws-renglon__detalle">{{ item.rol }}</span>
+                    </span>
+                    {% if item.puede_quitar %}<form method="POST" action="{% url 'core:proyecto_colaborador_eliminar' pid=item.proyecto.pid uid=usuario.uid %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-ghost btn-xs text-error hover:bg-error/10 rounded-lg text-xs" title="Desvincular">×</button>
-                    </form>
+                        <button type="submit" class="ws-quitar" title="Quitar de {{ item.proyecto.nombre }}" aria-label="Quitar de {{ item.proyecto.nombre }}">{% icono "x" "regular" 14 %}</button>
+                    </form>{% endif %}
                 </div>
                 {% empty %}
-                <p class="text-xs text-base-content/40 py-4 text-center">Sin proyectos registrados.</p>
+                <p class="ws-bloque__vacio">Sin proyectos todavía.</p>
                 {% endfor %}
-            </div>
-        </div>
+            </section>
 
-        <!-- ===================================================================== -->
-        <!-- 5. EXPERIENCE BENTO: TRAYECTORIA LABORAL (6 COLS) -->
-        <!-- ===================================================================== -->
-        <div class="md:col-span-6 bento-box p-6 space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
-                        Trayectoria Profesional
-                    </h3>
-                    <p class="text-[11px] text-base-content/50">Empresas y organizaciones en la red.</p>
+            {% if empresas_que_administra %}
+            <section class="ws-bloque" aria-label="Empresas que administra">
+                <div class="ws-bloque__cabecera"><h2 class="ws-bloque__titulo">Empresas que administra</h2></div>
+                {% for e in empresas_que_administra %}
+                <div class="ws-renglon">
+                    <a class="ws-renglon__titulo" href="{% url 'core:empresa_detalle' eid=e.eid %}">{{ e.nombre }}</a>
+                    {% if es_propio %}<a class="ws-enlace" href="{% url 'core:empresa_detalle' eid=e.eid %}?tab=gestion">Gestionar</a>{% endif %}
                 </div>
-                <button @click="showJobModal = true" class="btn btn-ghost btn-xs text-xs font-bold text-secondary hover:bg-secondary/10 rounded-xl">
-                    + Añadir
-                </button>
-            </div>
-
-            <div class="space-y-2.5">
-                {% for item in empleos_rel %}
-                <div class="p-3.5 rounded-2xl bg-base-100/60 border border-base-content/5 hover:border-secondary/30 transition flex items-start justify-between gap-3">
-                    <div class="space-y-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="font-black text-xs text-base-content">{{ item.cargo }}</span>
-                            {% if item.actual %}
-                            <span class="badge badge-xs badge-success text-[9px]">Actual</span>
-                            {% endif %}
-                        </div>
-                        <a href="{% url 'core:empresa_detalle' eid=item.empresa.eid %}" class="text-[11px] text-secondary font-semibold hover:underline block truncate">
-                            {{ item.empresa.nombre }}
-                        </a>
-                    </div>
-                    <form method="POST" action="{% url 'core:usuario_experiencia_eliminar' uid=usuario.uid eid=item.empresa.eid %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-ghost btn-xs text-error hover:bg-error/10 rounded-lg text-xs" title="Eliminar">×</button>
-                    </form>
-                </div>
-                {% empty %}
-                <p class="text-xs text-base-content/40 py-4 text-center">Sin experiencia laboral registrada.</p>
                 {% endfor %}
-            </div>
-        </div>
+            </section>
+            {% endif %}
 
-        <!-- ===================================================================== -->
-        <!-- 6. CONSTELLATION BENTO: RED INTERACTIVA VIS.JS (6 COLS) -->
-        <!-- ===================================================================== -->
-        <div class="md:col-span-6 bento-box p-6 space-y-3 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="font-black text-sm uppercase tracking-wider text-base-content flex items-center gap-2">
-                        Constelación de Conexiones
-                    </h3>
-                    <p class="text-[11px] text-base-content/50">Mini-lienzo estelar interactivo con sus colegas de 1er grado.</p>
+            {% if postulaciones_rel %}
+            <section class="ws-bloque" aria-label="Postulaciones">
+                <div class="ws-bloque__cabecera"><h2 class="ws-bloque__titulo">Postulaciones</h2></div>
+                {% for p in postulaciones_rel %}
+                <div class="ws-renglon">
+                    <a class="ws-renglon__titulo" href="{% url 'core:oferta_detalle' oid=p.oferta.oid %}">{{ p.oferta.titulo }}</a>
+                    <span class="ws-pastilla">{{ p.estado_texto }}</span>
                 </div>
-                <a href="{% url 'core:conexiones_red' %}?uid={{ usuario.uid }}" class="text-[10px] text-emerald-400 font-bold hover:underline">
-                    Expandir &rarr;
-                </a>
-            </div>
-
-            <!-- Canvas Vis.js Container -->
-            <div id="user-constellation-network" class="w-full h-52 rounded-2xl bg-base-100/80 border border-base-content/5 relative overflow-hidden">
-                <div class="absolute inset-0 flex items-center justify-center text-xs text-base-content/40 pointer-events-none" id="network-loading">
-                    Cargando constelación de red...
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between text-[10px] text-base-content/50">
-                <span>{{ conexiones_rel|length }} colegas conectados directamente</span>
-                <span class="font-mono">Neo4j :CONECTA_CON</span>
-            </div>
-        </div>
-
+                {% endfor %}
+            </section>
+            {% endif %}
+        </aside>
     </div>
 
     <!-- ========================================================================= -->
@@ -304,6 +206,7 @@
     <!-- ========================================================================= -->
 
     <!-- MODAL AÑADIR HABILIDAD -->
+    {% if puede_editar %}
     <div x-show="showSkillModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
             <h3 class="font-black text-sm text-base-content">Vincular Nueva Habilidad</h3>
@@ -314,9 +217,10 @@
                     <select name="hid" class="select select-sm select-bordered w-full rounded-xl" required>
                         <option value="">Seleccione una habilidad...</option>
                         {% for h in todas_habilidades %}
-                        <option value="{{ h.hid }}">{{ h.nombre }} ({{ h.categoria }})</option>
+                        <option value="{{ h.hid }}">{{ h.nombre }} ({{ h.categoria|legible }})</option>
                         {% endfor %}
                     </select>
+                    <p class="text-[11px] text-base-content/60 mt-1">¿No está en la lista? Solo el administrador de la plataforma agrega habilidades al catálogo.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -340,14 +244,15 @@
             </form>
         </div>
     </div>
+    {% endif %}
 
     <!-- MODAL CONECTAR -->
+    {% if puede_conectar %}
     <div x-show="showConnectModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
             <h3 class="font-black text-sm text-base-content">Conectar con {{ usuario.nombre }}</h3>
             <form method="POST" action="{% url 'core:conexion_conectar' %}" class="space-y-3 mt-3">
                 {% csrf_token %}
-                <input type="hidden" name="uid_origen" value="{{ current_user.uid }}">
                 <input type="hidden" name="uid_destino" value="{{ usuario.uid }}">
                 <div>
                     <label class="label py-1"><span class="label-text text-xs font-bold">Mensaje de invitación:</span></label>
@@ -360,11 +265,14 @@
             </form>
         </div>
     </div>
+    {% endif %}
 
     <!-- MODAL AÑADIR EXPERIENCIA -->
+    {% if puede_editar %}
     <div x-show="showJobModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
             <h3 class="font-black text-sm text-base-content">Añadir Experiencia Laboral</h3>
+            <p class="text-xs text-base-content/60 mt-1">Aparecerá en el perfil cuando la empresa lo confirme.</p>
             <form method="POST" action="{% url 'core:usuario_experiencia_agregar' uid=usuario.uid %}" class="space-y-3 mt-3">
                 {% csrf_token %}
                 <div>
@@ -388,16 +296,18 @@
                 </div>
                 <div class="modal-action pt-2">
                     <button type="button" @click="showJobModal = false" class="btn btn-sm btn-ghost rounded-xl text-xs">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-secondary rounded-xl text-xs font-bold">Guardar</button>
+                    <button type="submit" class="btn btn-sm btn-secondary rounded-xl text-xs font-bold">Enviar a la empresa</button>
                 </div>
             </form>
         </div>
     </div>
+    {% endif %}
 
     <!-- MODAL VINCULAR A PROYECTO -->
+    {% if proyectos_vinculables %}
     <div x-show="showProjectModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
-            <h3 class="font-black text-sm text-base-content">Vincular a Proyecto</h3>
+            <h3 class="font-black text-sm text-base-content">Invitar a un proyecto</h3>
             <form method="POST" id="form-vincular-proyecto" class="space-y-3 mt-3">
                 {% csrf_token %}
                 <input type="hidden" name="uid" value="{{ usuario.uid }}">
@@ -405,7 +315,7 @@
                     <label class="label py-1"><span class="label-text text-xs font-bold">Proyecto:</span></label>
                     <select id="select-pid" class="select select-sm select-bordered w-full rounded-xl" required onchange="document.getElementById('form-vincular-proyecto').action='/proyectos/' + this.value + '/colaboradores/agregar/'">
                         <option value="">Seleccione un proyecto...</option>
-                        {% for p in todos_proyectos %}
+                        {% for p in proyectos_vinculables %}
                         <option value="{{ p.pid }}">{{ p.nombre }}</option>
                         {% endfor %}
                     </select>
@@ -416,11 +326,12 @@
                 </div>
                 <div class="modal-action pt-2">
                     <button type="button" @click="showProjectModal = false" class="btn btn-sm btn-ghost rounded-xl text-xs">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-primary rounded-xl text-xs font-bold">Vincular</button>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-xl text-xs font-bold">Enviar invitación</button>
                 </div>
             </form>
         </div>
     </div>
+    {% endif %}
 
 </div>
 
@@ -434,12 +345,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const nodesData = [
         {
             id: "{{ usuario.uid }}",
-            label: "{{ usuario.nombre }}",
-            shape: "circularImage",
-            image: "https://api.dicebear.com/7.x/bottts/svg?seed={{ usuario.uid }}",
-            color: { background: "#10b981", border: "#34d399" },
+            label: "{{ usuario.nombre|escapejs }}",
+            shape: "dot",
+            color: { background: "#D9483B", border: "#B8372B" },
             size: 26,
-            font: { color: "#ffffff", size: 12, strokeWidth: 3, strokeColor: "#0f172a" }
+            font: { color: "#2A1A2E", size: 12, strokeWidth: 3, strokeColor: "#FFFFFF" }
         }
     ];
 
@@ -448,15 +358,15 @@ document.addEventListener("DOMContentLoaded", function () {
     {% for rel in conexiones_rel %}
     nodesData.push({
         id: "{{ rel.usuario.uid }}",
-        label: "{{ rel.usuario.nombre }}",
-        color: { background: "#06b6d4", border: "#22d3ee" },
+        label: "{{ rel.usuario.nombre|escapejs }}",
+        color: { background: "#455DD1", border: "#3448AE" },
         size: 16,
-        font: { color: "#94a3b8", size: 10, strokeWidth: 2, strokeColor: "#0f172a" }
+        font: { color: "#574759", size: 10, strokeWidth: 3, strokeColor: "#FFFFFF" }
     });
     edgesData.push({
         from: "{{ usuario.uid }}",
         to: "{{ rel.usuario.uid }}",
-        color: { color: "rgba(16, 185, 129, 0.4)", highlight: "#10b981" },
+        color: { color: "rgba(107, 95, 92, 0.4)", highlight: "#D9483B" },
         width: 1.5,
         smooth: { type: "continuous" }
     });

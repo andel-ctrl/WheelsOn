@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Eliminar Empresa | WheelsOn{% endblock %}
-{% block page_title %}Confirmar Eliminacion{% endblock %}
+{% block page_title %}Confirmar Eliminación{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto space-y-6 animate-fade-in-up">
@@ -16,17 +16,23 @@
 
             <h3 class="font-bold text-lg text-base-content">¿Eliminar esta Empresa?</h3>
             <p class="text-xs text-base-content/70 mt-1">
-                Esta accion eliminara el nodo de la empresa y sus vacantes asociadas del grafo.
+                Esta acción eliminará la empresa y sus empleos.
             </p>
 
             <div class="bg-base-300 p-3 rounded-lg my-4 text-xs font-semibold">
                 {{ objeto.nombre }}
             </div>
 
+            <p class="text-xs my-3">
+                También se eliminarán {{ impacto.ofertas }} empleo{{ impacto.ofertas|pluralize }} y {{ impacto.postulaciones }} postulaci{{ impacto.postulaciones|pluralize:"ón,ones" }}.
+                {{ impacto.empleados }} persona{{ impacto.empleados|pluralize }} perder{{ impacto.empleados|pluralize:"á,án" }} esta experiencia laboral de su perfil.
+                {% if impacto.publicaciones %}También se eliminarán sus publicaciones ({{ impacto.publicaciones }}).{% endif %}
+            </p>
+
             <form method="POST" class="flex justify-center gap-2">
                 {% csrf_token %}
                 <a href="javascript:history.back()" class="btn btn-sm btn-ghost">Cancelar</a>
-                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminacion</button>
+                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminación</button>
             </form>
         </div>
     </div>

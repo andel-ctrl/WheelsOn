@@ -27,6 +27,15 @@ CREATE CONSTRAINT proyecto_pid IF NOT EXISTS
 CREATE CONSTRAINT oferta_oid IF NOT EXISTS
   FOR (o:Oferta) REQUIRE o.oid IS UNIQUE;
 
+CREATE CONSTRAINT publicacion_pubid IF NOT EXISTS
+  FOR (p:Publicacion) REQUIRE p.pubid IS UNIQUE;
+
+CREATE CONSTRAINT avance_aid IF NOT EXISTS
+  FOR (a:Avance) REQUIRE a.aid IS UNIQUE;
+
+CREATE CONSTRAINT notificacion_nid IF NOT EXISTS
+  FOR (n:Notificacion) REQUIRE n.nid IS UNIQUE;
+
 // Indices de rendimiento para busquedas frecuentes
 CREATE INDEX usuario_nombres IF NOT EXISTS
   FOR (u:Usuario) ON (u.nombre, u.apellido);

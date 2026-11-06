@@ -1,348 +1,178 @@
-from core.services import (
-    is_neo4j_available,
-    UsuarioService,
-    EmpresaService,
-    HabilidadService,
-    ProyectoService,
-    OfertaService,
-    ConexionService,
-    EmpleoService,
-    HabilidadUsuarioService,
-    ParticipacionProyectoService,
-    PublicacionOfertaService,
-    RequisitoOfertaService,
-    PostulacionService,
-)
+"""
+Motor de recomendaciones de WheelsOn. Cada recomendación es una consulta Cypher
+que recorre el grafo en Neo4j; están documentadas en scripts/queries.cypher.
+"""
 
-try:
-    from neomodel import db
-except ImportError:
-    db = None
+from core.models import Empresa, Oferta, Usuario
+from core.services import consulta
 
 
 class RecommendationEngine:
     @staticmethod
     def recomendar_contactos(uid, limit=10):
+        """Personas con las que no estás conectado: pesan contactos, habilidades y empresas en común."""
         if not uid:
             return []
 
-        u_principal = UsuarioService.get(uid)
-        if not u_principal:
-            return []
+        filas = consulta(
+            """
+            MATCH (yo:Usuario {uid: $uid}), (otro:Usuario)
+            WHERE otro <> yo AND NOT (yo)-[:CONECTA_CON]-(otro) AND NOT (yo)-[:SOLICITA_CONEXION]-(otro)
+            OPTIONAL MATCH (yo)-[:CONECTA_CON]-(amigo:Usuario)-[:CONECTA_CON]-(otro)
+            WITH yo, otro,
+                 count(DISTINCT amigo) AS amigos_comun,
+                 collect(DISTINCT amigo.nombre + ' ' + amigo.apellido) AS nombres_amigos
+            OPTIONAL MATCH (yo)-[:TIENE_HABILIDAD]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(otro)
+            WITH yo, otro, amigos_comun, nombres_amigos,
+                 count(DISTINCT h) AS habs_comun,
+                 collect(DISTINCT h.nombre) AS nombres_habs
+            OPTIONAL MATCH (yo)-[t1:TRABAJA_EN]->(e:Empresa)<-[t2:TRABAJA_EN]-(otro)
+            WHERE coalesce(t1.actual, true) AND coalesce(t2.actual, true)
+            WITH otro, amigos_comun, nombres_amigos, habs_comun, nombres_habs,
+                 count(DISTINCT e) AS emps_comun
+            WITH otro, amigos_comun, nombres_amigos, habs_comun, nombres_habs, emps_comun,
+                 amigos_comun * 4 + habs_comun * 2 + emps_comun * 3 AS score
+            WHERE score > 0
+            RETURN otro, score, amigos_comun, nombres_amigos[..3], habs_comun, nombres_habs, emps_comun
+            ORDER BY score DESC, amigos_comun DESC, otro.nombre ASC
+            LIMIT $limit
+            """,
+            uid=str(uid), limit=int(limit),
+        )
 
-        if is_neo4j_available() and db:
-            try:
-                cypher = """
-                MATCH (u1:Usuario {uid: $uid})-[:CONECTA_CON]-(amigo:Usuario)-[:CONECTA_CON]-(u2:Usuario)
-                WHERE u1 <> u2 AND NOT (u1)-[:CONECTA_CON]-(u2)
-                WITH u2, count(DISTINCT amigo) AS amigos_comun, collect(DISTINCT amigo.nombre + ' ' + amigo.apellido) AS nombres_amigos
-                OPTIONAL MATCH (u1)-[:TIENE_HABILIDAD]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u2)
-                WITH u2, amigos_comun, nombres_amigos, count(DISTINCT h) AS habs_comun, collect(DISTINCT h.nombre) AS nombres_habs
-                OPTIONAL MATCH (u1)-[:TRABAJA_EN]->(emp:Empresa)<-[:TRABAJA_EN]-(u2)
-                WITH u2, amigos_comun, nombres_amigos, habs_comun, nombres_habs, count(DISTINCT emp) AS emps_comun
-                WITH u2, amigos_comun, nombres_amigos, habs_comun, nombres_habs, emps_comun,
-                     (amigos_comun * 4 + habs_comun * 2 + emps_comun * 3) AS score
-                ORDER BY score DESC, amigos_comun DESC, u2.nombre ASC
-                RETURN u2.uid AS uid, score, amigos_comun, nombres_amigos[..3] AS muestra_amigos,
-                       habs_comun, nombres_habs, emps_comun
-                LIMIT $limit
-                """
-                results, _ = db.cypher_query(cypher, {"uid": str(uid), "limit": int(limit)})
-                if results:
-                    salida = []
-                    for row in results:
-                        usr = UsuarioService.get(row[0])
-                        if usr:
-                            salida.append({
-                                "usuario": usr,
-                                "score": row[1],
-                                "amigos_comun": row[2],
-                                "muestra_amigos": row[3] or [],
-                                "habs_comun": row[4],
-                                "nombres_habs": row[5] or [],
-                                "emps_comun": row[6],
-                                "motivo": f"{row[2]} contacto(s) en común, {row[4]} habilidad(es) afín(es)",
-                            })
-                    if salida:
-                        return salida
-            except Exception:
-                pass
-
-        amigos_directos = {str(c["usuario"].uid) for c in ConexionService.listar(uid)}
-        mis_habilidades = {
-            str(h["habilidad"].hid): h["habilidad"].nombre
-            for h in HabilidadUsuarioService.listar_por_usuario(uid)
-        }
-        mis_empresas = {str(e["empresa"].eid) for e in EmpleoService.listar_por_usuario(uid)}
-
-        candidatos = []
-        for cand in UsuarioService.all():
-            cand_id = str(cand.uid)
-            if cand_id == str(uid) or cand_id in amigos_directos:
-                continue
-
-            cand_amigos = {str(c["usuario"].uid) for c in ConexionService.listar(cand_id)}
-            amigos_comun_ids = amigos_directos & cand_amigos
-            amigos_comun_count = len(amigos_comun_ids)
-
-            cand_habs = {
-                str(h["habilidad"].hid): h["habilidad"].nombre
-                for h in HabilidadUsuarioService.listar_por_usuario(cand_id)
-            }
-            habs_comun_ids = set(mis_habilidades.keys()) & set(cand_habs.keys())
-            habs_comun_count = len(habs_comun_ids)
-
-            cand_emps = {str(e["empresa"].eid) for e in EmpleoService.listar_por_usuario(cand_id)}
-            emps_comun_ids = mis_empresas & cand_emps
-            emps_comun_count = len(emps_comun_ids)
-
-            score = (amigos_comun_count * 4) + (habs_comun_count * 2) + (emps_comun_count * 3)
-            if score > 0 or len(candidatos) < limit:
-                amigos_muestra = [
-                    u.nombre_completo for u in
-                    [UsuarioService.get(i) for i in list(amigos_comun_ids)[:3]]
-                    if u
-                ]
-                habs_muestra = [mis_habilidades[i] for i in habs_comun_ids]
-
-                motivos = []
-                if amigos_comun_count > 0:
-                    motivos.append(f"{amigos_comun_count} contacto(s) en común")
-                if habs_comun_count > 0:
-                    motivos.append(f"{habs_comun_count} habilidad(es) compartida(s)")
-                if emps_comun_count > 0:
-                    motivos.append("Misma empresa o trayectoria")
-                if not motivos:
-                    motivos.append("Miembro destacado de la red")
-
-                candidatos.append({
-                    "usuario": cand,
-                    "score": score,
-                    "amigos_comun": amigos_comun_count,
-                    "muestra_amigos": amigos_muestra,
-                    "habs_comun": habs_comun_count,
-                    "nombres_habs": habs_muestra,
-                    "emps_comun": emps_comun_count,
-                    "motivo": ", ".join(motivos),
-                })
-
-        candidatos.sort(key=lambda x: (x["score"], x["amigos_comun"], x["habs_comun"]), reverse=True)
-        return candidatos[:limit]
+        recomendaciones = []
+        for otro, score, amigos, muestra, habs, nombres_habs, emps in filas:
+            motivos = []
+            if amigos:
+                motivos.append(f"{amigos} contacto{'s' if amigos != 1 else ''} en común")
+            if habs:
+                motivos.append("1 habilidad compartida" if habs == 1 else f"{habs} habilidades compartidas")
+            if emps:
+                motivos.append("Misma empresa")
+            recomendaciones.append({
+                "usuario": Usuario.inflate(otro),
+                "score": score,
+                "amigos_comun": amigos,
+                "muestra_amigos": muestra,
+                "habs_comun": habs,
+                "nombres_habs": nombres_habs,
+                "emps_comun": emps,
+                "motivo": ", ".join(motivos),
+            })
+        return recomendaciones
 
     @staticmethod
     def recomendar_empleos(uid, limit=10):
+        """Ofertas abiertas de otras empresas, a las que no te has postulado y con habilidades en común."""
         if not uid:
             return []
 
-        u = UsuarioService.get(uid)
-        if not u:
-            return []
-
-        if is_neo4j_available() and db:
-            try:
-                cypher = """
-                MATCH (u:Usuario {uid: $uid})
-                MATCH (o:Oferta {estado: 'abierta'})
-                WHERE NOT (u)-[:POSTULA_A]->(o)
-                MATCH (o)-[r:REQUIERE]->(h:Habilidad)
-                WITH u, o, collect({hid: h.hid, nombre: h.nombre, prioridad: r.prioridad}) AS requisitos, count(h) AS total_requisitos
-                OPTIONAL MATCH (u)-[:TIENE_HABILIDAD]->(h2:Habilidad)
-                WHERE h2.hid IN [req IN requisitos | req.hid]
-                WITH u, o, requisitos, total_requisitos, collect(h2.nombre) AS habilidades_match, count(h2) AS total_match
-                WHERE total_match > 0
-                WITH o, total_requisitos, total_match, habilidades_match,
-                     round((toFloat(total_match) / toFloat(total_requisitos)) * 100, 1) AS match_pct
-                ORDER BY match_pct DESC, total_match DESC, o.fecha_publicacion DESC
-                RETURN o.oid AS oid, match_pct, total_match, total_requisitos, habilidades_match
-                LIMIT $limit
-                """
-                results, _ = db.cypher_query(cypher, {"uid": str(uid), "limit": int(limit)})
-                if results:
-                    salida = []
-                    for row in results:
-                        oferta = OfertaService.get(row[0])
-                        if oferta:
-                            empresa = PublicacionOfertaService.obtener_empresa(oferta.oid)
-                            salida.append({
-                                "oferta": oferta,
-                                "empresa": empresa,
-                                "match_porcentaje": row[1],
-                                "total_match": row[2],
-                                "total_requisitos": row[3],
-                                "habilidades_match": row[4] or [],
-                                "habilidades_faltantes": [],
-                            })
-                    if salida:
-                        return salida
-            except Exception:
-                pass
-
-        mis_habilidades = {
-            str(h["habilidad"].hid): h["habilidad"].nombre
-            for h in HabilidadUsuarioService.listar_por_usuario(uid)
-        }
-
-        recomendaciones = []
-        for oferta in OfertaService.all():
-            if oferta.estado != "abierta":
-                continue
-            if PostulacionService.ha_postulado(uid, oferta.oid):
-                continue
-
-            reqs = RequisitoOfertaService.listar_por_oferta(oferta.oid)
-            if not reqs:
-                continue
-
-            req_dict = {str(r["habilidad"].hid): r for r in reqs}
-            matches = []
-            faltantes = []
-            obligatorias_cubiertas = 0
-            total_obligatorias = 0
-
-            for hid, req in req_dict.items():
-                es_obligatoria = (req.get("prioridad") == "obligatoria")
-                if es_obligatoria:
-                    total_obligatorias += 1
-
-                if hid in mis_habilidades:
-                    matches.append(req["habilidad"].nombre)
-                    if es_obligatoria:
-                        obligatorias_cubiertas += 1
-                else:
-                    faltantes.append(req["habilidad"].nombre)
-
-            if matches:
-                pct = round((len(matches) / len(reqs)) * 100, 1)
-                empresa = PublicacionOfertaService.obtener_empresa(oferta.oid)
-                recomendaciones.append({
-                    "oferta": oferta,
-                    "empresa": empresa,
-                    "match_porcentaje": pct,
-                    "total_match": len(matches),
-                    "total_requisitos": len(reqs),
-                    "habilidades_match": matches,
-                    "habilidades_faltantes": faltantes,
-                    "obligatorias_cubiertas": obligatorias_cubiertas,
-                    "total_obligatorias": total_obligatorias,
-                })
-
-        recomendaciones.sort(
-            key=lambda x: (x["match_porcentaje"], x["obligatorias_cubiertas"], x["total_match"]),
-            reverse=True,
+        filas = consulta(
+            """
+            MATCH (u:Usuario {uid: $uid}), (o:Oferta {estado: 'abierta'})
+            WHERE NOT (u)-[:POSTULA_A]->(o) AND NOT (u)-[:ADMINISTRA]->(:Empresa)-[:PUBLICA]->(o)
+            MATCH (o)-[r:REQUIERE]->(h:Habilidad)
+            WITH u, o, r, h, EXISTS { (u)-[:TIENE_HABILIDAD]->(h) } AS la_tiene
+            WITH o,
+                 count(h) AS total_requisitos,
+                 [n IN collect(CASE WHEN la_tiene THEN h.nombre END) WHERE n IS NOT NULL] AS coinciden,
+                 [n IN collect(CASE WHEN NOT la_tiene THEN h.nombre END) WHERE n IS NOT NULL] AS faltan,
+                 count(CASE WHEN r.prioridad = 'obligatoria' THEN 1 END) AS total_obligatorias,
+                 count(CASE WHEN r.prioridad = 'obligatoria' AND la_tiene THEN 1 END) AS obligatorias_cubiertas
+            WHERE size(coinciden) > 0
+            OPTIONAL MATCH (e:Empresa)-[:PUBLICA]->(o)
+            RETURN o, e, total_requisitos, coinciden, faltan, total_obligatorias, obligatorias_cubiertas,
+                   toFloat(size(coinciden)) / total_requisitos AS proporcion
+            ORDER BY proporcion DESC, obligatorias_cubiertas DESC, o.fecha_publicacion DESC
+            LIMIT $limit
+            """,
+            uid=str(uid), limit=int(limit),
         )
-        return recomendaciones[:limit]
+        return [
+            {
+                "oferta": Oferta.inflate(oferta),
+                "empresa": Empresa.inflate(empresa) if empresa else None,
+                "match_porcentaje": round(proporcion * 100, 1),
+                "total_match": len(coinciden),
+                "total_requisitos": total_requisitos,
+                "habilidades_match": coinciden,
+                "habilidades_faltantes": faltan,
+                "obligatorias_cubiertas": obligatorias_cubiertas,
+                "total_obligatorias": total_obligatorias,
+            }
+            for oferta, empresa, total_requisitos, coinciden, faltan, total_obligatorias,
+                obligatorias_cubiertas, proporcion in filas
+        ]
 
     @staticmethod
     def recomendar_colaboradores_proyecto(pid, limit=10):
+        """Personas fuera del proyecto con habilidades de su stack o contactos dentro del equipo."""
         if not pid:
             return []
 
-        proyecto = ProyectoService.get(pid)
-        if not proyecto:
-            return []
-
-        miembros_actuales = {
-            str(m["usuario"].uid): m["usuario"]
-            for m in ParticipacionProyectoService.listar_por_proyecto(pid)
-        }
-
-        # Extraer nombres o palabras clave de tecnologias del proyecto
-        tech_val = getattr(proyecto, "tecnologias", "") or ""
-        if isinstance(tech_val, list):
-            tech_tokens = {str(t).strip().lower() for t in tech_val if str(t).strip()}
-        else:
-            tech_tokens = {t.strip().lower() for t in str(tech_val).replace(";", ",").split(",") if t.strip()}
-
-        habilidades_clave = []
-        for hab in HabilidadService.all():
-            if hab.nombre.lower() in tech_tokens or any(tk in hab.nombre.lower() for tk in tech_tokens):
-                habilidades_clave.append(hab)
-
-        hab_ids_clave = {str(h.hid): h.nombre for h in habilidades_clave}
-
-        candidatos = []
-        for usr in UsuarioService.all():
-            uid_str = str(usr.uid)
-            if uid_str in miembros_actuales:
-                continue
-
-            habs_usr = {
-                str(h["habilidad"].hid): h["habilidad"].nombre
-                for h in HabilidadUsuarioService.listar_por_usuario(uid_str)
+        filas = consulta(
+            """
+            MATCH (p:Proyecto {pid: $pid}), (u:Usuario)
+            WHERE NOT (u)-[:PARTICIPA_EN]->(p)
+            OPTIONAL MATCH (u)-[:TIENE_HABILIDAD]->(h:Habilidad)
+            WHERE any(t IN coalesce(p.tecnologias, []) WHERE toLower(h.nombre) CONTAINS toLower(t))
+            WITH p, u, collect(DISTINCT h.nombre) AS habilidades
+            OPTIONAL MATCH (u)-[:CONECTA_CON]-(m:Usuario)-[:PARTICIPA_EN]->(p)
+            WITH u, habilidades, collect(DISTINCT m.nombre + ' ' + m.apellido) AS companeros
+            WITH u, habilidades, companeros, size(habilidades) * 5 + size(companeros) * 3 AS score
+            WHERE score > 0
+            RETURN u, score, habilidades, companeros
+            ORDER BY score DESC, size(habilidades) DESC, size(companeros) DESC, u.nombre ASC
+            LIMIT $limit
+            """,
+            pid=str(pid), limit=int(limit),
+        )
+        return [
+            {
+                "usuario": Usuario.inflate(usuario),
+                "score": score,
+                "habilidades_match": habilidades,
+                "total_match": len(habilidades),
+                "conexiones_equipo": len(companeros),
+                "nombres_conexiones": companeros,
             }
-
-            match_habs = set(hab_ids_clave.keys()) & set(habs_usr.keys())
-            conexiones_usr = {str(c["usuario"].uid) for c in ConexionService.listar(uid_str)}
-            conexiones_con_equipo = conexiones_usr & set(miembros_actuales.keys())
-
-            score = (len(match_habs) * 5) + (len(conexiones_con_equipo) * 3)
-
-            nombres_coincidentes = [hab_ids_clave[hid] for hid in match_habs]
-            companeros_conectados = [
-                miembros_actuales[mid].nombre_completo
-                for mid in conexiones_con_equipo
-                if mid in miembros_actuales
-            ]
-
-            if score > 0 or not tech_tokens:
-                candidatos.append({
-                    "usuario": usr,
-                    "score": score,
-                    "habilidades_match": nombres_coincidentes,
-                    "total_match": len(match_habs),
-                    "conexiones_equipo": len(conexiones_con_equipo),
-                    "nombres_conexiones": companeros_conectados,
-                })
-
-        candidatos.sort(key=lambda x: (x["score"], x["total_match"], x["conexiones_equipo"]), reverse=True)
-        return candidatos[:limit]
+            for usuario, score, habilidades, companeros in filas
+        ]
 
     @staticmethod
     def recomendar_candidatos_para_empresa(eid, limit=10):
+        """Personas externas con habilidades pedidas en sus ofertas abiertas o contactos en la empresa."""
         if not eid:
             return []
 
-        empresa = EmpresaService.get(eid)
-        if not empresa:
-            return []
-
-        ofertas_empresa = PublicacionOfertaService.listar_por_empresa(eid)
-        req_habilidades = {}
-        for ofr in ofertas_empresa:
-            if ofr.estado == "abierta":
-                for req in RequisitoOfertaService.listar_por_oferta(ofr.oid):
-                    hid = str(req["habilidad"].hid)
-                    req_habilidades[hid] = req["habilidad"].nombre
-
-        empleados_actuales = {
-            str(emp["usuario"].uid)
-            for emp in EmpleoService.listar_por_empresa(eid)
-        }
-
-        candidatos = []
-        for usr in UsuarioService.all():
-            uid_str = str(usr.uid)
-            if uid_str in empleados_actuales:
-                continue
-
-            habs_usr = {
-                str(h["habilidad"].hid): h["habilidad"].nombre
-                for h in HabilidadUsuarioService.listar_por_usuario(uid_str)
+        filas = consulta(
+            """
+            MATCH (e:Empresa {eid: $eid})
+            OPTIONAL MATCH (e)-[:PUBLICA]->(:Oferta {estado: 'abierta'})-[:REQUIERE]->(req:Habilidad)
+            WITH e, collect(DISTINCT req) AS requeridas
+            MATCH (u:Usuario)
+            WHERE NOT EXISTS { (u)-[t:TRABAJA_EN]->(e) WHERE coalesce(t.actual, true) }
+            OPTIONAL MATCH (u)-[:TIENE_HABILIDAD]->(h:Habilidad)
+            WHERE h IN requeridas
+            WITH e, u, collect(DISTINCT h.nombre) AS habilidades
+            OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[t:TRABAJA_EN]->(e)
+            WHERE coalesce(t.actual, true)
+            WITH u, habilidades, count(DISTINCT c) AS conexiones
+            WITH u, habilidades, conexiones, size(habilidades) * 4 + conexiones * 3 AS score
+            WHERE score > 0
+            RETURN u, score, habilidades, conexiones
+            ORDER BY score DESC, size(habilidades) DESC, u.nombre ASC
+            LIMIT $limit
+            """,
+            eid=str(eid), limit=int(limit),
+        )
+        return [
+            {
+                "usuario": Usuario.inflate(usuario),
+                "score": score,
+                "total_match": len(habilidades),
+                "habilidades_match": habilidades,
+                "conexiones_internas": conexiones,
             }
-
-            matches = set(req_habilidades.keys()) & set(habs_usr.keys())
-            conexiones_usr = {str(c["usuario"].uid) for c in ConexionService.listar(uid_str)}
-            conexiones_empleados = conexiones_usr & empleados_actuales
-
-            score = (len(matches) * 4) + (len(conexiones_empleados) * 3)
-            if score > 0 or not req_habilidades:
-                candidatos.append({
-                    "usuario": usr,
-                    "score": score,
-                    "total_match": len(matches),
-                    "habilidades_match": [req_habilidades[h] for h in matches if h in req_habilidades],
-                    "conexiones_internas": len(conexiones_empleados),
-                })
-
-        candidatos.sort(key=lambda x: (x["score"], x["total_match"]), reverse=True)
-        return candidatos[:limit]
+            for usuario, score, habilidades, conexiones in filas
+        ]

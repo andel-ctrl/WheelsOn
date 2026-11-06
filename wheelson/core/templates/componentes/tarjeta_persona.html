@@ -1,0 +1,54 @@
+{% load wheelson_ui %}
+{# Tarjeta líquida de una persona. accion: conectar, invitar, solicitar, equipo, desconectar o vacío. #}
+<article class="ws-persona{% if compacta %} ws-persona--compacta{% endif %}">
+    {% include "componentes/ola_persona.html" with clase="ws-persona__ola" %}
+    <a class="ws-persona__foto" href="{% url 'core:usuario_detalle' uid=p.uid %}" tabindex="-1" aria-hidden="true">{{ p.nombre|slice:":1" }}{{ p.apellido|slice:":1" }}</a>
+    <div class="ws-persona__datos">
+        <h2 class="ws-persona__nombre"><a href="{% url 'core:usuario_detalle' uid=p.uid %}">{{ p.nombre_completo }}</a></h2>
+        <p class="ws-persona__alias">@{{ p.nombre|slugify }}.{{ p.apellido|slugify }}</p>
+        <span class="ws-persona__trazo" aria-hidden="true"></span>
+        <p class="ws-persona__cargo">{{ p.titulo_profesional|default:"Profesional" }}</p>
+        <p class="ws-persona__lugar">{{ p.ubicacion|default:"Sin ubicación" }}</p>
+    </div>
+    {% if nota %}<p class="ws-persona__nota">{{ nota }}</p>{% elif p.biografia and not compacta %}<p class="ws-persona__nota">{{ p.biografia }}</p>{% endif %}
+    <div class="ws-persona__pie">
+        <a class="ws-grado" href="{% url 'core:consultas_index' %}?tab=camino&uid1={{ current_user.uid }}&uid2={{ p.uid }}" title="Ver cómo llegar a esta persona">
+            <span>Grado de conexión <strong>{{ p.grado }}</strong></span>
+            <span class="ws-grado__marcas" aria-hidden="true">{% for llena in p.marcas %}<i{% if llena %} class="es-llena"{% endif %}></i>{% endfor %}</span>
+        </a>
+        <div class="ws-persona__acciones">
+            {% if p|editable_por:permisos %}<a class="ws-enlace ws-persona__editar" href="{% url 'core:usuario_editar' uid=p.uid %}">Editar</a>{% endif %}
+            {% if accion == "conectar" %}
+            <a class="ws-enlace ws-persona__editar" href="{% url 'core:usuario_detalle' uid=p.uid %}">Ver Perfil</a>
+            <form method="POST" action="{% url 'core:conexion_conectar' %}">
+                {% csrf_token %}
+                <input type="hidden" name="uid_destino" value="{{ p.uid }}">
+                <input type="hidden" name="mensaje" value="Hola, vi tu perfil en WheelsOn y me gustaría conectar.">
+                <button type="submit" class="ws-btn ws-btn--primario">+ Conectar</button>
+            </form>
+            {% elif accion == "invitar" %}
+            <a class="ws-enlace ws-persona__editar" href="{% url 'core:usuario_detalle' uid=p.uid %}">Ver Perfil</a>
+            <form method="POST" action="{% url 'core:proyecto_colaborador_agregar' pid=pid %}">
+                {% csrf_token %}
+                <input type="hidden" name="uid" value="{{ p.uid }}">
+                <input type="hidden" name="rol" value="Colaborador Técnico">
+                <button type="submit" class="ws-btn ws-btn--primario">Invitar</button>
+            </form>
+            {% elif accion == "solicitar" %}
+            <a class="ws-enlace ws-persona__editar" href="{% url 'core:usuario_detalle' uid=p.uid %}">Ver Perfil</a>
+            <button type="button" class="ws-btn ws-btn--primario" data-uid="{{ p.uid }}" data-nombre="{{ p.nombre_completo }}" @click="showConnectModal = true; targetUid = $el.dataset.uid; targetNombre = $el.dataset.nombre">+ Solicitar conexión</button>
+            {% elif accion == "equipo" %}
+            <a class="ws-enlace ws-persona__editar" href="{% url 'core:usuario_detalle' uid=p.uid %}">Ver Perfil</a>
+            <a class="ws-btn ws-btn--primario" href="{% url 'core:empresa_detalle' eid=eid %}?tab=gestion&amp;invitar={{ p.uid }}">Invitar al equipo</a>
+            {% elif accion == "desconectar" %}
+            <form method="POST" action="{% url 'core:conexion_desconectar' uid_origen=origen uid_destino=p.uid %}" data-confirmar="¿Desconectar a {{ p.nombre_completo }}?" onsubmit="return confirm(this.dataset.confirmar);">
+                {% csrf_token %}
+                <button type="submit" class="ws-enlace ws-persona__quitar">Desconectar</button>
+            </form>
+            <a class="ws-btn ws-btn--primario" href="{% url 'core:usuario_detalle' uid=p.uid %}">Ver Perfil {% icono "arrow-right" "regular" 15 %}</a>
+            {% else %}
+            <a class="ws-btn ws-btn--primario" href="{% url 'core:usuario_detalle' uid=p.uid %}">Ver Perfil {% icono "arrow-right" "regular" 15 %}</a>
+            {% endif %}
+        </div>
+    </div>
+</article>

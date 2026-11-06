@@ -1,321 +1,235 @@
 // ==============================================================================
-// WheelsOn - Datos Semilla Oficiales (15 Usuarios de nombres.txt)
-// Base de Datos de Grafos Neo4j 5.x
+// WheelsOn - Datos iniciales del grafo (Neo4j 5.x)
 // ==============================================================================
+// Este script es la UNICA fuente de datos de ejemplo: la app no trae datos propios.
+//
+// Requisito: ejecutar antes scripts/init_db.cypher (restricciones e indices).
+// Para recargar desde cero, descomenta la limpieza del paso 1.
+//
+// Cada usuario de ejemplo tiene su propia contrasena: ver scripts/usuarios_demo.md
+//
+// Las fechas se guardan como texto ISO (AAAA-MM-DD) porque es el formato con el
+// que neomodel, el ORM de la app, lee y escribe sus propiedades de tipo fecha.
 
-// 1. Limpieza de datos previos (opcional)
+// 1. Limpieza opcional
 // MATCH (n) DETACH DELETE n;
 
-// 2. Creacion de 15 Nodos de Usuarios (nombres.txt)
-CREATE (u1:Usuario {
-    uid: "usr_carlos001",
-    nombre: "Carlos",
-    apellido: "Calabria",
-    email: "carlos@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Senior Backend & Graph Engineer",
-    ubicacion: "Bogota, Colombia",
-    biografia: "Especialista en bases de datos de grafos, modelado Cypher y arquitectura distribuida en Python.",
-    fecha_registro: date("2026-10-01")
-})
-CREATE (u2:Usuario {
-    uid: "usr_angelo002",
-    nombre: "Angelo",
-    apellido: "Caneda",
-    email: "angelo@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Senior Backend & Distributed Systems",
-    ubicacion: "Medellin, Colombia",
-    biografia: "Ingeniero backend enfocado en microservicios de alto rendimiento, concurrencia y FastAPI.",
-    fecha_registro: date("2026-10-05")
-})
-CREATE (u3:Usuario {
-    uid: "usr_dubal003",
-    nombre: "Dubal",
-    apellido: "Aguilar",
-    email: "dubal@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Data Architect & Big Data Specialist",
-    ubicacion: "Barranquilla, Colombia",
-    biografia: "Arquitecto de datos especializado en pipelines distribuidos, Spark y almacenamiento analitico.",
-    fecha_registro: date("2026-10-08")
-})
-CREATE (u4:Usuario {
-    uid: "usr_luis004",
-    nombre: "Luis",
-    apellido: "Angel",
-    email: "luis.angel@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Fullstack Engineer & Cloud Native",
-    ubicacion: "Cali, Colombia",
-    biografia: "Desarrollador fullstack con experiencia en ecosistemas React, TypeScript, Python y despliegues en la nube.",
-    fecha_registro: date("2026-10-10")
-})
-CREATE (u5:Usuario {
-    uid: "usr_mateo005",
-    nombre: "Mateo",
-    apellido: "Cisneros",
-    email: "mateo@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Tech Lead & Graph Architect",
-    ubicacion: "Bucaramanga, Colombia",
-    biografia: "Tech Lead de WheelsOn, especialista en modelado de grafos complejos, algoritmos de recomendacion y arquitectura distribuida.",
-    fecha_registro: date("2026-10-12")
-})
-CREATE (u6:Usuario {
-    uid: "usr_juan006",
-    nombre: "Juan",
-    apellido: "Arrieta",
-    email: "juan@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "DevOps & Site Reliability Engineer",
-    ubicacion: "Cartagena, Colombia",
-    biografia: "Especialista en observabilidad, automatizacion CI/CD, clusters Kubernetes y seguridad en la nube.",
-    fecha_registro: date("2026-10-14")
-})
-CREATE (u7:Usuario {
-    uid: "usr_jeronimo007",
-    nombre: "Jeronimo",
-    apellido: "Castro",
-    email: "jeronimo@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Frontend Architect & UI/UX Specialist",
-    ubicacion: "Pereira, Colombia",
-    biografia: "Apasionado por el diseno de interfaces modernas, estetica minimalista y rendimiento web.",
-    fecha_registro: date("2026-10-15")
-})
-CREATE (u8:Usuario {
-    uid: "usr_wilson008",
-    nombre: "Wilson",
-    apellido: "Estrada",
-    email: "wilson@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Cybersecurity & Infrastructure Lead",
-    ubicacion: "Manizales, Colombia",
-    biografia: "Lider de seguridad informatica enfocado en proteccion de infraestructuras criticas y hardening.",
-    fecha_registro: date("2026-10-18")
-})
-CREATE (u9:Usuario {
-    uid: "usr_maria009",
-    nombre: "Maria",
-    apellido: "Sanchez",
-    email: "maria.sanchez@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Product Manager & Tech Strategist",
-    ubicacion: "Bogota, Colombia",
-    biografia: "Lider de producto orientada a impacto en el usuario, metodologias agiles y vision estrategica de negocio.",
-    fecha_registro: date("2026-10-20")
-})
-CREATE (u10:Usuario {
-    uid: "usr_miguel010",
-    nombre: "Miguel",
-    apellido: "Carrizosa",
-    email: "miguel@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Mobile Developer & Flutter Lead",
-    ubicacion: "Medellin, Colombia",
-    biografia: "Desarrollador de aplicaciones moviles multiplataforma con Flutter, Dart y arquitecturas offline-first.",
-    fecha_registro: date("2026-10-22")
-})
-CREATE (u11:Usuario {
-    uid: "usr_santiago011",
-    nombre: "Santiago",
-    apellido: "Vieira",
-    email: "santiago.vieira@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Database Administrator & Neo4j Expert",
-    ubicacion: "Barranquilla, Colombia",
-    biografia: "DBA con amplia trayectoria en administracion, clustering y tuning de Neo4j y PostgreSQL.",
-    fecha_registro: date("2026-10-25")
-})
-CREATE (u12:Usuario {
-    uid: "usr_jose012",
-    nombre: "Jose",
-    apellido: "Villa",
-    email: "jose@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Software Engineer & Microservices",
-    ubicacion: "Cali, Colombia",
-    biografia: "Desarrollador backend enfocado en APIs RESTful escalables, colas de mensajeria y contenedores.",
-    fecha_registro: date("2026-10-26")
-})
-CREATE (u13:Usuario {
-    uid: "usr_luisc013",
-    nombre: "Luis",
-    apellido: "Cortes",
-    email: "luis.cortes@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "QA Automation & Performance Engineer",
-    ubicacion: "Bogota, Colombia",
-    biografia: "Ingeniero de pruebas automatizadas, pruebas de carga y aseguramiento de calidad de software.",
-    fecha_registro: date("2026-10-27")
-})
-CREATE (u14:Usuario {
-    uid: "usr_santiagoa014",
-    nombre: "Santiago",
-    apellido: "Arenas",
-    email: "santiago.arenas@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Solutions Architect & Cloud DevOps",
-    ubicacion: "Medellin, Colombia",
-    biografia: "Arquitecto de soluciones en la nube con enfasis en Terraform, Serverless y alta disponibilidad.",
-    fecha_registro: date("2026-10-28")
-})
-CREATE (u15:Usuario {
-    uid: "usr_andres015",
-    nombre: "Andres",
-    apellido: "Castillo",
-    email: "andres@wheelson.com",
-    password_hash: "pbkdf2_sha256$hashed",
-    titulo_profesional: "Data Scientist & NLP Specialist",
-    ubicacion: "Bucaramanga, Colombia",
-    biografia: "Cientifico de datos enfocado en procesamiento de lenguaje natural y analitica predictiva.",
-    fecha_registro: date("2026-10-30")
-);
 
-// 3. Creacion de Nodos de Empresas
-CREATE (e1:Empresa {
-    eid: "emp_nexus01",
-    nombre: "Nexus Corp",
-    industria: "Fintech",
-    ubicacion: "Bogota, Colombia",
-    descripcion: "Empresa lider en soluciones tecnologicas financieras impulsadas por grafos.",
-    tamano: "grande"
-})
-CREATE (e2:Empresa {
-    eid: "emp_techin02",
-    nombre: "Tech Innovators",
-    industria: "Software",
-    ubicacion: "Medellin, Colombia",
-    descripcion: "Hub de investigacion y desarrollo de productos digitales avanzados.",
-    tamano: "mediana"
-})
-CREATE (e3:Empresa {
-    eid: "emp_globant03",
-    nombre: "Globant Latam",
-    industria: "Consultoria IT",
-    ubicacion: "Bogota, Colombia",
-    descripcion: "Transformacion digital y arquitectura de software de clase mundial.",
-    tamano: "grande"
-});
+// 2. Usuarios
+CREATE (:Usuario {uid: "usr_carlos001", nombre: "Carlos", apellido: "Calabria", email: "carlos@wheelson.com", password_hash: "pbkdf2_sha256$1500000$rEE1YzJfSIH6Knhj8oLMjI$ozygnxEDELZ9GML9IMlSR/qFiDkQ7lOz2XjQLfgDwBs=", rol: "usuario", titulo_profesional: "Senior Backend & Graph Engineer", ubicacion: "Bogota, Colombia", biografia: "Especialista en bases de datos de grafos, modelado Cypher y arquitectura distribuida en Python.", fecha_registro: "2026-10-01"});
+CREATE (:Usuario {uid: "usr_angelo002", nombre: "Angelo", apellido: "Caneda", email: "angelo@wheelson.com", password_hash: "pbkdf2_sha256$1500000$MTIiRjKFWVyn3946Hjsyb1$H722BJY6PRmDpHeaaH+lkOFSoRNddHw/I7eF0FRbe/o=", rol: "usuario", titulo_profesional: "Senior Backend & Distributed Systems", ubicacion: "Medellin, Colombia", biografia: "Ingeniero backend enfocado en microservicios de alto rendimiento, concurrencia y FastAPI.", fecha_registro: "2026-10-05"});
+CREATE (:Usuario {uid: "usr_dubal003", nombre: "Dubal", apellido: "Aguilar", email: "dubal@wheelson.com", password_hash: "pbkdf2_sha256$1500000$3W7ki7oGYxBGk6Lpo0Ib3p$vTqzOgoet9GWjylqdAsjEVAbFWHSzrl5+8VW8M8kuXw=", rol: "usuario", titulo_profesional: "Data Architect & Big Data Specialist", ubicacion: "Barranquilla, Colombia", biografia: "Arquitecto de datos especializado en pipelines distribuidos, Spark y almacenamiento analitico.", fecha_registro: "2026-10-08"});
+CREATE (:Usuario {uid: "usr_luis004", nombre: "Luis", apellido: "Angel", email: "luis.angel@wheelson.com", password_hash: "pbkdf2_sha256$1500000$WMrbNSt4I6CAuPlRl44aPJ$NExgE3SOY2PD1IWyqu8SZ1Z09drLZP2gY2h9sf8BSwI=", rol: "usuario", titulo_profesional: "Fullstack Engineer & Cloud Native", ubicacion: "Cali, Colombia", biografia: "Desarrollador fullstack con experiencia en ecosistemas React, TypeScript, Python y despliegues en la nube.", fecha_registro: "2026-10-10"});
+CREATE (:Usuario {uid: "usr_mateo005", nombre: "Mateo", apellido: "Cisneros", email: "mateo@wheelson.com", password_hash: "pbkdf2_sha256$1500000$3KIsJ3JHLWKJHbJXdlW6p5$eYIUsWP2chXikQFoWpAJe0mck7fEPzEqtkD64RWl4kk=", rol: "usuario", titulo_profesional: "Tech Lead & Graph Architect", ubicacion: "Bucaramanga, Colombia", biografia: "Tech Lead de WheelsOn, especialista en modelado de grafos complejos, algoritmos de recomendación y arquitectura distribuida.", fecha_registro: "2026-10-12"});
+CREATE (:Usuario {uid: "usr_juan006", nombre: "Juan", apellido: "Arrieta", email: "juan@wheelson.com", password_hash: "pbkdf2_sha256$1500000$Bt1LE8xpxl0gOMW862QIXq$ZQ6ETbXs/ntI+yFUJ1cXkdpUMv/8bSj5ITi6YQ83ZsI=", rol: "usuario", titulo_profesional: "DevOps & Site Reliability Engineer", ubicacion: "Cartagena, Colombia", biografia: "Especialista en observabilidad, automatizacion CI/CD, clusters Kubernetes y seguridad en la nube.", fecha_registro: "2026-10-14"});
+CREATE (:Usuario {uid: "usr_jeronimo007", nombre: "Jeronimo", apellido: "Castro", email: "jeronimo@wheelson.com", password_hash: "pbkdf2_sha256$1500000$lnz9MI4jp4tD27hXlvdQZ4$XgXjZDZLVJd3UnSFXJdBCHCdznV/eiEKecXutxt/8b0=", rol: "usuario", titulo_profesional: "Frontend Architect & UI/UX Specialist", ubicacion: "Pereira, Colombia", biografia: "Apasionado por el diseño de interfaces modernas, estetica minimalista y rendimiento web.", fecha_registro: "2026-10-15"});
+CREATE (:Usuario {uid: "usr_wilson008", nombre: "Wilson", apellido: "Estrada", email: "wilson@wheelson.com", password_hash: "pbkdf2_sha256$1500000$wBjcs1wTOZZnugCjtwmGQu$XQAxq3SPXVXh5+gfiK3xC0mwcjP5D3P/MeJOzVtBNDw=", rol: "admin", titulo_profesional: "Cybersecurity & Infrastructure Lead", ubicacion: "Manizales, Colombia", biografia: "Líder de seguridad informatica enfocado en proteccion de infraestructuras criticas y hardening.", fecha_registro: "2026-10-18"});
+CREATE (:Usuario {uid: "usr_maria009", nombre: "Maria", apellido: "Sanchez", email: "maria.sanchez@wheelson.com", password_hash: "pbkdf2_sha256$1500000$dl7ysOtJEm7AHfbopCfpBl$R8Isa5qJgA66fmUC/o6YpIJ7DEQLZROH3gXTHINdlSE=", rol: "usuario", titulo_profesional: "Product Manager & Tech Strategist", ubicacion: "Bogota, Colombia", biografia: "Líder de producto orientada a impacto en el usuario, metodologias agiles y vision estrategica de negocio.", fecha_registro: "2026-10-20"});
+CREATE (:Usuario {uid: "usr_miguel010", nombre: "Miguel", apellido: "Carrizosa", email: "miguel@wheelson.com", password_hash: "pbkdf2_sha256$1500000$dUNTNJI9sup7FMUXVaEebN$QD0QlQ+PG4AjZmNjh0NWp8bn2QeSH++hAJprw65RdBo=", rol: "usuario", titulo_profesional: "Mobile Developer & Flutter Lead", ubicacion: "Medellin, Colombia", biografia: "Desarrollador de aplicaciones moviles multiplataforma con Flutter, Dart y arquitecturas offline-first.", fecha_registro: "2026-10-22"});
+CREATE (:Usuario {uid: "usr_santiago011", nombre: "Santiago", apellido: "Vieira", email: "santiago.vieira@wheelson.com", password_hash: "pbkdf2_sha256$1500000$tkjCcuuZqg8ZalgifWRDlg$gNmzoxDAbRDK+BVI/b7sXhdGak5r8ov97pAxDFO06ag=", rol: "usuario", titulo_profesional: "Database Administrator & Neo4j Expert", ubicacion: "Barranquilla, Colombia", biografia: "DBA con amplia trayectoria en administracion, clustering y tuning de Neo4j y PostgreSQL.", fecha_registro: "2026-10-25"});
+CREATE (:Usuario {uid: "usr_jose012", nombre: "Jose", apellido: "Villa", email: "jose@wheelson.com", password_hash: "pbkdf2_sha256$1500000$2GGh59rNhqzOWFSb3MZMQh$4iG1L7a9zlapSjvjnrSY7ieXDis1sYzJ+2xFKeLDsFg=", rol: "usuario", titulo_profesional: "Software Engineer & Microservices", ubicacion: "Cali, Colombia", biografia: "Desarrollador backend enfocado en APIs RESTful escalables, colas de mensajeria y contenedores.", fecha_registro: "2026-10-26"});
+CREATE (:Usuario {uid: "usr_luisc013", nombre: "Luis", apellido: "Cortes", email: "luis.cortes@wheelson.com", password_hash: "pbkdf2_sha256$1500000$KCgzeLaAvkITjyY3nGha5B$DNxjIp4whxLbSznaHpT4hH0vENSvL2gIpk3ZM8AIKsE=", rol: "usuario", titulo_profesional: "QA Automation & Performance Engineer", ubicacion: "Bogota, Colombia", biografia: "Ingeniero de pruebas automatizadas, pruebas de carga y aseguramiento de calidad de software.", fecha_registro: "2026-10-27"});
+CREATE (:Usuario {uid: "usr_santiagoa014", nombre: "Santiago", apellido: "Arenas", email: "santiago.arenas@wheelson.com", password_hash: "pbkdf2_sha256$1500000$VjobDPKLbWCimFbF1DHZnJ$R+t0TdQjLnEzqAjt8Jlp84AZRGDOfwe8tONBN1Ss4Ug=", rol: "usuario", titulo_profesional: "Solutions Architect & Cloud DevOps", ubicacion: "Medellin, Colombia", biografia: "Arquitecto de soluciones en la nube con enfasis en Terraform, Serverless y alta disponibilidad.", fecha_registro: "2026-10-28"});
+CREATE (:Usuario {uid: "usr_andres015", nombre: "Andres", apellido: "Castillo", email: "andres@wheelson.com", password_hash: "pbkdf2_sha256$1500000$lOXjAHwWiY3CChtcqA5AMO$eILzD2A98yuYdsBmoPC2e3EqVu7vw9UURCpMWyuu/gE=", rol: "usuario", titulo_profesional: "Data Scientist & NLP Specialist", ubicacion: "Bucaramanga, Colombia", biografia: "Cientifico de datos enfocado en procesamiento de lenguaje natural y analitica predictiva.", fecha_registro: "2026-10-30"});
 
-// 4. Creacion de Habilidades
-CREATE (h1:Habilidad {hid: "hab_py01", nombre: "Python", categoria: "tecnica", descripcion: "Lenguaje principal backend y analitica."})
-CREATE (h2:Habilidad {hid: "hab_neo02", nombre: "Neo4j", categoria: "tecnica", descripcion: "Base de datos orientada a grafos y motor Bolt."})
-CREATE (h3:Habilidad {hid: "hab_cyp03", nombre: "Cypher", categoria: "tecnica", descripcion: "Lenguaje de consulta declarativo sobre grafos."})
-CREATE (h4:Habilidad {hid: "hab_doc04", nombre: "Docker", categoria: "tecnica", descripcion: "Contenerizacion y microservicios."})
-CREATE (h5:Habilidad {hid: "hab_lid05", nombre: "Liderazgo", categoria: "blanda", descripcion: "Gestion de equipos tecnicos y coordinacion."})
-CREATE (h6:Habilidad {hid: "hab_ing06", nombre: "Ingles Tecnico", categoria: "idioma", descripcion: "Comunicacion fluida internacional."})
-CREATE (h7:Habilidad {hid: "hab_rea07", nombre: "React", categoria: "tecnica", descripcion: "Interfaces de usuario web modernas."})
-CREATE (h8:Habilidad {hid: "hab_ts08", nombre: "TypeScript", categoria: "tecnica", descripcion: "JavaScript tipado estaticamente."})
-CREATE (h9:Habilidad {hid: "hab_ml09", nombre: "Machine Learning", categoria: "tecnica", descripcion: "Modelos predictivos y embeddings."})
-CREATE (h10:Habilidad {hid: "hab_aws10", nombre: "AWS Cloud", categoria: "tecnica", descripcion: "Infraestructura cloud y servicios gestionados."})
-CREATE (h11:Habilidad {hid: "hab_k8s11", nombre: "Kubernetes", categoria: "tecnica", descripcion: "Orquestacion de contenedores en cluster."})
-CREATE (h12:Habilidad {hid: "hab_sql12", nombre: "PostgreSQL", categoria: "tecnica", descripcion: "Motor relacional y datos estructurados."});
+// 3. Empresas
+CREATE (:Empresa {eid: "emp_nexus01", nombre: "Nexus Corp", industria: "Fintech", ubicacion: "Bogota, Colombia", descripcion: "Empresa líder en soluciones tecnológicas financieras impulsadas por grafos.", tamano: "grande"});
+CREATE (:Empresa {eid: "emp_techin02", nombre: "Tech Innovators", industria: "Software", ubicacion: "Medellin, Colombia", descripcion: "Hub de investigación y desarrollo de productos digitales avanzados.", tamano: "mediana"});
+CREATE (:Empresa {eid: "emp_globant03", nombre: "Globant Latam", industria: "Consultoria IT", ubicacion: "Bogota, Colombia", descripcion: "Transformacion digital y arquitectura de software de clase mundial.", tamano: "grande"});
 
-// 5. Creacion de Proyectos
-CREATE (p1:Proyecto {
-    pid: "proy_graph01",
-    nombre: "Motor de Grafos WheelsOn",
-    descripcion: "Plataforma de investigacion y desarrollo para navegacion y analisis de redes complejas.",
-    estado: "activo",
-    fecha_inicio: date("2026-10-01"),
-    tecnologias: ["Python", "Django", "Neo4j", "Cypher", "Vis.js"]
-})
-CREATE (p2:Proyecto {
-    pid: "proy_fintech02",
-    nombre: "Plataforma Fintech AI",
-    descripcion: "Deteccion de patrones anomalos y analisis de comunidades en redes de pago.",
-    estado: "activo",
-    fecha_inicio: date("2026-09-01"),
-    tecnologias: ["Python", "Docker", "Neo4j", "Machine Learning"]
-});
+// 4. Habilidades
+CREATE (:Habilidad {hid: "hab_py01", nombre: "Python", categoria: "tecnica", descripcion: "Lenguaje principal de desarrollo backend y analitica."});
+CREATE (:Habilidad {hid: "hab_neo02", nombre: "Neo4j", categoria: "tecnica", descripcion: "Base de datos orientada a grafos y motor Bolt."});
+CREATE (:Habilidad {hid: "hab_cyp03", nombre: "Cypher", categoria: "tecnica", descripcion: "Lenguaje declarativo de consulta sobre nodos y aristas."});
+CREATE (:Habilidad {hid: "hab_doc04", nombre: "Docker", categoria: "tecnica", descripcion: "Contenerizacion y despliegue de microservicios."});
+CREATE (:Habilidad {hid: "hab_lid05", nombre: "Liderazgo", categoria: "blanda", descripcion: "Gestion de equipos de alto rendimiento y coordinacion."});
+CREATE (:Habilidad {hid: "hab_ing06", nombre: "Ingles Tecnico", categoria: "idioma", descripcion: "Comunicacion fluida en entornos internacionales."});
+CREATE (:Habilidad {hid: "hab_rea07", nombre: "React", categoria: "tecnica", descripcion: "Libreria declarativa para interfaces de usuario modernas."});
+CREATE (:Habilidad {hid: "hab_ts08", nombre: "TypeScript", categoria: "tecnica", descripcion: "Superconjunto tipado de JavaScript para aplicaciones robustas."});
+CREATE (:Habilidad {hid: "hab_ml09", nombre: "Machine Learning", categoria: "tecnica", descripcion: "Modelos estadisticos, prediccion y embeddings."});
+CREATE (:Habilidad {hid: "hab_aws10", nombre: "AWS Cloud", categoria: "tecnica", descripcion: "Infraestructura, computo distribuido y storage en la nube."});
+CREATE (:Habilidad {hid: "hab_k8s11", nombre: "Kubernetes", categoria: "tecnica", descripcion: "Orquestacion de contenedores en clusters de produccion."});
+CREATE (:Habilidad {hid: "hab_sql12", nombre: "PostgreSQL", categoria: "tecnica", descripcion: "Base de datos relacional y soporte de extensiones avanzadas."});
 
-// 6. Creacion de Ofertas
-CREATE (o1:Oferta {
-    oid: "ofr_dataeng01",
-    titulo: "Senior Data Engineer",
-    descripcion: "Buscamos especialista en modelos de grafos para optimizar almacenamiento y consultas analiticas.",
-    salario_min: 8000000.0,
-    salario_max: 12000000.0,
-    modalidad: "remoto",
-    ubicacion: "Colombia",
-    estado: "abierta"
-})
-CREATE (o2:Oferta {
-    oid: "ofr_arch02",
-    titulo: "Lead Graph Architect",
-    descripcion: "Liderazgo en diseno de ontologias de grafos y algoritmos de recomendacion colaborativa.",
-    salario_min: 14000000.0,
-    salario_max: 18000000.0,
-    modalidad: "hibrido",
-    ubicacion: "Bogota",
-    estado: "abierta"
-});
+// 5. Proyectos
+CREATE (:Proyecto {pid: "proy_graph01", nombre: "Motor de Grafos WheelsOn", descripcion: "Plataforma de investigación y desarrollo para navegación y análisis de redes complejas.", estado: "activo", fecha_inicio: "2026-10-01", tecnologias: ["Python", "Django", "Neo4j", "Cypher", "Vis.js"]});
+CREATE (:Proyecto {pid: "proy_fintech02", nombre: "Plataforma Fintech AI", descripcion: "Detección de patrones anómalos y análisis de comunidades en redes de pago.", estado: "activo", fecha_inicio: "2026-09-01", tecnologias: ["Python", "Docker", "Neo4j", "Machine Learning"]});
+CREATE (:Proyecto {pid: "proy_talento03", nombre: "Recomendador de Talento", descripcion: "Motor que cruza habilidades y conexiones para sugerir candidatos a empleos abiertos.", estado: "activo", fecha_inicio: "2026-10-20", tecnologias: ["Python", "Neo4j", "React"]});
 
-// 7. Relaciones de Conexión Mutua [:CONECTA_CON]
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u2:Usuario {uid: "usr_angelo002"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u2);
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u3:Usuario {uid: "usr_dubal003"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u3);
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u4:Usuario {uid: "usr_luis004"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u4);
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u5:Usuario {uid: "usr_mateo005"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u5);
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u7:Usuario {uid: "usr_jeronimo007"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u7);
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u8:Usuario {uid: "usr_wilson008"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u8);
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u9:Usuario {uid: "usr_maria009"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u9);
-MATCH (u1:Usuario {uid: "usr_carlos001"}), (u11:Usuario {uid: "usr_santiago011"}) CREATE (u1)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u11);
+// 6. Ofertas
+CREATE (:Oferta {oid: "ofr_dataeng01", cupos: 1, titulo: "Senior Data Engineer", descripcion: "Buscamos especialista en modelos de grafos para optimizar almacenamiento y consultas analiticas.", salario_min: 8000000.0, salario_max: 12000000.0, modalidad: "remoto", ubicacion: "Colombia", estado: "abierta", fecha_publicacion: "2026-11-01"});
+CREATE (:Oferta {oid: "ofr_arch02", cupos: 2, titulo: "Lead Graph Architect", descripcion: "Liderazgo en diseño de ontologías de grafos y algoritmos de recomendación colaborativa.", salario_min: 14000000.0, salario_max: 18000000.0, modalidad: "hibrido", ubicacion: "Bogota", estado: "abierta", fecha_publicacion: "2026-11-02"});
 
-MATCH (u2:Usuario {uid: "usr_angelo002"}), (u3:Usuario {uid: "usr_dubal003"}) CREATE (u2)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u3);
-MATCH (u2:Usuario {uid: "usr_angelo002"}), (u6:Usuario {uid: "usr_juan006"}) CREATE (u2)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u6);
-MATCH (u2:Usuario {uid: "usr_angelo002"}), (u12:Usuario {uid: "usr_jose012"}) CREATE (u2)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u12);
+// 7. Conexiones profesionales [:CONECTA_CON]
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_carlos001"}) CREATE (a)-[:CONECTA_CON {mensaje: "Gran colaboración en el motor de grafos y arquitectura backend.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_angelo002"}) CREATE (a)-[:CONECTA_CON {mensaje: "Revisemos la integracion de los endpoints y microservicios.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_dubal003"}) CREATE (a)-[:CONECTA_CON {mensaje: "Excelente avance en el pipeline de datos y particionado.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_luis004"}) CREATE (a)-[:CONECTA_CON {mensaje: "El frontend reactivo de WheelsOn quedo impecable.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_jeronimo007"}) CREATE (a)-[:CONECTA_CON {mensaje: "La estetica y usabilidad de la plataforma esta genial.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_wilson008"}) CREATE (a)-[:CONECTA_CON {mensaje: "Revisemos las politicas de seguridad del cluster.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_maria009"}) CREATE (a)-[:CONECTA_CON {mensaje: "Alineemos los entregables tecnicos del próximo sprint.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_santiago011"}) CREATE (a)-[:CONECTA_CON {mensaje: "Optimizamos los indices y restricciones en Neo4j.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Usuario {uid: "usr_andres015"}) CREATE (a)-[:CONECTA_CON {mensaje: "Comparativa de embeddings de nodos relacionales finalizada.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Usuario {uid: "usr_angelo002"}) CREATE (a)-[:CONECTA_CON {mensaje: "Gran debate sobre concurrencia y FastAPI.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Usuario {uid: "usr_dubal003"}) CREATE (a)-[:CONECTA_CON {mensaje: "Excelente debate sobre particionado en grafos distribuidos.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Usuario {uid: "usr_luis004"}) CREATE (a)-[:CONECTA_CON {mensaje: "El frontend reactivo de WheelsOn quedo impecable.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Usuario {uid: "usr_santiago011"}) CREATE (a)-[:CONECTA_CON {mensaje: "Optimizamos los indices y restricciones en Neo4j.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Usuario {uid: "usr_dubal003"}) CREATE (a)-[:CONECTA_CON {mensaje: "Conectemos el pipeline de ingestion con los microservicios.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Usuario {uid: "usr_juan006"}) CREATE (a)-[:CONECTA_CON {mensaje: "Listo el manifiesto de despliegue en Kubernetes.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Usuario {uid: "usr_jose012"}) CREATE (a)-[:CONECTA_CON {mensaje: "Estandaricemos las interfaces de la API.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Usuario {uid: "usr_santiago011"}) CREATE (a)-[:CONECTA_CON {mensaje: "Validemos las particiones de la base de datos.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Usuario {uid: "usr_andres015"}) CREATE (a)-[:CONECTA_CON {mensaje: "El dataset analitico ya esta limpio y normalizado.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_jeronimo007"}), (b:Usuario {uid: "usr_luis004"}) CREATE (a)-[:CONECTA_CON {mensaje: "Integracion fluida de los componentes Alpine.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_jeronimo007"}), (b:Usuario {uid: "usr_miguel010"}) CREATE (a)-[:CONECTA_CON {mensaje: "Compartamos el sistema de diseño para mobile.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_jeronimo007"}), (b:Usuario {uid: "usr_maria009"}) CREATE (a)-[:CONECTA_CON {mensaje: "Feedback de experiencia de usuario implementado.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Usuario {uid: "usr_miguel010"}) CREATE (a)-[:CONECTA_CON {mensaje: "Unificando endpoints para la app y la web.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Usuario {uid: "usr_luisc013"}) CREATE (a)-[:CONECTA_CON {mensaje: "Listos los tests e2e para el flujo de publicación.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_juan006"}), (b:Usuario {uid: "usr_wilson008"}) CREATE (a)-[:CONECTA_CON {mensaje: "Auditoria de red interna aprobada sin hallazgos.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_juan006"}), (b:Usuario {uid: "usr_santiagoa014"}) CREATE (a)-[:CONECTA_CON {mensaje: "Infraestructura como código en Terraform desplegada.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_juan006"}), (b:Usuario {uid: "usr_luisc013"}) CREATE (a)-[:CONECTA_CON {mensaje: "Pipeline de pruebas automatizadas integrado en CI/CD.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_wilson008"}), (b:Usuario {uid: "usr_santiagoa014"}) CREATE (a)-[:CONECTA_CON {mensaje: "Configuracion de VPC y grupos de seguridad lista.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_maria009"}), (b:Usuario {uid: "usr_santiagoa014"}) CREATE (a)-[:CONECTA_CON {mensaje: "Estimacion de costos de infraestructura aprobada.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_jose012"}), (b:Usuario {uid: "usr_luisc013"}) CREATE (a)-[:CONECTA_CON {mensaje: "Casos de prueba de regresion ejecutados al 100%.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
+MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Usuario {uid: "usr_jose012"}) CREATE (a)-[:CONECTA_CON {mensaje: "Pool de conexiones a base de datos ajustado.", estado: "aceptada", fecha: "2026-11-01"}]->(b);
 
-MATCH (u3:Usuario {uid: "usr_dubal003"}), (u11:Usuario {uid: "usr_santiago011"}) CREATE (u3)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u11);
-MATCH (u3:Usuario {uid: "usr_dubal003"}), (u15:Usuario {uid: "usr_andres015"}) CREATE (u3)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u15);
+// 8. Experiencia laboral [:TRABAJA_EN]
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Empresa {eid: "emp_nexus01"}) CREATE (a)-[:TRABAJA_EN {cargo: "Tech Lead & Graph Architect", fecha_inicio: "2024-01-15", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Empresa {eid: "emp_nexus01"}) CREATE (a)-[:TRABAJA_EN {cargo: "Senior Backend & Graph Engineer", fecha_inicio: "2024-02-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Empresa {eid: "emp_techin02"}) CREATE (a)-[:TRABAJA_EN {cargo: "Senior Backend Engineer", fecha_inicio: "2023-03-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Empresa {eid: "emp_globant03"}) CREATE (a)-[:TRABAJA_EN {cargo: "Principal Data Architect", fecha_inicio: "2022-06-10", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Empresa {eid: "emp_techin02"}) CREATE (a)-[:TRABAJA_EN {cargo: "Fullstack Developer", fecha_inicio: "2023-08-15", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_juan006"}), (b:Empresa {eid: "emp_globant03"}) CREATE (a)-[:TRABAJA_EN {cargo: "DevOps & SRE Lead", fecha_inicio: "2023-01-10", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_jeronimo007"}), (b:Empresa {eid: "emp_nexus01"}) CREATE (a)-[:TRABAJA_EN {cargo: "Frontend Architect", fecha_inicio: "2023-11-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_wilson008"}), (b:Empresa {eid: "emp_techin02"}) CREATE (a)-[:TRABAJA_EN {cargo: "Cybersecurity Specialist", fecha_inicio: "2022-09-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_maria009"}), (b:Empresa {eid: "emp_globant03"}) CREATE (a)-[:TRABAJA_EN {cargo: "Senior Product Manager", fecha_inicio: "2023-04-15", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_miguel010"}), (b:Empresa {eid: "emp_techin02"}) CREATE (a)-[:TRABAJA_EN {cargo: "Mobile Tech Lead", fecha_inicio: "2023-10-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Empresa {eid: "emp_nexus01"}) CREATE (a)-[:TRABAJA_EN {cargo: "Senior Database Administrator", fecha_inicio: "2023-05-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_jose012"}), (b:Empresa {eid: "emp_techin02"}) CREATE (a)-[:TRABAJA_EN {cargo: "Backend Software Engineer", fecha_inicio: "2024-03-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_luisc013"}), (b:Empresa {eid: "emp_globant03"}) CREATE (a)-[:TRABAJA_EN {cargo: "QA Automation Lead", fecha_inicio: "2023-07-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_santiagoa014"}), (b:Empresa {eid: "emp_nexus01"}) CREATE (a)-[:TRABAJA_EN {cargo: "Solutions Architect", fecha_inicio: "2023-12-01", actual: true}]->(b);
+MATCH (a:Usuario {uid: "usr_andres015"}), (b:Empresa {eid: "emp_globant03"}) CREATE (a)-[:TRABAJA_EN {cargo: "Data Scientist", fecha_inicio: "2024-04-01", actual: true}]->(b);
 
-MATCH (u7:Usuario {uid: "usr_jeronimo007"}), (u4:Usuario {uid: "usr_luis004"}) CREATE (u7)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u4);
-MATCH (u7:Usuario {uid: "usr_jeronimo007"}), (u10:Usuario {uid: "usr_miguel010"}) CREATE (u7)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u10);
-MATCH (u7:Usuario {uid: "usr_jeronimo007"}), (u9:Usuario {uid: "usr_maria009"}) CREATE (u7)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u9);
+// 9. Habilidades de cada usuario [:TIENE_HABILIDAD]
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 7}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Habilidad {hid: "hab_neo02"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Habilidad {hid: "hab_cyp03"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Habilidad {hid: "hab_lid05"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 6}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Habilidad {hid: "hab_ml09"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Habilidad {hid: "hab_doc04"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 7}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Habilidad {hid: "hab_neo02"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Habilidad {hid: "hab_cyp03"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Habilidad {hid: "hab_doc04"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 6}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Habilidad {hid: "hab_doc04"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Habilidad {hid: "hab_sql12"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Habilidad {hid: "hab_cyp03"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "intermedio", anios_experiencia: 3}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Habilidad {hid: "hab_neo02"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Habilidad {hid: "hab_aws10"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Habilidad {hid: "hab_rea07"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Habilidad {hid: "hab_ts08"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "intermedio", anios_experiencia: 3}]->(b);
+MATCH (a:Usuario {uid: "usr_juan006"}), (b:Habilidad {hid: "hab_doc04"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 6}]->(b);
+MATCH (a:Usuario {uid: "usr_juan006"}), (b:Habilidad {hid: "hab_k8s11"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_juan006"}), (b:Habilidad {hid: "hab_aws10"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_jeronimo007"}), (b:Habilidad {hid: "hab_rea07"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_jeronimo007"}), (b:Habilidad {hid: "hab_ts08"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_wilson008"}), (b:Habilidad {hid: "hab_doc04"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_wilson008"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_maria009"}), (b:Habilidad {hid: "hab_lid05"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 8}]->(b);
+MATCH (a:Usuario {uid: "usr_maria009"}), (b:Habilidad {hid: "hab_ing06"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 6}]->(b);
+MATCH (a:Usuario {uid: "usr_miguel010"}), (b:Habilidad {hid: "hab_ts08"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_miguel010"}), (b:Habilidad {hid: "hab_rea07"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "intermedio", anios_experiencia: 3}]->(b);
+MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Habilidad {hid: "hab_neo02"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 7}]->(b);
+MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Habilidad {hid: "hab_cyp03"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 6}]->(b);
+MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Habilidad {hid: "hab_sql12"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 5}]->(b);
+MATCH (a:Usuario {uid: "usr_jose012"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_jose012"}), (b:Habilidad {hid: "hab_doc04"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "intermedio", anios_experiencia: 3}]->(b);
+MATCH (a:Usuario {uid: "usr_luisc013"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_luisc013"}), (b:Habilidad {hid: "hab_doc04"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "intermedio", anios_experiencia: 3}]->(b);
+MATCH (a:Usuario {uid: "usr_santiagoa014"}), (b:Habilidad {hid: "hab_aws10"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 6}]->(b);
+MATCH (a:Usuario {uid: "usr_santiagoa014"}), (b:Habilidad {hid: "hab_k8s11"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
+MATCH (a:Usuario {uid: "usr_andres015"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "experto", anios_experiencia: 6}]->(b);
+MATCH (a:Usuario {uid: "usr_andres015"}), (b:Habilidad {hid: "hab_ml09"}) CREATE (a)-[:TIENE_HABILIDAD {nivel: "avanzado", anios_experiencia: 4}]->(b);
 
-MATCH (u4:Usuario {uid: "usr_luis004"}), (u10:Usuario {uid: "usr_miguel010"}) CREATE (u4)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u10);
-MATCH (u4:Usuario {uid: "usr_luis004"}), (u13:Usuario {uid: "usr_luisc013"}) CREATE (u4)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u13);
+// 10. Participacion en proyectos [:PARTICIPA_EN]
+MATCH (a:Usuario {uid: "usr_mateo005"}), (b:Proyecto {pid: "proy_graph01"}) CREATE (a)-[:PARTICIPA_EN {rol: "Tech Director & Lead Architect", fecha_inicio: "2026-10-01", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Proyecto {pid: "proy_graph01"}) CREATE (a)-[:PARTICIPA_EN {rol: "Senior Graph Engineer", fecha_inicio: "2026-10-01", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_angelo002"}), (b:Proyecto {pid: "proy_graph01"}) CREATE (a)-[:PARTICIPA_EN {rol: "Backend Lead", fecha_inicio: "2026-10-05", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_jeronimo007"}), (b:Proyecto {pid: "proy_graph01"}) CREATE (a)-[:PARTICIPA_EN {rol: "Frontend Architect", fecha_inicio: "2026-10-10", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Proyecto {pid: "proy_graph01"}) CREATE (a)-[:PARTICIPA_EN {rol: "Fullstack Developer", fecha_inicio: "2026-10-12", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Proyecto {pid: "proy_graph01"}) CREATE (a)-[:PARTICIPA_EN {rol: "Database DBA", fecha_inicio: "2026-10-15", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Proyecto {pid: "proy_fintech02"}) CREATE (a)-[:PARTICIPA_EN {rol: "Data Architect", fecha_inicio: "2026-09-05", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_andres015"}), (b:Proyecto {pid: "proy_fintech02"}) CREATE (a)-[:PARTICIPA_EN {rol: "Lead Data Scientist", fecha_inicio: "2026-09-10", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_carlos001"}), (b:Proyecto {pid: "proy_talento03"}) CREATE (a)-[:PARTICIPA_EN {rol: "Graph Engineer", fecha_inicio: "2026-10-20", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Proyecto {pid: "proy_talento03"}) CREATE (a)-[:PARTICIPA_EN {rol: "Data Architect", fecha_inicio: "2026-10-20", activo: true}]->(b);
+MATCH (a:Usuario {uid: "usr_miguel010"}), (b:Proyecto {pid: "proy_talento03"}) CREATE (a)-[:PARTICIPA_EN {rol: "Frontend Developer", fecha_inicio: "2026-10-25", activo: true}]->(b);
 
-MATCH (u5:Usuario {uid: "usr_mateo005"}), (u15:Usuario {uid: "usr_andres015"}) CREATE (u5)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u15);
-MATCH (u5:Usuario {uid: "usr_mateo005"}), (u9:Usuario {uid: "usr_maria009"}) CREATE (u5)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u9);
-MATCH (u5:Usuario {uid: "usr_mateo005"}), (u11:Usuario {uid: "usr_santiago011"}) CREATE (u5)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u11);
+// 11. Publicacion de ofertas [:PUBLICA]
+MATCH (a:Empresa {eid: "emp_nexus01"}), (b:Oferta {oid: "ofr_dataeng01"}) CREATE (a)-[:PUBLICA {fecha_publicacion: "2026-11-01"}]->(b);
+MATCH (a:Empresa {eid: "emp_globant03"}), (b:Oferta {oid: "ofr_arch02"}) CREATE (a)-[:PUBLICA {fecha_publicacion: "2026-11-02"}]->(b);
 
-MATCH (u6:Usuario {uid: "usr_juan006"}), (u8:Usuario {uid: "usr_wilson008"}) CREATE (u6)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u8);
-MATCH (u6:Usuario {uid: "usr_juan006"}), (u14:Usuario {uid: "usr_santiagoa014"}) CREATE (u6)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u14);
-MATCH (u6:Usuario {uid: "usr_juan006"}), (u13:Usuario {uid: "usr_luisc013"}) CREATE (u6)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u13);
+// 12. Requisitos de ofertas [:REQUIERE]
+MATCH (a:Oferta {oid: "ofr_dataeng01"}), (b:Habilidad {hid: "hab_py01"}) CREATE (a)-[:REQUIERE {nivel_minimo: "avanzado", prioridad: "obligatoria"}]->(b);
+MATCH (a:Oferta {oid: "ofr_dataeng01"}), (b:Habilidad {hid: "hab_neo02"}) CREATE (a)-[:REQUIERE {nivel_minimo: "intermedio", prioridad: "obligatoria"}]->(b);
+MATCH (a:Oferta {oid: "ofr_dataeng01"}), (b:Habilidad {hid: "hab_aws10"}) CREATE (a)-[:REQUIERE {nivel_minimo: "intermedio", prioridad: "deseable"}]->(b);
+MATCH (a:Oferta {oid: "ofr_arch02"}), (b:Habilidad {hid: "hab_cyp03"}) CREATE (a)-[:REQUIERE {nivel_minimo: "avanzado", prioridad: "obligatoria"}]->(b);
+MATCH (a:Oferta {oid: "ofr_arch02"}), (b:Habilidad {hid: "hab_neo02"}) CREATE (a)-[:REQUIERE {nivel_minimo: "avanzado", prioridad: "obligatoria"}]->(b);
+MATCH (a:Oferta {oid: "ofr_arch02"}), (b:Habilidad {hid: "hab_lid05"}) CREATE (a)-[:REQUIERE {nivel_minimo: "avanzado", prioridad: "deseable"}]->(b);
 
-MATCH (u8:Usuario {uid: "usr_wilson008"}), (u14:Usuario {uid: "usr_santiagoa014"}) CREATE (u8)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u14);
-MATCH (u9:Usuario {uid: "usr_maria009"}), (u14:Usuario {uid: "usr_santiagoa014"}) CREATE (u9)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u14);
-MATCH (u12:Usuario {uid: "usr_jose012"}), (u13:Usuario {uid: "usr_luisc013"}) CREATE (u12)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u13);
-MATCH (u11:Usuario {uid: "usr_santiago011"}), (u12:Usuario {uid: "usr_jose012"}) CREATE (u11)-[:CONECTA_CON {estado: "aceptada", fecha: date("2026-11-01")}]->(u12);
+// 13. Postulaciones [:POSTULA_A]
+MATCH (a:Usuario {uid: "usr_dubal003"}), (b:Oferta {oid: "ofr_dataeng01"}) CREATE (a)-[:POSTULA_A {fecha: "2026-11-03", estado: "enviada", carta_presentacion: "Cuento con experiencia sólida en pipelines de datos distribuidos y grafos de conocimiento."}]->(b);
+MATCH (a:Usuario {uid: "usr_santiago011"}), (b:Oferta {oid: "ofr_arch02"}) CREATE (a)-[:POSTULA_A {fecha: "2026-11-04", estado: "revision", carta_presentacion: "Especialista en administracion y optimizacion de grafos Neo4j a gran escala."}]->(b);
 
-// 8. Relaciones Laborales [:TRABAJA_EN]
-MATCH (u:Usuario {uid: "usr_mateo005"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Tech Lead & Graph Architect", actual: true, fecha_inicio: date("2024-01-15")}]->(e);
-MATCH (u:Usuario {uid: "usr_angelo002"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Senior Backend Engineer", actual: true, fecha_inicio: date("2023-03-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_dubal003"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:TRABAJA_EN {cargo: "Principal Data Architect", actual: true, fecha_inicio: date("2022-06-10")}]->(e);
-MATCH (u:Usuario {uid: "usr_luis004"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Fullstack Developer", actual: true, fecha_inicio: date("2023-08-15")}]->(e);
-MATCH (u:Usuario {uid: "usr_carlos001"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Senior Backend & Graph Engineer", actual: true, fecha_inicio: date("2024-02-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_juan006"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:TRABAJA_EN {cargo: "DevOps & SRE Lead", actual: true, fecha_inicio: date("2023-01-10")}]->(e);
-MATCH (u:Usuario {uid: "usr_jeronimo007"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Frontend Architect", actual: true, fecha_inicio: date("2023-11-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_wilson008"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Cybersecurity Specialist", actual: true, fecha_inicio: date("2022-09-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_maria009"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:TRABAJA_EN {cargo: "Senior Product Manager", actual: true, fecha_inicio: date("2023-04-15")}]->(e);
-MATCH (u:Usuario {uid: "usr_miguel010"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Mobile Tech Lead", actual: true, fecha_inicio: date("2023-10-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_santiago011"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Senior Database Administrator", actual: true, fecha_inicio: date("2023-05-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_jose012"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:TRABAJA_EN {cargo: "Backend Software Engineer", actual: true, fecha_inicio: date("2024-03-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_luisc013"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:TRABAJA_EN {cargo: "QA Automation Lead", actual: true, fecha_inicio: date("2023-07-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_santiagoa014"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:TRABAJA_EN {cargo: "Solutions Architect", actual: true, fecha_inicio: date("2023-12-01")}]->(e);
-MATCH (u:Usuario {uid: "usr_andres015"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:TRABAJA_EN {cargo: "Data Scientist", actual: true, fecha_inicio: date("2024-04-01")}]->(e);
+// 14. Administradores de empresas [:ADMINISTRA]
+MATCH (u:Usuario {uid: "usr_mateo005"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:ADMINISTRA]->(e);
+MATCH (u:Usuario {uid: "usr_angelo002"}), (e:Empresa {eid: "emp_techin02"}) CREATE (u)-[:ADMINISTRA]->(e);
+MATCH (u:Usuario {uid: "usr_maria009"}), (e:Empresa {eid: "emp_globant03"}) CREATE (u)-[:ADMINISTRA]->(e);
 
-// 9. Publicaciones de Ofertas [:PUBLICA]
-MATCH (e:Empresa {eid: "emp_nexus01"}), (o:Oferta {oid: "ofr_dataeng01"}) CREATE (e)-[:PUBLICA {fecha_publicacion: date("2026-11-01")}]->(o);
-MATCH (e:Empresa {eid: "emp_globant03"}), (o:Oferta {oid: "ofr_arch02"}) CREATE (e)-[:PUBLICA {fecha_publicacion: date("2026-11-02")}]->(o);
+// 15. Lideres de proyectos [:LIDERA]
+MATCH (u:Usuario {uid: "usr_mateo005"}), (p:Proyecto {pid: "proy_graph01"}) CREATE (u)-[:LIDERA]->(p);
+MATCH (u:Usuario {uid: "usr_dubal003"}), (p:Proyecto {pid: "proy_fintech02"}) CREATE (u)-[:LIDERA]->(p);
+MATCH (u:Usuario {uid: "usr_carlos001"}), (p:Proyecto {pid: "proy_talento03"}) CREATE (u)-[:LIDERA]->(p);
 
-// 10. Requisitos de Ofertas [:REQUIERE]
-MATCH (o:Oferta {oid: "ofr_dataeng01"}), (h:Habilidad {hid: "hab_py01"}) CREATE (o)-[:REQUIERE {prioridad: "obligatoria", nivel_minimo: "avanzado"}]->(h);
-MATCH (o:Oferta {oid: "ofr_dataeng01"}), (h:Habilidad {hid: "hab_neo02"}) CREATE (o)-[:REQUIERE {prioridad: "obligatoria", nivel_minimo: "intermedio"}]->(h);
-MATCH (o:Oferta {oid: "ofr_dataeng01"}), (h:Habilidad {hid: "hab_aws10"}) CREATE (o)-[:REQUIERE {prioridad: "deseable", nivel_minimo: "intermedio"}]->(h);
+// 16. Solicitudes de conexion pendientes [:SOLICITA_CONEXION]: se vuelven CONECTA_CON al aceptarse
+MATCH (a:Usuario {uid: "usr_luis004"}), (b:Usuario {uid: "usr_dubal003"}) CREATE (a)-[:SOLICITA_CONEXION {mensaje: "Hola Dubal, me gustaria conectar contigo.", fecha: "2026-11-05"}]->(b);
+MATCH (a:Usuario {uid: "usr_jose012"}), (b:Usuario {uid: "usr_mateo005"}) CREATE (a)-[:SOLICITA_CONEXION {mensaje: "Mateo, me interesa tu trabajo con grafos.", fecha: "2026-11-05"}]->(b);
 
-MATCH (o:Oferta {oid: "ofr_arch02"}), (h:Habilidad {hid: "hab_cyp03"}) CREATE (o)-[:REQUIERE {prioridad: "obligatoria", nivel_minimo: "avanzado"}]->(h);
-MATCH (o:Oferta {oid: "ofr_arch02"}), (h:Habilidad {hid: "hab_neo02"}) CREATE (o)-[:REQUIERE {prioridad: "obligatoria", nivel_minimo: "avanzado"}]->(h);
-MATCH (o:Oferta {oid: "ofr_arch02"}), (h:Habilidad {hid: "hab_lid05"}) CREATE (o)-[:REQUIERE {prioridad: "deseable", nivel_minimo: "avanzado"}]->(h);
+// 17. Invitaciones pendientes a proyectos [:INVITADO_A]: se vuelven PARTICIPA_EN al aceptarse
+MATCH (u:Usuario {uid: "usr_luis004"}), (p:Proyecto {pid: "proy_fintech02"}) CREATE (u)-[:INVITADO_A {tipo: "colaborar", rol: "Backend Developer", fecha: "2026-11-05"}]->(p);
+
+// 18. Publicaciones: (:Usuario)-[:AUTOR_DE]->(:Publicacion)
+CREATE (:Publicacion {pubid: "pub_dubal01", texto: "Hoy termine de modelar las rutas de referidos en Neo4j: ahora se puede ver quien te conecta con una empresa en pocos saltos.", fecha: "2026-11-05", creada: 3.0});
+CREATE (:Publicacion {pubid: "pub_carlos02", texto: "Busco ideas para medir que tan buena es una recomendación de talento. Que métricas usarian?", fecha: "2026-11-04", creada: 2.0});
+CREATE (:Publicacion {pubid: "pub_maria03", texto: "Gran semana para el equipo: abrimos una conversacion interna sobre arquitecturas basadas en grafos.", fecha: "2026-11-03", creada: 1.0});
+MATCH (u:Usuario {uid: "usr_dubal003"}), (p:Publicacion {pubid: "pub_dubal01"}) CREATE (u)-[:AUTOR_DE]->(p);
+MATCH (u:Usuario {uid: "usr_carlos001"}), (p:Publicacion {pubid: "pub_carlos02"}) CREATE (u)-[:AUTOR_DE]->(p);
+MATCH (u:Usuario {uid: "usr_maria009"}), (p:Publicacion {pubid: "pub_maria03"}) CREATE (u)-[:AUTOR_DE]->(p);
+
+// 19. Percepcion de las publicaciones [:PERCIBE]
+MATCH (u:Usuario {uid: "usr_luis004"}), (p:Publicacion {pubid: "pub_dubal01"}) CREATE (u)-[:PERCIBE {tipo: "buena", fecha: "2026-11-05"}]->(p);
+MATCH (u:Usuario {uid: "usr_mateo005"}), (p:Publicacion {pubid: "pub_dubal01"}) CREATE (u)-[:PERCIBE {tipo: "buena", fecha: "2026-11-05"}]->(p);
+MATCH (u:Usuario {uid: "usr_carlos001"}), (p:Publicacion {pubid: "pub_dubal01"}) CREATE (u)-[:PERCIBE {tipo: "buena", fecha: "2026-11-05"}]->(p);
+MATCH (u:Usuario {uid: "usr_angelo002"}), (p:Publicacion {pubid: "pub_carlos02"}) CREATE (u)-[:PERCIBE {tipo: "buena", fecha: "2026-11-04"}]->(p);
+MATCH (u:Usuario {uid: "usr_jose012"}), (p:Publicacion {pubid: "pub_carlos02"}) CREATE (u)-[:PERCIBE {tipo: "mala", fecha: "2026-11-04"}]->(p);
+MATCH (u:Usuario {uid: "usr_dubal003"}), (p:Publicacion {pubid: "pub_maria03"}) CREATE (u)-[:PERCIBE {tipo: "buena", fecha: "2026-11-03"}]->(p);
+
+// 20. Avances de proyectos: (:Proyecto)-[:TIENE_AVANCE]->(:Avance)<-[:REGISTRA]-(:Usuario)
+CREATE (:Avance {aid: "av_graph01", texto: "Terminamos el cálculo de caminos mínimos sobre la red completa.", estado: "activo", fecha: "2026-10-20", creada: 1.0});
+CREATE (:Avance {aid: "av_graph02", texto: "Primera version del grafo interactivo funcionando con datos reales.", estado: "activo", fecha: "2026-11-02", creada: 2.0});
+CREATE (:Avance {aid: "av_fintech01", texto: "Detectamos los primeros patrones anómalos en los datos de prueba.", estado: "activo", fecha: "2026-10-28", creada: 1.0});
+MATCH (p:Proyecto {pid: "proy_graph01"}), (a:Avance {aid: "av_graph01"}), (u:Usuario {uid: "usr_mateo005"}) CREATE (p)-[:TIENE_AVANCE]->(a), (u)-[:REGISTRA]->(a);
+MATCH (p:Proyecto {pid: "proy_graph01"}), (a:Avance {aid: "av_graph02"}), (u:Usuario {uid: "usr_mateo005"}) CREATE (p)-[:TIENE_AVANCE]->(a), (u)-[:REGISTRA]->(a);
+MATCH (p:Proyecto {pid: "proy_fintech02"}), (a:Avance {aid: "av_fintech01"}), (u:Usuario {uid: "usr_dubal003"}) CREATE (p)-[:TIENE_AVANCE]->(a), (u)-[:REGISTRA]->(a);
+
+// 21. Solicitudes pendientes para unirse a un proyecto [:SOLICITA_UNIRSE]: se vuelven PARTICIPA_EN al aceptarse
+MATCH (u:Usuario {uid: "usr_jose012"}), (p:Proyecto {pid: "proy_talento03"}) CREATE (u)-[:SOLICITA_UNIRSE {fecha: "2026-11-05"}]->(p);
+
+// 22. Publicaciones a nombre de una empresa: (:Empresa)-[:AUTOR_DE]->(:Publicacion)<-[:REDACTA]-(:Usuario)
+CREATE (:Publicacion {pubid: "pub_nexus04", texto: "En Nexus estamos ampliando el equipo de datos. Pronto mas novedades sobre nuestra plataforma de grafos.", fecha: "2026-11-02", creada: 1.0});
+MATCH (e:Empresa {eid: "emp_nexus01"}), (u:Usuario {uid: "usr_mateo005"}), (p:Publicacion {pubid: "pub_nexus04"}) CREATE (e)-[:AUTOR_DE]->(p), (u)-[:REDACTA]->(p);
+MATCH (u:Usuario {uid: "usr_luis004"}), (p:Publicacion {pubid: "pub_nexus04"}) CREATE (u)-[:PERCIBE {tipo: "buena", fecha: "2026-11-03"}]->(p);
+
+// 23. Empleos por confirmar [:SOLICITA_EMPLEO]: se vuelven TRABAJA_EN cuando la empresa los acepta
+MATCH (u:Usuario {uid: "usr_jose012"}), (e:Empresa {eid: "emp_nexus01"}) CREATE (u)-[:SOLICITA_EMPLEO {cargo: "QA Engineer", actual: true, fecha: "2026-11-05"}]->(e);

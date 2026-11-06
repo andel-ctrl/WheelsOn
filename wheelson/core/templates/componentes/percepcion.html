@@ -1,0 +1,27 @@
+{% load wheelson_ui %}
+{# Percepción de una publicación: una opinión por persona, que se puede cambiar o retirar. #}
+<div class="ws-percepcion">
+    {% if p.es_mia %}
+    <span class="ws-percepcion__conteo">{% icono "seal-check" "regular" 16 %}{{ p.buenas }} buena{{ p.buenas|pluralize }}</span>
+    <span class="ws-percepcion__conteo">{% icono "x" "regular" 16 %}{{ p.malas }} mala{{ p.malas|pluralize }}</span>
+    {% else %}
+    <form method="POST" action="{% url 'core:publicacion_percibir' pubid=p.publicacion.pubid %}" class="ws-percepcion__botones">
+        {% csrf_token %}
+        <button type="submit" name="tipo" value="buena" aria-pressed="{% if p.mi_percepcion == 'buena' %}true{% else %}false{% endif %}"
+                class="ws-percepcion__btn ws-percepcion__btn--buena {% if p.mi_percepcion == 'buena' %}es-mia{% endif %}">
+            {% icono "seal-check" "regular" 16 %}Buena percepción <span class="ws-percepcion__cifra">{{ p.buenas }}</span>
+        </button>
+        <button type="submit" name="tipo" value="mala" aria-pressed="{% if p.mi_percepcion == 'mala' %}true{% else %}false{% endif %}"
+                class="ws-percepcion__btn ws-percepcion__btn--mala {% if p.mi_percepcion == 'mala' %}es-mia{% endif %}">
+            {% icono "x" "regular" 16 %}Mala percepción <span class="ws-percepcion__cifra">{{ p.malas }}</span>
+        </button>
+    </form>
+    {% endif %}
+    <span class="ws-percepcion__resumen">{% if p.total %}{{ p.pct_buena }} % la percibe bien · {{ p.total }} opini{{ p.total|pluralize:"ón,ones" }}{% else %}Sin opiniones todavía{% endif %}</span>
+    {% if p.puede_eliminar %}
+    <form method="POST" action="{% url 'core:publicacion_eliminar' pubid=p.publicacion.pubid %}" data-confirmar="¿Eliminar esta publicación?" onsubmit="return confirm(this.dataset.confirmar);" class="ws-percepcion__eliminar">
+        {% csrf_token %}
+        <button type="submit" class="ws-enlace" style="background:none;border:0;cursor:pointer;font-size:13px">Eliminar</button>
+    </form>
+    {% endif %}
+</div>

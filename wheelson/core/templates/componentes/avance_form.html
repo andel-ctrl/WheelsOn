@@ -1,0 +1,14 @@
+{# Registrar un avance. También actualiza el estado del proyecto. #}
+<form method="POST" action="{% url 'core:proyecto_avance_agregar' pid=proyecto.pid %}" class="ws-avance-form">
+    {% csrf_token %}
+    <h4 class="ws-avance-form__titulo">Agregar avance</h4>
+    <label class="ws-oculto-visual" for="avance-texto">¿Qué hay de nuevo en el proyecto?</label>
+    <textarea id="avance-texto" name="texto" rows="3" maxlength="1000" required class="ws-campo" placeholder="¿Qué lograron? ¿Qué hay de nuevo en el proyecto?"></textarea>
+    <div class="ws-avance-form__pie">
+        <label class="text-xs" for="avance-estado">Estado del proyecto</label>
+        <select id="avance-estado" name="estado" class="ws-campo" style="width:auto">
+            {% for valor, texto in estados_proyecto %}<option value="{{ valor }}" {% if valor == proyecto.estado %}selected{% endif %}>{{ texto }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="ws-btn ws-btn--primario" style="margin-left:auto">Publicar avance</button>
+    </div>
+</form>

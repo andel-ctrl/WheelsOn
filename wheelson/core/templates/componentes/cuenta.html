@@ -1,0 +1,47 @@
+{% load wheelson_ui %}
+{% if current_user %}
+<div class="ws-cuenta" x-data="{ abierta: null, alternar(nombre) { this.abierta = this.abierta === nombre ? null : nombre } }">
+    <a class="ws-cuenta__titular" href="{% url 'core:usuario_detalle' uid=current_user.uid %}" title="Ver mi perfil">
+        <span class="ws-avatar ws-avatar--marca" aria-hidden="true">{{ current_user.nombre|slice:":1" }}{{ current_user.apellido|slice:":1" }}</span>
+        <span style="min-width:0">
+            <span class="ws-cuenta__nombre">{{ current_user.nombre_completo }}</span>
+            <span class="ws-cuenta__handle">Ver mi perfil</span>
+        </span>
+    </a>
+
+    {% if modo_demo %}
+    <div class="ws-opcion">
+        <button type="button" class="ws-opcion__boton" @click="alternar('perspectiva')" :aria-expanded="(abierta === 'perspectiva').toString()" aria-expanded="false">
+            {% icono "arrows-left-right" "regular" 18 %}<span>Ver la app como…</span>{% icono "caret-down" "regular" 14 "ws-opcion__flecha" %}
+        </button>
+        <div class="ws-desplegable" :class="{ 'is-abierto': abierta === 'perspectiva' }">
+            <div class="ws-desplegable__interior">
+                <div class="ws-desplegable__contenido">
+                    <p class="ws-perspectivas__ayuda">Solo en la demo: entra con otra cuenta para probar qué puede hacer cada persona.</p>
+                    <div class="ws-perspectivas">
+                        {% for u in all_users_for_switch %}
+                        <a href="?as_user={{ u.uid }}" class="{% if u.uid == current_user.uid %}is-activo{% endif %}">
+                            <span>{{ u.nombre_completo }}</span>{% if u.uid == current_user.uid %}<span>Tú</span>{% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <form class="ws-opcion ws-opcion--peligro" method="POST" action="{% url 'core:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="ws-opcion__boton">{% icono "sign-out" "regular" 18 %}<span>Cerrar sesión</span></button>
+    </form>
+</div>
+{% else %}
+<div class="ws-cuenta">
+    <div class="ws-desplegable__contenido" style="padding-top:12px; display:flex; gap:8px">
+        <a class="ws-btn ws-btn--primario" style="flex:1" href="{% url 'core:login' %}">Entrar</a>
+        <a class="ws-btn ws-btn--secundario" style="flex:1" href="{% url 'core:registro' %}">Registro</a>
+    </div>
+</div>
+{% endif %}
+<p class="ws-cuenta__pie">&copy; 2026 WheelsOn, Inc.</p>

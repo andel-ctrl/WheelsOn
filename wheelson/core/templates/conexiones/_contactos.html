@@ -1,0 +1,22 @@
+{% load wheelson_ui %}
+{% for c in conexiones %}
+<article class="ws-contacto">
+    <a class="ws-contacto__foto" href="{% url 'core:usuario_detalle' uid=c.usuario.uid %}" tabindex="-1" aria-hidden="true">{{ c.usuario.nombre|slice:":1" }}{{ c.usuario.apellido|slice:":1" }}</a>
+    <div class="ws-contacto__datos">
+        <h3 class="ws-contacto__nombre"><a href="{% url 'core:usuario_detalle' uid=c.usuario.uid %}">{{ c.usuario.nombre_completo }}</a></h3>
+        <p class="ws-contacto__cargo">{{ c.usuario.titulo_profesional|default:"Profesional" }}</p>
+        <p class="ws-contacto__lugar">{{ c.usuario.ubicacion|default:"Sin ubicación" }}</p>
+    </div>
+    {% if puede_desconectar %}
+    <div class="ws-menu ws-contacto__menu" x-data="{ abierto: false }" @click.outside="abierto = false" @keydown.escape="abierto = false">
+        <button type="button" class="ws-btn ws-btn--icono ws-btn--fantasma" @click="abierto = !abierto" :aria-expanded="abierto.toString()" aria-label="Opciones de {{ c.usuario.nombre_completo }}">{% icono "dots-three" "regular" 18 %}</button>
+        <div class="ws-menu__lista" x-show="abierto" x-cloak>
+            <form method="POST" action="{% url 'core:conexion_desconectar' uid_origen=usuario_activo.uid uid_destino=c.usuario.uid %}" data-confirmar="¿Desconectar a {{ c.usuario.nombre_completo }}?" onsubmit="return confirm(this.dataset.confirmar);">
+                {% csrf_token %}
+                <button type="submit" class="es-peligro">{% icono "x" "regular" 16 %}Desconectar</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</article>
+{% endfor %}

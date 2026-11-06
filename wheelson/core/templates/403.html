@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load wheelson_ui %}
+
+{% block title %}Sin permiso{% endblock %}
+
+{% block content %}
+<div class="ws-sin-permiso">
+    <span class="ws-sin-permiso__icono">{% icono "info" "duotone" 28 %}</span>
+    <h1>No puedes hacer esto</h1>
+    <p>{{ exception|default:"No tienes permiso para realizar esta acción." }}</p>
+    <a class="ws-btn ws-btn--primario" href="{% url 'core:dashboard' %}">Volver al inicio</a>
+</div>
+{% endblock %}

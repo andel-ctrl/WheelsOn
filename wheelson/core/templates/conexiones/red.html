@@ -1,155 +1,181 @@
 {% extends "base.html" %}
+{% load wheelson_ui %}
 
 {% block title %}Red de Conexiones | WheelsOn{% endblock %}
 {% block page_title %}Red de Conexiones (:CONECTA_CON){% endblock %}
 
 {% block content %}
-<div class="space-y-6 animate-fade-in-up" x-data="{ showConnectModal: false, targetUid: '', targetNombre: '' }">
+<div class="ws-pagina" x-data="{ showConnectModal: false, targetUid: '', targetNombre: '' }">
 
     {% if usuario_activo %}
-    <!-- Active User Hero Banner (Camuflado) -->
-    <div class="peer-card p-5 rounded-2xl bg-[#0e1116] border border-[#181c24] flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-3.5 text-center sm:text-left">
-            <div class="w-12 h-12 rounded-2xl bg-[#00b84c] text-white font-black text-base flex items-center justify-center shadow">
-                {{ usuario_activo.nombre|slice:":1" }}{{ usuario_activo.apellido|slice:":1" }}
-            </div>
-            <div>
-                <h2 class="text-base font-bold text-white">{{ usuario_activo.nombre_completo }}</h2>
-                <p class="text-xs text-gray-400">{{ usuario_activo.titulo_profesional|default:"Profesional" }} &bull; {{ usuario_activo.ubicacion }}</p>
-                <span class="text-[10px] font-mono text-[#00b84c] mt-0.5 block">@{{ usuario_activo.nombre|lower }}.{{ usuario_activo.apellido|lower }}</span>
-            </div>
+    <header class="ws-seccion">
+        <div>
+            <h1 class="ws-seccion__titulo">{% if es_mi_red %}Mi Red{% else %}La red de {{ usuario_activo.nombre }}{% endif %}</h1>
+            <p class="ws-seccion__bajada">{% if es_mi_red %}Lo que espera tu respuesta y la gente con la que ya estás conectado.{% else %}{{ usuario_activo.nombre_completo }} · {{ usuario_activo.titulo_profesional|default:"Profesional" }}{% endif %}</p>
         </div>
+        <p class="ws-seccion__cifra"><strong>{{ total_conexiones }}</strong>contacto{{ total_conexiones|pluralize }}</p>
+    </header>
 
-        <div class="flex items-center gap-6 text-center">
-            <div class="space-y-0.5">
-                <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">Conexiones Directas</span>
-                <p class="text-xl font-black text-[#00b84c]">{{ conexiones|length }}</p>
+    {% if solicitudes_recibidas or invitaciones or solicitudes_enviadas or uniones_recibidas or uniones_enviadas or empleos_recibidos or invitaciones_equipo %}
+    <!-- Lo que espera una respuesta -->
+    <section class="ws-bandeja" aria-label="Solicitudes e invitaciones">
+        <h2 class="ws-bandeja__titulo">Te están esperando</h2>
+
+        {% for s in solicitudes_recibidas %}
+        <div class="ws-bandeja__fila">
+            <div class="ws-bandeja__texto">
+                <a href="{% url 'core:usuario_detalle' uid=s.usuario.uid %}" class="ws-bandeja__quien">{{ s.usuario.nombre_completo }}</a>
+                <span>quiere conectar contigo</span>
+                {% if s.mensaje %}<p class="ws-bandeja__nota">"{{ s.mensaje }}"</p>{% endif %}
             </div>
-            <div class="space-y-0.5">
-                <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">Grado de Red</span>
-                <p class="text-xl font-black text-cyan-400">1°</p>
-            </div>
+            {% url 'core:conexion_solicitud_responder' uid_origen=s.usuario.uid as url_responder %}
+            {% include "componentes/responder.html" with url=url_responder %}
         </div>
-    </div>
+        {% endfor %}
 
-    <!-- Grid: Conexiones Directas & Sugerencias -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
-        <!-- 1. Columna Conexiones (7 cols) -->
-        <div class="lg:col-span-7 space-y-3.5">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
-                    Contactos Conectados ({{ conexiones|length }})
-                </h3>
-                <span class="text-[11px] text-gray-500 font-mono">Vínculo (:CONECTA_CON)</span>
+        {% for i in invitaciones %}
+        <div class="ws-bandeja__fila">
+            <div class="ws-bandeja__texto">
+                {% if i.tipo == "administrar" %}
+                <span>Te proponen administrar</span>
+                <a href="{% url 'core:empresa_detalle' eid=i.eid %}" class="ws-bandeja__quien">{{ i.nombre }}</a>
+                {% elif i.tipo == "liderar" %}
+                <span>Te proponen liderar</span>
+                <a href="{% url 'core:proyecto_detalle' pid=i.pid %}" class="ws-bandeja__quien">{{ i.nombre }}</a>
+                {% else %}
+                <span>Te invitaron a colaborar en</span>
+                <a href="{% url 'core:proyecto_detalle' pid=i.pid %}" class="ws-bandeja__quien">{{ i.nombre }}</a>
+                {% if i.rol %}<span>como {{ i.rol }}</span>{% endif %}
+                {% endif %}
             </div>
+            {% if i.tipo == "administrar" %}
+            {% url 'core:empresa_invitacion_responder' eid=i.eid as url_responder %}
+            {% else %}
+            {% url 'core:proyecto_invitacion_responder' pid=i.pid as url_responder %}
+            {% endif %}
+            {% include "componentes/responder.html" with url=url_responder %}
+        </div>
+        {% endfor %}
 
+        {% for s in empleos_recibidos %}
+        <div class="ws-bandeja__fila">
+            <div class="ws-bandeja__texto">
+                <a href="{% url 'core:usuario_detalle' uid=s.usuario.uid %}" class="ws-bandeja__quien">{{ s.usuario.nombre_completo }}</a>
+                <span>dice que trabaja como {{ s.cargo }} en</span>
+                <a href="{% url 'core:empresa_detalle' eid=s.empresa.eid %}" class="ws-bandeja__quien">{{ s.empresa.nombre }}</a>
+            </div>
+            {% url 'core:empresa_empleo_responder' eid=s.empresa.eid uid=s.usuario.uid as url_responder %}
+            {% include "componentes/responder.html" with url=url_responder %}
+        </div>
+        {% endfor %}
+
+        {% for i in invitaciones_equipo %}
+        <div class="ws-bandeja__fila">
+            <div class="ws-bandeja__texto">
+                <a href="{% url 'core:empresa_detalle' eid=i.empresa.eid %}" class="ws-bandeja__quien">{{ i.empresa.nombre }}</a>
+                <span>te invita a su equipo como {{ i.cargo }}</span>
+            </div>
+            {% url 'core:empresa_equipo_invitacion_responder' eid=i.empresa.eid as url_responder %}
+            {% include "componentes/responder.html" with url=url_responder %}
+        </div>
+        {% endfor %}
+
+        {% for s in uniones_recibidas %}
+        <div class="ws-bandeja__fila">
+            <div class="ws-bandeja__texto">
+                <a href="{% url 'core:usuario_detalle' uid=s.usuario.uid %}" class="ws-bandeja__quien">{{ s.usuario.nombre_completo }}</a>
+                <span>quiere unirse a</span>
+                <a href="{% url 'core:proyecto_detalle' pid=s.proyecto.pid %}" class="ws-bandeja__quien">{{ s.proyecto.nombre }}</a>
+            </div>
+            {% url 'core:proyecto_union_responder' pid=s.proyecto.pid uid=s.usuario.uid as url_responder %}
+            {% include "componentes/responder.html" with url=url_responder %}
+        </div>
+        {% endfor %}
+
+        {% if uniones_enviadas or solicitudes_enviadas %}<h3 class="ws-bandeja__subtitulo">Enviadas por ti, sin respuesta todavía</h3>{% endif %}
+        {% for p in uniones_enviadas %}
+        <div class="ws-bandeja__fila">
+            <div class="ws-bandeja__texto">
+                <span>Pediste unirte a</span>
+                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="ws-bandeja__quien">{{ p.nombre }}</a>
+            </div>
+            <form method="POST" action="{% url 'core:proyecto_unirse_cancelar' pid=p.pid %}">
+                {% csrf_token %}
+                <button type="submit" class="ws-btn ws-btn--secundario" style="min-height:32px">Cancelar solicitud</button>
+            </form>
+        </div>
+        {% endfor %}
+
+        {% for s in solicitudes_enviadas %}
+        <div class="ws-bandeja__fila">
+            <div class="ws-bandeja__texto">
+                <span>Esperando respuesta de</span>
+                <a href="{% url 'core:usuario_detalle' uid=s.usuario.uid %}" class="ws-bandeja__quien">{{ s.usuario.nombre_completo }}</a>
+            </div>
+            <form method="POST" action="{% url 'core:conexion_solicitud_cancelar' uid_destino=s.usuario.uid %}">
+                {% csrf_token %}
+                <button type="submit" class="ws-btn ws-btn--secundario" style="min-height:32px">Cancelar solicitud</button>
+            </form>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <div class="ws-red{% if not sugerencias %} ws-red--sola{% endif %}">
+        <section class="ws-agenda" aria-label="Contactos">
+            <div class="ws-agenda__cabecera">
+                <h2 class="ws-red__titulo">{% if es_mi_red %}Tus contactos{% else %}Contactos{% endif %}</h2>
+                {% if total_conexiones > 6 or query %}
+                <form method="GET" class="ws-buscador ws-agenda__buscar">
+                    {% if not es_mi_red %}<input type="hidden" name="uid" value="{{ usuario_activo.uid }}">{% endif %}
+                    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar entre tus contactos" aria-label="Buscar entre los contactos">
+                    {% if query %}<a class="ws-enlace" href="?{% if not es_mi_red %}uid={{ usuario_activo.uid }}{% endif %}">Limpiar</a>{% endif %}
+                </form>
+                {% endif %}
+            </div>
             {% if conexiones %}
-            <div class="space-y-2.5">
-                {% for item in conexiones %}
-                <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] p-4 rounded-2xl transition">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-9 h-9 rounded-xl bg-[#151921] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
-                                {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
-                            </div>
-                            <div class="min-w-0">
-                                <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-xs text-white hover:text-[#00b84c] transition truncate block">
-                                    {{ item.usuario.nombre_completo }}
-                                </a>
-                                <p class="text-[11px] text-gray-400 truncate">{{ item.usuario.titulo_profesional|default:"Profesional" }}</p>
-                                <span class="text-[10px] text-gray-600 font-mono">Conectado: {{ item.fecha|default:"Reciente" }}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="px-3 py-1 rounded-full text-xs text-gray-300 hover:text-white border border-[#1f2532] transition">Ver Perfil</a>
-                            <form method="POST" action="{% url 'core:conexion_desconectar' uid_origen=usuario_activo.uid uid_destino=item.usuario.uid %}"
-                                  onsubmit="return confirm('¿Desconectar a {{ item.usuario.nombre_completo }}?');">
-                                {% csrf_token %}
-                                <button type="submit" class="px-2.5 py-1 rounded-full text-[11px] text-red-400 hover:text-red-300 hover:bg-red-900/20 transition" title="Eliminar Conexión">
-                                    Desconectar
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    {% if item.mensaje %}
-                    <div class="mt-2 pt-2 border-t border-[#181c24] text-[11px] text-gray-400 italic bg-[#090b0e] p-2 rounded-xl">
-                        "{{ item.mensaje }}"
-                    </div>
-                    {% endif %}
-                </div>
-                {% endfor %}
+            <div class="ws-agenda__lista" id="lista-contactos">
+                {% include "conexiones/_contactos.html" %}
             </div>
+            {% include "componentes/ver_mas.html" %}
+            {% elif query %}
+            <div class="ws-vacio"><h2>Nadie coincide con esa búsqueda</h2><p>Prueba con otro nombre, cargo o ciudad.</p></div>
             {% else %}
-            <div class="peer-card bg-[#0e1116] border border-[#181c24] p-8 text-center rounded-2xl space-y-2">
-                <p class="font-bold text-white text-xs">Sin conexiones directas aún</p>
-                <p class="text-[11px] text-gray-500 max-w-xs mx-auto">
-                    Explora las sugerencias a la derecha para conectar y expandir tu red relacional.
-                </p>
-            </div>
+            <div class="ws-vacio"><h2>Sin contactos aún</h2><p>{% if es_mi_red %}Empieza por las personas que te sugerimos.{% else %}Esta persona todavía no tiene contactos.{% endif %}</p></div>
             {% endif %}
-        </div>
+        </section>
 
-        <!-- 2. Columna Sugerencias para Conectar (5 cols) -->
-        <div class="lg:col-span-5 space-y-3.5">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-                    Sugerencias para Conectar
-                </h3>
-                <span class="text-[10px] font-mono text-gray-500 bg-[#090b0e] px-2 py-0.5 rounded-full border border-[#161a22]">{{ sugerencias|length }}</span>
-            </div>
-
-            {% if sugerencias %}
-            <div class="space-y-2.5">
-                {% for sug in sugerencias %}
-                <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] p-3.5 rounded-2xl flex flex-col justify-between gap-2.5 transition">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-xl bg-[#151921] text-cyan-400 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                            {{ sug.nombre|slice:":1" }}{{ sug.apellido|slice:":1" }}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <a href="{% url 'core:usuario_detalle' uid=sug.uid %}" class="font-bold text-xs text-white hover:text-[#00b84c] transition truncate block">
-                                {{ sug.nombre_completo }}
-                            </a>
-                            <p class="text-[11px] text-gray-400 truncate">{{ sug.titulo_profesional|default:"Profesional" }}</p>
-                            <span class="text-[10px] text-gray-600 font-mono">{{ sug.ubicacion|default:"No especificada" }}</span>
-                        </div>
-                    </div>
-
-                    <button type="button" @click="showConnectModal = true; targetUid = '{{ sug.uid }}'; targetNombre = '{{ sug.nombre_completo }}'"
-                            class="peer-btn-green px-3 py-1.5 rounded-full text-xs font-bold w-full shadow-sm">
-                        + Conectar en la Red
-                    </button>
+        {% if sugerencias %}
+        <aside class="ws-quizas" aria-label="Personas que quizás conoces">
+            <h2 class="ws-quizas__titulo">Quizás conoces a…</h2>
+            <p class="ws-quizas__bajada">Aún no son tus contactos. Te las sugerimos por lo que tienen en común contigo.</p>
+            {% for item in sugerencias %}
+            <div class="ws-quizas__fila">
+                <a class="ws-quizas__foto" href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" tabindex="-1" aria-hidden="true">{{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}</a>
+                <div class="ws-quizas__datos">
+                    <a class="ws-quizas__nombre" href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}">{{ item.usuario.nombre_completo }}</a>
+                    <p class="ws-quizas__motivo">{{ item.motivo }}</p>
+                    <button type="button" class="ws-quizas__conectar" data-uid="{{ item.usuario.uid }}" data-nombre="{{ item.usuario.nombre_completo }}" @click="showConnectModal = true; targetUid = $el.dataset.uid; targetNombre = $el.dataset.nombre">Conectar</button>
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="peer-card bg-[#0e1116] border border-[#181c24] p-6 text-center rounded-2xl">
-                <p class="text-xs text-gray-500">¡Estás conectado con todos los miembros de la red!</p>
-            </div>
-            {% endif %}
-        </div>
-
+            {% endfor %}
+            <a class="ws-quizas__todas" href="{% url 'core:recomendaciones_index' %}">Ver todas las sugerencias {% icono "arrow-right" "regular" 14 %}</a>
+        </aside>
+        {% endif %}
     </div>
 
     <!-- Connect Modal -->
     <div x-show="showConnectModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl" @click.stop>
             <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#00b84c] animate-pulse"></span>
                 Conectar con <span class="text-[#00b84c]" x-text="targetNombre"></span>
             </h3>
             <p class="text-xs text-gray-400">
-                Se creará una arista orientada <code class="font-mono text-[#00b84c] bg-[#090b0e] px-1.5 py-0.5 rounded">(:Usuario)-[:CONECTA_CON]->(:Usuario)</code> en el grafo Neo4j.
+                La otra persona recibirá tu solicitud. La conexión se crea cuando la acepte.
             </p>
 
             <form method="POST" action="{% url 'core:conexion_conectar' %}" class="space-y-4">
                 {% csrf_token %}
-                <input type="hidden" name="uid_origen" value="{{ usuario_activo.uid }}">
                 <input type="hidden" name="uid_destino" :value="targetUid">
 
                 <div class="space-y-1">
@@ -160,7 +186,7 @@
 
                 <div class="flex items-center justify-end gap-2 pt-2">
                     <button type="button" @click="showConnectModal = false" class="px-4 py-1.5 rounded-full text-xs text-gray-400 hover:text-white transition">Cancelar</button>
-                    <button type="submit" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold">Crear Vínculo</button>
+                    <button type="submit" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold">Enviar solicitud</button>
                 </div>
             </form>
         </div>
@@ -169,7 +195,7 @@
     {% else %}
     <div class="peer-card bg-[#0e1116] border border-[#181c24] p-12 text-center rounded-2xl space-y-3">
         <p class="text-xs text-gray-500">No hay usuarios registrados para visualizar conexiones.</p>
-        <a href="{% url 'core:usuario_crear' %}" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold inline-block">Registrar Usuario</a>
+        <a href="{% url 'core:registro' %}" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold inline-block">Registrar Usuario</a>
     </div>
     {% endif %}
 

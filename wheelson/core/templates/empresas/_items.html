@@ -1,0 +1,22 @@
+{% load wheelson_ui %}
+{% for e in empresas %}
+<article class="ws-edificio">
+    <a class="ws-edificio__cielo" href="{% url 'core:empresa_detalle' eid=e.eid %}" tabindex="-1" aria-hidden="true">
+        <span class="ws-edificio__sol"></span>
+        {% skyline e.eid e.tamano e.resumen.empleados %}
+    </a>
+    <div class="ws-edificio__placa">
+        <h2 class="ws-edificio__nombre"><a href="{% url 'core:empresa_detalle' eid=e.eid %}">{{ e.nombre }}</a></h2>
+        <p class="ws-edificio__rubro">{{ e.industria }} · {{ e.ubicacion|default:"Sin ubicación" }}</p>
+        <p class="ws-edificio__texto">{{ e.descripcion|default:"Esta empresa todavía no tiene descripción."|truncatewords:20 }}</p>
+        <dl class="ws-pisos">
+            <div><dd>{{ e.resumen.empleados }}</dd><dt>persona{{ e.resumen.empleados|pluralize }}</dt></div>
+            <div><dd>{{ e.resumen.ofertas }}</dd><dt>empleo{{ e.resumen.ofertas|pluralize }}</dt></div>
+        </dl>
+        <div class="ws-edificio__pie">
+            {% if e|editable_por:permisos %}<a class="ws-enlace ws-persona__editar" href="{% url 'core:empresa_editar' eid=e.eid %}">Editar</a>{% endif %}
+            <a class="ws-btn ws-btn--primario" href="{% url 'core:empresa_detalle' eid=e.eid %}">Ver Ficha {% icono "arrow-right" "regular" 15 %}</a>
+        </div>
+    </div>
+</article>
+{% endfor %}

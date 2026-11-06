@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Eliminar {{ tipo }} | WheelsOn{% endblock %}
-{% block page_title %}Confirmar Eliminacion{% endblock %}
+{% block page_title %}Confirmar Eliminación{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto space-y-6 animate-fade-in-up">
@@ -16,18 +16,28 @@
 
             <h3 class="font-bold text-lg text-base-content">¿Eliminar este {{ tipo }}?</h3>
             <p class="text-xs text-base-content/70 mt-1">
-                Esta accion eliminara el nodo del grafo y todas sus aristas asociadas de forma irreversible.
+                Esta acción eliminará la cuenta y todos sus vínculos. No se puede deshacer.
             </p>
 
             <div class="bg-base-300 p-3 rounded-lg my-4 text-xs font-semibold">
-                {{ objeto.nombre_completo|default:objeto.nombre|default:objeto.titulo }}
+                {{ objeto.nombre_completo }}
             </div>
 
+            {% if ultimo_admin %}
+            <p class="text-xs my-3">Esta cuenta es el único administrador de la plataforma y no se puede eliminar.</p>
+            <a href="{% url 'core:usuario_detalle' uid=objeto.uid %}" class="btn btn-sm btn-ghost">Volver al perfil</a>
+            {% elif pendientes %}
+            <p class="text-xs my-3">Antes de eliminar esta cuenta hay que dejar a otra persona a cargo, o eliminar: <strong>{{ pendientes|join:", " }}</strong>.</p>
+            <a href="{% url 'core:usuario_detalle' uid=objeto.uid %}" class="btn btn-sm btn-ghost">Volver al perfil</a>
+            {% else %}
+            {% if proyectos_individuales %}<p class="text-xs my-3">También se eliminarán sus proyectos sin más participantes: <strong>{% for p in proyectos_individuales %}{{ p.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong>.</p>{% endif %}
+            {% if total_publicaciones %}<p class="text-xs my-3">También se eliminarán sus publicaciones ({{ total_publicaciones }}).</p>{% endif %}
             <form method="POST" class="flex justify-center gap-2">
                 {% csrf_token %}
-                <a href="javascript:history.back()" class="btn btn-sm btn-ghost">Cancelar</a>
-                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminacion</button>
+                <a href="{% url 'core:usuario_detalle' uid=objeto.uid %}" class="btn btn-sm btn-ghost">Cancelar</a>
+                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminación</button>
             </form>
+            {% endif %}
         </div>
     </div>
 
