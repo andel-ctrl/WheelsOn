@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Neo4j no disponible | WheelsOn</title>
+    <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; background: #0d0f12; color: #f0f6fc; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+        main { max-width: 620px; background: #0e1116; border: 1px solid #2a3441; border-radius: 12px; padding: 32px; }
+        h1 { margin: 0 0 8px; font-size: 24px; }
+        p { margin: 0 0 16px; color: #a9b4c0; }
+        pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; background: #090b0e; border: 1px solid #2a3441; border-radius: 8px; font-size: 13px; }
+        a { display: inline-block; padding: 8px 16px; background: #2fc774; color: #06210f; border-radius: 8px; font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <main>
+        {% if motivo == "credenciales" %}
+            <h1>Neo4j rechazó el usuario o la contraseña</h1>
+            <p>WheelsOn guarda todos sus datos en Neo4j y no puede entrar a la base. Revisa que <code>NEO4J_BOLT_URL</code>, en el archivo <code>wheelson/.env</code>, tenga las credenciales correctas y reinicia el servidor.</p>
+        {% else %}
+            <h1>No se pudo conectar con Neo4j</h1>
+            <p>WheelsOn guarda todos sus datos en Neo4j y la base no está respondiendo. Si la usas con Docker, enciéndela con este comando:</p>
+            <pre>docker start wheelson-neo4j</pre>
+            <p>Espera unos segundos a que arranque y vuelve a intentarlo.</p>
+        {% endif %}
+        <a href="">Reintentar</a>
+    </main>
+</body>
+</html>

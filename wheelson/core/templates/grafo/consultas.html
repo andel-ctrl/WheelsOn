@@ -306,7 +306,7 @@
             <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
                 <span class="text-cyan-400 font-bold">// Consulta Cypher de Camino Heterogéneo:</span><br>
                 MATCH (u:Usuario {uid: '{{ uid1 }}'}), (e:Empresa {eid: '{{ eid }}'})<br>
-                MATCH p = shortestPath((u)-[*..6]-(e))<br>
+                MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN*..6]-(e))<br>
                 RETURN p;
             </div>
         </div>

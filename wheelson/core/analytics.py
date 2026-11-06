@@ -1,21 +1,14 @@
 from collections import defaultdict, deque
-import math
 from core.services import (
-    is_neo4j_available,
     UsuarioService,
     EmpresaService,
     HabilidadService,
     ProyectoService,
     OfertaService,
-    ConexionService,
     HabilidadUsuarioService,
     RequisitoOfertaService,
+    consulta,
 )
-
-try:
-    from neomodel import db
-except ImportError:
-    db = None
 
 
 class NetworkAnalyticsService:
@@ -23,7 +16,7 @@ class NetworkAnalyticsService:
     Servicio de analítica avanzada de grafos para la red social WheelsOn.
     Implementa métricas topológicas, centralidad, PageRank, detección
     de comunidades y análisis de oferta/demanda de competencias.
-    Soporta ejecución dual (Cypher nativo con fallback algorítmico en memoria).
+    Los datos se leen de Neo4j y las métricas se calculan aquí, en Python.
     """
 
     @classmethod
@@ -241,9 +234,8 @@ class NetworkAnalyticsService:
     def deteccion_comunidades(cls):
         """
         Detección de comunidades y clústeres profesionales en el grafo.
-        Combina conexiones de red social (:CONECTA_CON) con afinidad de habilidades
-        (:TIENE_HABILIDAD) mediante un algoritmo de propagación de etiquetas adaptativo.
-        Clasifica e infiere la especialidad temática dominante de cada clúster.
+        Agrupa a los usuarios según sus conexiones (:CONECTA_CON) con el algoritmo
+        de Louvain y nombra cada clúster según sus habilidades más frecuentes.
         """
         usuarios = UsuarioService.all()
         if not usuarios:
@@ -252,42 +244,12 @@ class NetworkAnalyticsService:
         adj, _ = cls._construir_grafo_conexiones(usuarios)
         u_map = {u.uid: u for u in usuarios}
 
-        # Inicialización de etiquetas con el propio UID
-        labels = {u.uid: u.uid for u in usuarios}
-
-        # Iteración de propagación de etiquetas (Label Propagation)
-        nodos = [u.uid for u in usuarios]
-        max_iter = 15
-
-        for _ in range(max_iter):
-            cambios = 0
-            for uid in nodos:
-                vecinos = list(adj.get(uid, []))
-                if not vecinos:
-                    continue
-
-                # Votación ponderada de etiquetas entre vecinos
-                conteo_etiquetas = defaultdict(int)
-                for v in vecinos:
-                    conteo_etiquetas[labels[v]] += 1
-
-                # Seleccionar la etiqueta más frecuente
-                mejor_etiqueta = max(conteo_etiquetas.items(), key=lambda x: x[1])[0]
-                if labels[uid] != mejor_etiqueta:
-                    labels[uid] = mejor_etiqueta
-                    cambios += 1
-
-            if cambios == 0:
-                break
-
-        # Agrupar miembros por clúster
         grupos = defaultdict(list)
-        for uid, etiqueta in labels.items():
-            u = u_map.get(uid)
-            if u:
-                grupos[etiqueta].append(u)
+        for uid, comunidad in cls._louvain(adj).items():
+            grupos[comunidad].append(u_map[uid])
 
         clusters = []
+        nombres_usados = defaultdict(int)
         for cid, miembros in grupos.items():
             # Obtener habilidades de los miembros para inferir temática
             hab_counts = defaultdict(int)
@@ -298,14 +260,19 @@ class NetworkAnalyticsService:
                     if hab:
                         hab_counts[hab.nombre] += 1
 
-            top_habs = sorted(hab_counts.items(), key=lambda x: x[1], reverse=True)[:4]
+            top_habs = sorted(hab_counts.items(), key=lambda x: (-x[1], x[0]))[:4]
 
             # Inferencia de título del cluster
             if top_habs:
                 temas = [h[0] for h in top_habs[:2]]
                 nombre_cluster = f"Ecosistema {' & '.join(temas)}"
             else:
-                nombre_cluster = f"Comunidad Red #{len(clusters) + 1}"
+                nombre_cluster = "Comunidad de la red"
+
+            # Dos comunidades distintas pueden compartir habilidades principales
+            nombres_usados[nombre_cluster] += 1
+            if nombres_usados[nombre_cluster] > 1:
+                nombre_cluster = f"{nombre_cluster} ({nombres_usados[nombre_cluster]})"
 
             # Densidad interna del cluster
             n_m = len(miembros)
@@ -329,11 +296,80 @@ class NetworkAnalyticsService:
                 "miembros": miembros,
                 "habilidades_top": [h[0] for h in top_habs],
                 "densidad_interna_pct": round(densidad_interna * 100, 1),
-                "lider": miembros[0] if miembros else None,
+                "lider": max(miembros, key=lambda m: (len(adj[m.uid] & miembros_uids), m.uid)),
             })
 
-        clusters.sort(key=lambda x: x["tamano"], reverse=True)
+        clusters.sort(key=lambda x: (-x["tamano"], x["nombre"]))
         return clusters
+
+    @classmethod
+    def _louvain(cls, adj):
+        """
+        Algoritmo de Louvain: mueve cada nodo a la comunidad vecina donde más
+        aumenta la modularidad (cuántas conexiones quedan dentro de los grupos,
+        comparado con lo esperable al azar). Luego trata cada comunidad como un
+        solo nodo y repite hasta que no haya mejora. Los nodos se recorren
+        ordenados para que el resultado sea siempre el mismo.
+
+        Devuelve un diccionario {uid: identificador de su comunidad}.
+        """
+        grafo = {n: {v: 1.0 for v in adj[n]} for n in adj}
+        miembros = {n: [n] for n in adj}
+
+        while True:
+            comunidad = cls._agrupar_por_modularidad(grafo)
+            if len(set(comunidad.values())) == len(grafo):
+                break
+
+            nuevo_grafo = defaultdict(lambda: defaultdict(float))
+            for n, vecinos in grafo.items():
+                # Cuenta también los pesos internos: quedan como un lazo del nuevo nodo
+                _ = nuevo_grafo[comunidad[n]]
+                for v, peso in vecinos.items():
+                    nuevo_grafo[comunidad[n]][comunidad[v]] += peso
+
+            nuevos_miembros = defaultdict(list)
+            for n, integrantes in miembros.items():
+                nuevos_miembros[comunidad[n]].extend(integrantes)
+
+            grafo = {n: dict(vecinos) for n, vecinos in nuevo_grafo.items()}
+            miembros = nuevos_miembros
+
+        return {uid: c for c, integrantes in miembros.items() for uid in integrantes}
+
+    @staticmethod
+    def _agrupar_por_modularidad(grafo):
+        grado = {n: sum(vecinos.values()) for n, vecinos in grafo.items()}
+        total = sum(grado.values())
+        comunidad = {n: n for n in grafo}
+        if not total:
+            return comunidad
+
+        peso_comunidad = dict(grado)
+        hubo_cambios = True
+        while hubo_cambios:
+            hubo_cambios = False
+            for n in sorted(grafo):
+                actual = comunidad[n]
+                peso_comunidad[actual] -= grado[n]
+
+                peso_hacia = defaultdict(float)
+                for v, peso in grafo[n].items():
+                    if v != n:
+                        peso_hacia[comunidad[v]] += peso
+
+                ganancia = lambda c: peso_hacia[c] - peso_comunidad[c] * grado[n] / total
+                mejor = actual
+                for c in sorted(peso_hacia):
+                    if ganancia(c) > ganancia(mejor) + 1e-9:
+                        mejor = c
+
+                peso_comunidad[mejor] += grado[n]
+                if mejor != actual:
+                    comunidad[n] = mejor
+                    hubo_cambios = True
+
+        return comunidad
 
     @classmethod
     def analisis_oferta_demanda_habilidades(cls):
@@ -344,7 +380,7 @@ class NetworkAnalyticsService:
         """
         habilidades = HabilidadService.all()
         usuarios = UsuarioService.all()
-        ofertas = OfertaService.all()
+        ofertas = [o for o in OfertaService.all() if o.estado == "abierta"]
 
         oferta_conteo = defaultdict(int)
         for u in usuarios:
@@ -404,7 +440,7 @@ class NetworkAnalyticsService:
         # Ordenar por demanda total y ratio de escasez
         items.sort(key=lambda x: (x["demanda"], x["ratio"]), reverse=True)
 
-        top_demandadas = sorted(items, key=lambda x: x["demanda"], reverse=True)[:8]
+        top_demandadas = [it for it in items if it["demanda"] > 0][:8]
         top_escasez = [it for it in items if it["brecha"] > 0]
         top_escasez.sort(key=lambda x: x["brecha"], reverse=True)
 
@@ -422,7 +458,8 @@ class NetworkAnalyticsService:
         directamente los componentes visuales de Chart.js en el frontend.
         """
         centralidad = cls.ranking_centralidad_grado(limit=7)
-        pagerank = cls.ranking_pagerank(limit=7)
+        # Sin límite: una persona del top de conexiones puede no estar en el top de PageRank.
+        pagerank = cls.ranking_pagerank(limit=None)
         comunidades = cls.deteccion_comunidades()
         skills_data = cls.analisis_oferta_demanda_habilidades()
 
@@ -468,20 +505,19 @@ class NetworkAnalyticsService:
     def _construir_grafo_conexiones(cls, usuarios):
         adj = defaultdict(set)
         aristas_set = set()
+        uids = {u.uid for u in usuarios}
 
-        for u in usuarios:
-            _ = adj[u.uid]  # Asegurar entrada de nodo aislado
-            conexiones = ConexionService.listar(u.uid)
-            for c in conexiones:
-                amigo = c.get("usuario")
-                if not amigo:
-                    continue
-                amigo_uid = amigo.uid
-                adj[u.uid].add(amigo_uid)
-                adj[amigo_uid].add(u.uid)
+        for uid in uids:
+            _ = adj[uid]  # Asegurar entrada de nodo aislado
+
+        for origen, destino in consulta(
+            "MATCH (a:Usuario)-[:CONECTA_CON]->(b:Usuario) RETURN a.uid, b.uid"
+        ):
+            if origen in uids and destino in uids and origen != destino:
+                adj[origen].add(destino)
+                adj[destino].add(origen)
                 # Arista normalizada (min_uid, max_uid) para no duplicar conteo
-                edge = tuple(sorted([u.uid, amigo_uid]))
-                aristas_set.add(edge)
+                aristas_set.add(tuple(sorted([origen, destino])))
 
         return adj, aristas_set
 

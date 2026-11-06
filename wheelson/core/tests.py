@@ -1,5 +1,12 @@
-from django.test import TestCase, Client
+from datetime import date
+from unittest.mock import patch
+
+from django.test import Client
 from django.urls import reverse
+from neo4j.exceptions import AuthError, ServiceUnavailable
+from neomodel import UniqueProperty, db
+
+from core.test_utils import Neo4jTestCase as TestCase, ejecutar_script_cypher
 from core.models import (
     Usuario,
     Empresa,
@@ -796,6 +803,8 @@ class RecommendationEngineTest(TestCase):
 
 class Fase9VisualizacionGrafoTest(TestCase):
     def setUp(self):
+        super().setUp()
+        ejecutar_script_cypher("seed_data.cypher")
         self.client = Client()
 
     def test_grafo_interactivo_view_renders(self):
@@ -838,8 +847,310 @@ class Fase9VisualizacionGrafoTest(TestCase):
         self.assertGreater(len(carlos_nodes), 0)
 
 
+def contar_relaciones(tipo):
+    return db.cypher_query(f"MATCH ()-[r:{tipo}]->() RETURN count(r)")[0][0][0]
 
 
+class ScriptDeDatosTest(TestCase):
+    """El script de datos debe cargar sin errores y crear todo el grafo."""
+
+    def setUp(self):
+        super().setUp()
+        ejecutar_script_cypher("seed_data.cypher")
+
+    def test_crea_todos_los_nodos_y_relaciones(self):
+        nodos = dict(db.cypher_query("MATCH (n) RETURN labels(n)[0], count(*)")[0])
+        self.assertEqual(nodos, {"Usuario": 15, "Empresa": 3, "Habilidad": 12, "Proyecto": 2, "Oferta": 2})
+        relaciones = dict(db.cypher_query("MATCH ()-[r]->() RETURN type(r), count(*)")[0])
+        self.assertEqual(relaciones, {
+            "CONECTA_CON": 30, "TRABAJA_EN": 15, "TIENE_HABILIDAD": 42,
+            "PARTICIPA_EN": 8, "PUBLICA": 2, "REQUIERE": 6, "POSTULA_A": 2,
+        })
+
+    def test_usuario_de_ejemplo_puede_iniciar_sesion(self):
+        cliente = Client()
+        res = cliente.post(reverse("core:login") + "?force=1", {
+            "email": "dubal@wheelson.com",
+            "password": "WheelsOn2026*",
+        })
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(cliente.session.get("active_user_uid"), "usr_dubal003")
+
+    def test_todas_las_pantallas_responden(self):
+        cliente = Client()
+        rutas = [
+            "/", "/usuarios/", "/usuarios/usr_carlos001/", "/empresas/", "/empresas/emp_nexus01/",
+            "/habilidades/", "/proyectos/", "/proyectos/proy_graph01/", "/ofertas/",
+            "/ofertas/ofr_dataeng01/", "/conexiones/", "/analitica/", "/grafo/", "/grafo/api/data/",
+            "/consultas/?tab=camino&uid1=usr_andres015&uid2=usr_miguel010",
+            "/consultas/?tab=comun&uid1=usr_carlos001&uid2=usr_dubal003",
+            "/consultas/?tab=similares&uid1=usr_carlos001",
+            "/consultas/?tab=ruta_empresa&uid1=usr_andres015&eid=emp_techin02",
+            "/consultas/?tab=candidatos&oid=ofr_dataeng01",
+            "/recomendaciones/?tab=contactos&uid=usr_carlos001",
+            "/recomendaciones/?tab=empleos&uid=usr_carlos001",
+            "/recomendaciones/?tab=colaboradores&pid=proy_graph01",
+            "/recomendaciones/?tab=talento&eid=emp_nexus01",
+        ]
+        for ruta in rutas:
+            with self.subTest(ruta=ruta):
+                self.assertEqual(cliente.get(ruta).status_code, 200)
 
 
+class SoloNeo4jTest(TestCase):
+    """La app no debe mostrar datos que no estén en Neo4j."""
 
+    def test_base_vacia_no_inventa_datos(self):
+        self.assertEqual(UsuarioService.all(), [])
+        self.assertEqual(EmpresaService.all(), [])
+        self.assertEqual(OfertaService.all(), [])
+        self.assertIsNone(UsuarioService.get("usr_carlos001"))
+        self.assertEqual(GraphAnalyticsService.habilidades_mas_demandadas(), [])
+
+    def test_pantallas_funcionan_con_base_vacia(self):
+        cliente = Client()
+        for ruta in ["/", "/usuarios/", "/consultas/", "/recomendaciones/", "/analitica/", "/grafo/", "/conexiones/"]:
+            with self.subTest(ruta=ruta):
+                self.assertEqual(cliente.get(ruta).status_code, 200)
+
+    def test_neo4j_caido_muestra_error_claro(self):
+        cliente = Client()
+        with patch("neomodel.sync_.database.Database.cypher_query", side_effect=ServiceUnavailable("caido")):
+            res = cliente.get("/usuarios/")
+        self.assertEqual(res.status_code, 503)
+        self.assertContains(res, "No se pudo conectar con Neo4j", status_code=503)
+
+    def test_credenciales_incorrectas_muestran_error_claro(self):
+        cliente = Client()
+        with patch("neomodel.sync_.database.Database.cypher_query", side_effect=AuthError("clave")):
+            res = cliente.get("/analitica/")
+        self.assertEqual(res.status_code, 503)
+        self.assertContains(res, "rechazó el usuario o la contraseña", status_code=503)
+
+    def test_api_del_grafo_responde_json_si_neo4j_esta_caido(self):
+        cliente = Client()
+        with patch("neomodel.sync_.database.Database.cypher_query", side_effect=ServiceUnavailable("caido")):
+            res = cliente.get(reverse("core:grafo_data_api"))
+        self.assertEqual(res.status_code, 503)
+        self.assertEqual(res["content-type"], "application/json")
+
+    def test_correo_repetido_avisa_en_el_formulario(self):
+        UsuarioService.create(nombre="Ana", apellido="Paz", email="ana@test.com")
+        res = Client().post(reverse("core:usuario_crear"), {
+            "nombre": "Otra", "apellido": "Ana", "email": "ana@test.com",
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Ya existe un usuario con este correo")
+        self.assertEqual(len(UsuarioService.all()), 1)
+
+    def test_nombre_de_empresa_repetido_lanza_error_de_unicidad(self):
+        EmpresaService.create(nombre="Acme", industria="X")
+        with self.assertRaises(UniqueProperty):
+            EmpresaService.create(nombre="Acme", industria="Y")
+
+    def test_cambiar_contrasena_desde_el_servicio(self):
+        u = UsuarioService.create(nombre="Ana", apellido="Paz", email="ana@test.com", password="ClaveVieja1*")
+        UsuarioService.update(u.uid, password="ClaveNueva1*")
+        self.assertEqual(UsuarioService.autenticar("ana@test.com", "ClaveNueva1*").uid, u.uid)
+        self.assertIsNone(UsuarioService.autenticar("ana@test.com", "ClaveVieja1*"))
+
+
+class FechasEnRelacionesTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.cliente = Client()
+        self.u = UsuarioService.create(nombre="Ana", apellido="Paz", email="ana@test.com")
+        self.emp = EmpresaService.create(nombre="Acme", industria="Software")
+        self.proy = ProyectoService.create(nombre="Motor", estado="activo")
+
+    def test_experiencia_con_fecha_se_guarda_en_neo4j(self):
+        self.cliente.post(reverse("core:usuario_experiencia_agregar", kwargs={"uid": self.u.uid}), {
+            "eid": self.emp.eid, "cargo": "QA", "fecha_inicio": "2026-01-15", "actual": "on",
+        })
+        self.assertEqual(contar_relaciones("TRABAJA_EN"), 1)
+        self.assertEqual(EmpleoService.listar_por_usuario(self.u.uid)[0]["fecha_inicio"], "2026-01-15")
+
+    def test_colaborador_con_fecha_se_guarda_en_neo4j(self):
+        self.cliente.post(reverse("core:proyecto_colaborador_agregar", kwargs={"pid": self.proy.pid}), {
+            "uid": self.u.uid, "rol": "QA", "fecha_inicio": "2026-02-20",
+        })
+        self.assertEqual(contar_relaciones("PARTICIPA_EN"), 1)
+        self.assertEqual(ParticipacionProyectoService.listar_por_proyecto(self.proy.pid)[0]["fecha_inicio"], "2026-02-20")
+
+    def test_fecha_invalida_avisa_y_no_guarda(self):
+        res = self.cliente.post(reverse("core:usuario_experiencia_agregar", kwargs={"uid": self.u.uid}), {
+            "eid": self.emp.eid, "cargo": "QA", "fecha_inicio": "ayer", "actual": "on",
+        }, follow=True)
+        self.assertEqual(contar_relaciones("TRABAJA_EN"), 0)
+        self.assertContains(res, "La fecha no es valida")
+
+    def test_objeto_date_tambien_funciona(self):
+        EmpleoService.vincular(self.u.uid, self.emp.eid, cargo="QA", fecha_inicio=date(2025, 3, 1))
+        self.assertEqual(EmpleoService.listar_por_usuario(self.u.uid)[0]["fecha_inicio"], "2025-03-01")
+
+
+class RelacionesSinDuplicadosTest(TestCase):
+    def test_repetir_un_vinculo_reemplaza_sus_datos(self):
+        u = UsuarioService.create(nombre="Ana", apellido="Paz", email="ana@test.com")
+        e = EmpresaService.create(nombre="Acme", industria="X")
+        h = HabilidadService.create(nombre="Python")
+        EmpleoService.vincular(u.uid, e.eid, cargo="Junior")
+        EmpleoService.vincular(u.uid, e.eid, cargo="Senior")
+        HabilidadUsuarioService.vincular(u.uid, h.hid, nivel="basico")
+        HabilidadUsuarioService.vincular(u.uid, h.hid, nivel="experto")
+
+        self.assertEqual(contar_relaciones("TRABAJA_EN"), 1)
+        self.assertEqual(EmpleoService.listar_por_usuario(u.uid)[0]["cargo"], "Senior")
+        self.assertEqual(contar_relaciones("TIENE_HABILIDAD"), 1)
+        self.assertEqual(HabilidadUsuarioService.listar_por_usuario(u.uid)[0]["nivel"], "experto")
+
+
+class ConexionesMutuasTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.a = UsuarioService.create(nombre="Ana", apellido="Paz", email="a@test.com")
+        self.b = UsuarioService.create(nombre="Beto", apellido="Rey", email="b@test.com")
+
+    def test_la_conexion_se_ve_desde_ambos_lados(self):
+        ConexionService.conectar(self.a.uid, self.b.uid, mensaje="Hola")
+        self.assertEqual(ConexionService.listar(self.a.uid)[0]["usuario"].uid, self.b.uid)
+        self.assertEqual(ConexionService.listar(self.b.uid)[0]["usuario"].uid, self.a.uid)
+        self.assertTrue(ConexionService.estan_conectados(self.b.uid, self.a.uid))
+
+    def test_conectar_en_sentido_contrario_no_duplica(self):
+        ConexionService.conectar(self.a.uid, self.b.uid)
+        ConexionService.conectar(self.b.uid, self.a.uid)
+        self.assertEqual(contar_relaciones("CONECTA_CON"), 1)
+
+    def test_desconectar_funciona_desde_cualquier_lado(self):
+        ConexionService.conectar(self.a.uid, self.b.uid)
+        self.assertTrue(ConexionService.desconectar(self.b.uid, self.a.uid))
+        self.assertEqual(contar_relaciones("CONECTA_CON"), 0)
+
+    def test_conteo_de_conexiones_en_datos_de_ejemplo(self):
+        ejecutar_script_cypher("seed_data.cypher")
+        self.assertEqual(len(ConexionService.listar("usr_dubal003")), 5)
+
+
+class RecomendacionesEnGrafoTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.yo = UsuarioService.create(nombre="Yo", apellido="Mismo", email="yo@test.com")
+        self.x = UsuarioService.create(nombre="Xavi", apellido="Luz", email="x@test.com")
+        self.z = UsuarioService.create(nombre="Zoe", apellido="Mar", email="z@test.com")
+        self.py = HabilidadService.create(nombre="Python")
+        self.react = HabilidadService.create(nombre="React")
+
+    def test_contactos_solo_cuenta_habilidades_compartidas_conmigo(self):
+        # Xavi y Zoe comparten React entre ellos, pero yo solo tengo Python.
+        HabilidadUsuarioService.vincular(self.yo.uid, self.py.hid)
+        HabilidadUsuarioService.vincular(self.x.uid, self.py.hid)
+        HabilidadUsuarioService.vincular(self.x.uid, self.react.hid)
+        HabilidadUsuarioService.vincular(self.z.uid, self.react.hid)
+
+        recomendados = RecommendationEngine.recomendar_contactos(self.yo.uid)
+        self.assertEqual([r["usuario"].uid for r in recomendados], [self.x.uid])
+        self.assertEqual(recomendados[0]["nombres_habs"], ["Python"])
+
+    def test_empleos_indica_las_habilidades_que_faltan(self):
+        oferta = OfertaService.create(titulo="Dev", estado="abierta")
+        RequisitoOfertaService.vincular(oferta.oid, self.py.hid)
+        RequisitoOfertaService.vincular(oferta.oid, self.react.hid, prioridad="deseable")
+        HabilidadUsuarioService.vincular(self.yo.uid, self.py.hid)
+
+        recomendacion = RecommendationEngine.recomendar_empleos(self.yo.uid)[0]
+        self.assertEqual(recomendacion["habilidades_faltantes"], ["React"])
+        self.assertEqual(recomendacion["obligatorias_cubiertas"], 1)
+        self.assertEqual(recomendacion["total_obligatorias"], 1)
+
+    def test_ruta_a_empresa_no_pasa_por_habilidades(self):
+        empresa = EmpresaService.create(nombre="Acme", industria="X")
+        HabilidadUsuarioService.vincular(self.yo.uid, self.py.hid)
+        HabilidadUsuarioService.vincular(self.x.uid, self.py.hid)
+        EmpleoService.vincular(self.x.uid, empresa.eid, cargo="Dev")
+        self.assertFalse(GraphAnalyticsService.ruta_usuario_empresa(self.yo.uid, empresa.eid)["encontrado"])
+
+
+class GrafoInteractivoDesdeNeo4jTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        ejecutar_script_cypher("seed_data.cypher")
+
+    def test_cada_arista_coincide_con_neo4j(self):
+        datos = Client().get(reverse("core:grafo_data_api")).json()
+        en_pantalla = {}
+        for arista in datos["edges"]:
+            en_pantalla[arista["label"]] = en_pantalla.get(arista["label"], 0) + 1
+        en_neo4j = dict(db.cypher_query("MATCH ()-[r]->() RETURN type(r), count(*)")[0])
+        self.assertEqual(en_pantalla, en_neo4j)
+
+    def test_relacion_creada_directo_en_neo4j_aparece(self):
+        db.cypher_query(
+            "MATCH (a:Usuario {uid: 'usr_miguel010'}), (b:Usuario {uid: 'usr_andres015'}) "
+            "CREATE (a)-[:CONECTA_CON]->(b)"
+        )
+        datos = Client().get(reverse("core:grafo_data_api")).json()
+        self.assertTrue(any(
+            {arista["from"], arista["to"]} == {"usr_miguel010", "usr_andres015"}
+            for arista in datos["edges"]
+        ))
+
+
+class ComunidadesTest(TestCase):
+    def _grupo(self, prefijo, cantidad):
+        usuarios = [
+            UsuarioService.create(nombre=f"{prefijo}{i}", apellido="T", email=f"{prefijo}{i}@test.com")
+            for i in range(cantidad)
+        ]
+        for i, a in enumerate(usuarios):
+            for b in usuarios[i + 1:]:
+                ConexionService.conectar(a.uid, b.uid)
+        return usuarios
+
+    def test_separa_dos_grupos_unidos_por_un_solo_puente(self):
+        grupo_a = self._grupo("a", 4)
+        grupo_b = self._grupo("b", 4)
+        ConexionService.conectar(grupo_a[0].uid, grupo_b[0].uid)
+
+        comunidades = NetworkAnalyticsService.deteccion_comunidades()
+        self.assertEqual(len(comunidades), 2)
+        conjuntos = [{m.uid for m in c["miembros"]} for c in comunidades]
+        self.assertIn({u.uid for u in grupo_a}, conjuntos)
+        self.assertIn({u.uid for u in grupo_b}, conjuntos)
+
+    def test_datos_de_ejemplo_tienen_varias_comunidades_y_resultado_estable(self):
+        ejecutar_script_cypher("seed_data.cypher")
+        primera = NetworkAnalyticsService.deteccion_comunidades()
+        segunda = NetworkAnalyticsService.deteccion_comunidades()
+        self.assertGreater(len(primera), 1)
+        self.assertEqual(sum(c["tamano"] for c in primera), 15)
+        self.assertEqual(
+            [sorted(m.uid for m in c["miembros"]) for c in primera],
+            [sorted(m.uid for m in c["miembros"]) for c in segunda],
+        )
+
+
+class PanelDeAnaliticaTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        ejecutar_script_cypher("seed_data.cypher")
+
+    def test_grafico_de_influencia_no_pone_pagerank_en_cero(self):
+        datos = NetworkAnalyticsService.preparar_datos_graficos()["influencia"]
+        self.assertTrue(all(valor > 0 for valor in datos["pagerank"]))
+
+    def test_oferta_cerrada_no_cuenta_como_demanda(self):
+        OfertaService.update("ofr_arch02", estado="cerrada")
+        balance = NetworkAnalyticsService.analisis_oferta_demanda_habilidades()
+        en_panel = {item["habilidad"].nombre: item["demanda"] for item in balance["top_demandadas"]}
+        en_consulta = {
+            item["habilidad"]: item["total_ofertas"]
+            for item in GraphAnalyticsService.habilidades_mas_demandadas()
+        }
+        self.assertEqual(en_panel, en_consulta)
+        self.assertNotIn("Liderazgo", en_panel)
+
+    def test_mas_demandadas_excluye_habilidades_sin_demanda(self):
+        balance = NetworkAnalyticsService.analisis_oferta_demanda_habilidades()
+        self.assertTrue(balance["top_demandadas"])
+        self.assertTrue(all(item["demanda"] > 0 for item in balance["top_demandadas"]))

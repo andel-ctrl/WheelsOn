@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',           # Soporte HTMX
+    'core.middleware.Neo4jNoDisponibleMiddleware',     # Error claro si Neo4j no responde
 ]
 
 ROOT_URLCONF = 'wheelson.urls'
@@ -96,10 +97,13 @@ DATABASES = {
 # Neo4j - Base de datos de grafos (configuración principal)
 NEOMODEL_NEO4J_BOLT_URL = os.getenv(
     'NEO4J_BOLT_URL',
-    'bolt://neo4j:neo4j@localhost:7687'
+    'bolt://neo4j:password@localhost:7687'
 )
 
 NEOMODEL_ENCRYPTED = os.getenv('NEO4J_ENCRYPTED', 'False').lower() in ('true', '1')
+
+# Los tests usan su propio Neo4j porque borran todos los datos (ver core/test_utils.py)
+TEST_RUNNER = 'core.test_utils.Neo4jTestRunner'
 
 
 # ==============================================================================

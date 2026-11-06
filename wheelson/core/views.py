@@ -2,6 +2,7 @@ from datetime import date
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
+from neomodel import UniqueProperty
 from core.forms import (
     UsuarioForm,
     EmpresaForm,
@@ -61,16 +62,13 @@ def dashboard(request):
                 tecnologias=tecnologias,
             )
             if current_user and proyecto:
-                try:
-                    ParticipacionProyectoService.vincular(
-                        uid=current_user.uid,
-                        pid=proyecto.pid,
-                        rol="Lead Creator",
-                        fecha_inicio=date.today(),
-                        activo=True,
-                    )
-                except Exception:
-                    pass
+                ParticipacionProyectoService.vincular(
+                    uid=current_user.uid,
+                    pid=proyecto.pid,
+                    rol="Lead Creator",
+                    fecha_inicio=date.today(),
+                    activo=True,
+                )
             messages.success(request, f"¡Tu publicación '{nombre}' ya está en el feed social!")
         else:
             messages.error(request, "Por favor incluye una descripción sobre qué estás trabajando.")
@@ -196,9 +194,13 @@ def usuario_crear(request):
     if request.method == "POST":
         form = UsuarioForm(request.POST)
         if form.is_valid():
-            u = UsuarioService.create(**form.cleaned_data)
-            messages.success(request, f"Usuario '{u.nombre_completo}' registrado exitosamente.")
-            return redirect("core:usuario_detalle", uid=u.uid)
+            try:
+                u = UsuarioService.create(**form.cleaned_data)
+            except UniqueProperty:
+                form.add_error("email", "Ya existe un usuario con este correo.")
+            else:
+                messages.success(request, f"Usuario '{u.nombre_completo}' registrado exitosamente.")
+                return redirect("core:usuario_detalle", uid=u.uid)
     else:
         form = UsuarioForm()
     return render(request, "usuarios/formulario.html", {"form": form, "accion": "Crear"})
@@ -237,9 +239,13 @@ def usuario_editar(request, uid):
             data = form.cleaned_data
             if not data.get("password"):
                 data.pop("password", None)
-            UsuarioService.update(uid, **data)
-            messages.success(request, f"Perfil de '{usuario.nombre_completo}' actualizado.")
-            return redirect("core:usuario_detalle", uid=uid)
+            try:
+                UsuarioService.update(uid, **data)
+            except UniqueProperty:
+                form.add_error("email", "Ya existe un usuario con este correo.")
+            else:
+                messages.success(request, f"Perfil de '{usuario.nombre_completo}' actualizado.")
+                return redirect("core:usuario_detalle", uid=uid)
     else:
         form = UsuarioForm(initial={
             "nombre": usuario.nombre,
@@ -288,9 +294,13 @@ def empresa_crear(request):
     if request.method == "POST":
         form = EmpresaForm(request.POST)
         if form.is_valid():
-            e = EmpresaService.create(**form.cleaned_data)
-            messages.success(request, f"Empresa '{e.nombre}' creada con exito.")
-            return redirect("core:empresa_detalle", eid=e.eid)
+            try:
+                e = EmpresaService.create(**form.cleaned_data)
+            except UniqueProperty:
+                form.add_error("nombre", "Ya existe una empresa con este nombre.")
+            else:
+                messages.success(request, f"Empresa '{e.nombre}' creada con exito.")
+                return redirect("core:empresa_detalle", eid=e.eid)
     else:
         form = EmpresaForm()
     return render(request, "empresas/formulario.html", {"form": form, "accion": "Crear"})
@@ -320,9 +330,13 @@ def empresa_editar(request, eid):
     if request.method == "POST":
         form = EmpresaForm(request.POST)
         if form.is_valid():
-            EmpresaService.update(eid, **form.cleaned_data)
-            messages.success(request, f"Empresa '{empresa.nombre}' actualizada.")
-            return redirect("core:empresa_detalle", eid=eid)
+            try:
+                EmpresaService.update(eid, **form.cleaned_data)
+            except UniqueProperty:
+                form.add_error("nombre", "Ya existe una empresa con este nombre.")
+            else:
+                messages.success(request, f"Empresa '{empresa.nombre}' actualizada.")
+                return redirect("core:empresa_detalle", eid=eid)
     else:
         form = EmpresaForm(initial={
             "nombre": empresa.nombre,
@@ -370,8 +384,12 @@ def habilidad_crear(request):
     if request.method == "POST":
         form = HabilidadForm(request.POST)
         if form.is_valid():
-            h = HabilidadService.create(**form.cleaned_data)
-            messages.success(request, f"Habilidad '{h.nombre}' registrada.")
+            try:
+                h = HabilidadService.create(**form.cleaned_data)
+            except UniqueProperty:
+                messages.error(request, "Ya existe una habilidad con ese nombre.")
+            else:
+                messages.success(request, f"Habilidad '{h.nombre}' registrada.")
         else:
             messages.error(request, "Error al registrar la habilidad.")
     return redirect("core:habilidades_lista")
@@ -630,8 +648,12 @@ def usuario_experiencia_agregar(request, uid):
         fecha_fin = request.POST.get("fecha_fin") or None
         actual = request.POST.get("actual") == "on" or request.POST.get("actual") == "true"
         if eid and cargo:
-            EmpleoService.vincular(uid, eid, cargo=cargo, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, actual=actual)
-            messages.success(request, "Experiencia laboral anadida al perfil.")
+            try:
+                EmpleoService.vincular(uid, eid, cargo=cargo, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, actual=actual)
+            except ValueError:
+                messages.error(request, "La fecha no es valida. Usa el formato AAAA-MM-DD.")
+            else:
+                messages.success(request, "Experiencia laboral anadida al perfil.")
         else:
             messages.error(request, "Debe indicar empresa y cargo obligatoriamente.")
     return redirect("core:usuario_detalle", uid=uid)
@@ -650,8 +672,12 @@ def proyecto_colaborador_agregar(request, pid):
         rol = request.POST.get("rol", "Colaborador").strip()
         fecha_inicio = request.POST.get("fecha_inicio") or None
         if uid:
-            ParticipacionProyectoService.vincular(uid, pid, rol=rol, fecha_inicio=fecha_inicio)
-            messages.success(request, "Colaborador incorporado al proyecto.")
+            try:
+                ParticipacionProyectoService.vincular(uid, pid, rol=rol, fecha_inicio=fecha_inicio)
+            except ValueError:
+                messages.error(request, "La fecha no es valida. Usa el formato AAAA-MM-DD.")
+            else:
+                messages.success(request, "Colaborador incorporado al proyecto.")
         else:
             messages.error(request, "Debe seleccionar un usuario para vincularlo.")
     return redirect("core:proyecto_detalle", pid=pid)

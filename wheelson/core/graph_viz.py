@@ -2,14 +2,12 @@
 """
 Servicio de Visualizacion de Grafos Interactiva (Fase 9)
 Proyecto WheelsOn - Red Social Profesional con Base de Datos de Grafos
-Genera estructuras optimizadas para Vis.js Network con compatibilidad Dual-Mode.
+Genera estructuras optimizadas para Vis.js Network a partir de los datos de Neo4j.
 """
 
 from core.services import (
     UsuarioService, EmpresaService, HabilidadService, ProyectoService, OfertaService,
-    _memory_conexiones, _memory_empleos, _memory_habilidades_usuario,
-    _memory_participaciones, _memory_publicaciones, _memory_requisitos,
-    _memory_postulaciones, is_neo4j_available
+    consulta,
 )
 
 
@@ -64,7 +62,7 @@ class GrafoVisualizacionService:
         Extrae y compila nodos y aristas para Vis.js.
         Soporta filtrado por tipo de entidad, búsqueda y extracción de subgrafos egocéntricos.
         """
-        # 1. Obtener entidades del backend (Online / Offline)
+        # 1. Obtener entidades de Neo4j
         usuarios = UsuarioService.all(limit=max_nodos)
         empresas = EmpresaService.all(limit=max_nodos)
         habilidades = HabilidadService.all(limit=max_nodos)
@@ -105,33 +103,25 @@ class GrafoVisualizacionService:
             }
             edges_raw.append(edge)
 
-        # 2.1 Conexiones sociales (:CONECTADO_CON)
-        for e in _memory_conexiones._edges:
-            agregar_arista(e.get("source_id"), e.get("target_id"), "CONECTADO_CON", "#334155", dirigida=False, datos=e)
-
-        # 2.2 Experiencia laboral (:TRABAJA_EN)
-        for e in _memory_empleos._edges:
-            agregar_arista(e.get("source_id"), e.get("target_id"), "TRABAJA_EN", "#1e293b", dirigida=True, datos=e)
-
-        # 2.3 Habilidades de usuarios (:TIENE_HABILIDAD)
-        for e in _memory_habilidades_usuario._edges:
-            agregar_arista(e.get("source_id"), e.get("target_id"), "TIENE_HABILIDAD", "#1e293b", dirigida=True, datos=e)
-
-        # 2.4 Proyectos desarrollados (:DESARROLLO)
-        for e in _memory_participaciones._edges:
-            agregar_arista(e.get("source_id"), e.get("target_id"), "DESARROLLO", "#1e293b", dirigida=True, datos=e)
-
-        # 2.5 Empresas publican ofertas (:PUBLICA)
-        for e in _memory_publicaciones._edges:
-            agregar_arista(e.get("source_id"), e.get("target_id"), "PUBLICA", "#1e293b", dirigida=True, datos=e)
-
-        # 2.6 Requisitos de ofertas (:REQUIERE)
-        for e in _memory_requisitos._edges:
-            agregar_arista(e.get("source_id"), e.get("target_id"), "REQUIERE", "#1e293b", dirigida=True, datos=e)
-
-        # 2.7 Postulaciones laborales (:APLICO_A)
-        for e in _memory_postulaciones._edges:
-            agregar_arista(e.get("source_id"), e.get("target_id"), "APLICO_A", "#1e293b", dirigida=True, datos=e)
+        # Las relaciones se leen de Neo4j, con los mismos nombres que tienen en el modelo.
+        relaciones = consulta(
+            """
+            MATCH (a)-[r:CONECTA_CON|TRABAJA_EN|TIENE_HABILIDAD|PARTICIPA_EN|PUBLICA|REQUIERE|POSTULA_A]->(b)
+            RETURN coalesce(a.uid, a.eid, a.hid, a.pid, a.oid),
+                   coalesce(b.uid, b.eid, b.hid, b.pid, b.oid),
+                   type(r),
+                   properties(r)
+            """
+        )
+        for origen, destino, tipo, propiedades in relaciones:
+            agregar_arista(
+                origen,
+                destino,
+                tipo,
+                "#334155" if tipo == "CONECTA_CON" else "#1e293b",
+                dirigida=tipo != "CONECTA_CON",
+                datos={clave: str(valor) for clave, valor in propiedades.items()},
+            )
 
         # 3. Compilar Nodos
         nodes_raw = []
