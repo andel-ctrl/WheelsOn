@@ -30,6 +30,18 @@ def social_context(request):
     active_uid = request.session.get("active_user_uid")
     current_user = UsuarioService.get(active_uid) if active_uid else None
 
+    # Si la ruta es login o registro y no hay sesión activa, no forzar login automático
+    if not current_user and request.path in ["/login/", "/registro/"]:
+        return {
+            "current_user": None,
+            "current_user_handle": "@invitado",
+            "current_user_connections_count": 0,
+            "current_user_skills_count": 0,
+            "current_user_projects_count": 0,
+            "all_users_for_switch": all_users,
+            "dev_mode": request.session.get("dev_mode", False),
+        }
+
     # Si no hay usuario en sesion, fijar usr_carlos001 o el primero de la lista
     if not current_user:
         current_user = UsuarioService.get("usr_carlos001") or all_users[0]

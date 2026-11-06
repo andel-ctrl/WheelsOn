@@ -296,3 +296,71 @@ class RutaEmpresaForm(BaseTailwindForm):
 class CandidatosOfertaForm(BaseTailwindForm):
     oid = forms.CharField(max_length=64, label="Oferta Laboral")
 
+
+# ==============================================================================
+# FORMULARIOS DE AUTENTICACION & REGISTRO
+# ==============================================================================
+
+class LoginForm(BaseTailwindForm):
+    email = forms.EmailField(
+        label="Correo Electrónico",
+        widget=forms.EmailInput(attrs={"placeholder": "carlos@wheelson.com", "autocomplete": "email"})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"placeholder": "••••••••", "autocomplete": "current-password"}),
+        label="Contraseña"
+    )
+
+
+class RegistroForm(BaseTailwindForm):
+    nombre = forms.CharField(
+        max_length=100,
+        label="Nombre",
+        widget=forms.TextInput(attrs={"placeholder": "Carlos"})
+    )
+    apellido = forms.CharField(
+        max_length=100,
+        label="Apellido",
+        widget=forms.TextInput(attrs={"placeholder": "Calabria"})
+    )
+    email = forms.EmailField(
+        label="Correo Electrónico",
+        widget=forms.EmailInput(attrs={"placeholder": "tu.correo@wheelson.com"})
+    )
+    titulo_profesional = forms.CharField(
+        max_length=150,
+        required=False,
+        label="Título Profesional",
+        initial="Profesional de Software",
+        widget=forms.TextInput(attrs={"placeholder": "Ej: Senior Backend & Graph Architect"})
+    )
+    ubicacion = forms.CharField(
+        max_length=150,
+        required=False,
+        label="Ubicación",
+        initial="Bogota, Colombia",
+        widget=forms.TextInput(attrs={"placeholder": "Ej: Medellín, Colombia"})
+    )
+    biografia = forms.CharField(
+        widget=forms.Textarea(attrs={"placeholder": "Breve descripción sobre tu trayectoria técnica...", "rows": 3}),
+        required=False,
+        label="Biografía Corta"
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"placeholder": "Mínimo 6 caracteres"}),
+        label="Contraseña"
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={"placeholder": "Repite tu contraseña"}),
+        label="Confirmar Contraseña"
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get("password")
+        p2 = cleaned_data.get("password_confirm")
+        if p1 and p2 and p1 != p2:
+            self.add_error("password_confirm", "Las contraseñas no coinciden.")
+        return cleaned_data
+
+

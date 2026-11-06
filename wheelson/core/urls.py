@@ -76,4 +76,9 @@ urlpatterns = [
 
     # Panel de Analítica de Grafos (Fase 8)
     path("analitica/", views.analitica_dashboard, name="analitica_dashboard"),
+
+    # Autenticación y Cuentas (Fase 8 Extension)
+    path("login/", views.login_view, name="login"),
+    path("registro/", views.registro_view, name="registro"),
+    path("logout/", views.logout_view, name="logout"),
 ]

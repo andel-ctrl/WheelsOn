@@ -14,6 +14,8 @@ from core.forms import (
     PublicarOfertaEmpresaForm,
     RequisitoOfertaForm,
     PostulacionForm,
+    LoginForm,
+    RegistroForm,
 )
 from core.services import (
     UsuarioService,
@@ -830,6 +832,73 @@ def analitica_dashboard(request):
         "chart_data_json": json.dumps(chart_data),
     }
     return render(request, "analitica/dashboard.html", context)
+
+
+def login_view(request):
+    quick_uid = request.GET.get("quick_login")
+    if quick_uid:
+        user = UsuarioService.get(quick_uid)
+        if user:
+            request.session["active_user_uid"] = user.uid
+            messages.success(request, f"Sesión iniciada como {user.nombre_completo}.")
+            return redirect("core:dashboard")
+
+    if request.session.get("active_user_uid") and not request.GET.get("force"):
+        return redirect("core:dashboard")
+
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            password = form.cleaned_data["password"]
+            user = UsuarioService.autenticar(email, password)
+            if user:
+                request.session["active_user_uid"] = user.uid
+                messages.success(request, f"¡Bienvenido de nuevo, {user.nombre}!")
+                next_url = request.GET.get("next") or "core:dashboard"
+                return redirect(next_url)
+            else:
+                messages.error(request, "Credenciales incorrectas. Verifica tu correo y contraseña.")
+    else:
+        form = LoginForm()
+
+    context = {
+        "form": form,
+        "usuarios_demo": UsuarioService.all()[:10],
+    }
+    return render(request, "auth/login.html", context)
+
+
+def registro_view(request):
+    if request.session.get("active_user_uid") and not request.GET.get("force"):
+        return redirect("core:dashboard")
+
+    if request.method == "POST":
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            if UsuarioService.get_by_email(email):
+                form.add_error("email", "Ya existe una cuenta registrada con este correo.")
+            else:
+                data = form.cleaned_data.copy()
+                data.pop("password_confirm", None)
+                nuevo_usuario = UsuarioService.create(**data)
+                request.session["active_user_uid"] = nuevo_usuario.uid
+                messages.success(request, f"¡Cuenta creada con éxito! Bienvenido a WheelsOn, {nuevo_usuario.nombre}.")
+                return redirect("core:dashboard")
+    else:
+        form = RegistroForm()
+
+    return render(request, "auth/registro.html", {"form": form})
+
+
+def logout_view(request):
+    if "active_user_uid" in request.session:
+        del request.session["active_user_uid"]
+    request.session.flush()
+    messages.info(request, "Has cerrado sesión correctamente. ¡Hasta pronto!")
+    return redirect("core:login")
+
 
 
 

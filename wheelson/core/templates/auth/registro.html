@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Cuenta | WheelsOn{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col justify-center items-center py-10 px-4 animate-fade-in-up">
+
+    <!-- Card Principal de Registro -->
+    <div class="w-full max-w-lg bg-[#0e1116] border border-[#181c24] rounded-2xl p-7 shadow-2xl space-y-6">
+
+        <!-- Logo & Header -->
+        <div class="text-center space-y-2">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#00b84c] text-white font-black text-xl shadow-lg shadow-emerald-900/30">
+                W
+            </div>
+            <h1 class="text-xl font-black text-white tracking-tight">Únete a WheelsOn</h1>
+            <p class="text-xs text-gray-400">
+                Crea tu perfil profesional y conéctate con la red de desarrolladores orientada a grafos
+            </p>
+        </div>
+
+        <!-- Formulario -->
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="p-3 rounded-xl bg-rose-950/40 border border-rose-900/50 text-rose-300 text-xs">
+                {% for err in form.non_field_errors %}
+                <p>{{ err }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Nombre y Apellido -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-300">{{ form.nombre.label }}</label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                    <p class="text-[11px] text-rose-400 font-mono">{{ form.nombre.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-300">{{ form.apellido.label }}</label>
+                    {{ form.apellido }}
+                    {% if form.apellido.errors %}
+                    <p class="text-[11px] text-rose-400 font-mono">{{ form.apellido.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-1">
+                <label class="block text-xs font-semibold text-gray-300">{{ form.email.label }}</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <p class="text-[11px] text-rose-400 font-mono">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Cargo y Ubicación -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-300">{{ form.titulo_profesional.label }}</label>
+                    {{ form.titulo_profesional }}
+                    {% if form.titulo_profesional.errors %}
+                    <p class="text-[11px] text-rose-400 font-mono">{{ form.titulo_profesional.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-300">{{ form.ubicacion.label }}</label>
+                    {{ form.ubicacion }}
+                    {% if form.ubicacion.errors %}
+                    <p class="text-[11px] text-rose-400 font-mono">{{ form.ubicacion.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Biografía -->
+            <div class="space-y-1">
+                <label class="block text-xs font-semibold text-gray-300">{{ form.biografia.label }}</label>
+                {{ form.biografia }}
+                {% if form.biografia.errors %}
+                <p class="text-[11px] text-rose-400 font-mono">{{ form.biografia.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Contraseñas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-300">{{ form.password.label }}</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                    <p class="text-[11px] text-rose-400 font-mono">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-300">{{ form.password_confirm.label }}</label>
+                    {{ form.password_confirm }}
+                    {% if form.password_confirm.errors %}
+                    <p class="text-[11px] text-rose-400 font-mono">{{ form.password_confirm.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="peer-btn-green w-full py-2.5 rounded-xl text-xs font-bold shadow-md transition-all duration-200 mt-2">
+                Crear Cuenta & Unirme
+            </button>
+        </form>
+
+        <!-- Enlace a Login -->
+        <div class="pt-4 border-t border-[#181c24] text-center text-xs text-gray-400">
+            <span>¿Ya tienes una cuenta registrada?</span>
+            <a href="{% url 'core:login' %}" class="font-bold text-[#00b84c] hover:underline ml-1">
+                Iniciar Sesión
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

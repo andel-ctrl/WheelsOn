@@ -739,6 +739,62 @@ class RecommendationEngineTest(TestCase):
         self.assertIn("habilidades_balance", res.context)
         self.assertIn("chart_data_json", res.context)
 
+    def test_auth_login_views_and_quick_demo(self):
+        # 1. GET Login Page
+        res_get = self.client.get(reverse("core:login") + "?force=1")
+        self.assertEqual(res_get.status_code, 200)
+        self.assertContains(res_get, "Iniciar Sesión")
+
+        # 2. Quick Demo Login (1-click)
+        res_quick = self.client.get(reverse("core:login") + f"?quick_login={self.u1.uid}")
+        self.assertEqual(res_quick.status_code, 302)
+        self.assertEqual(self.client.session.get("active_user_uid"), self.u1.uid)
+
+        # 3. Normal POST Login
+        res_post = self.client.post(reverse("core:login"), {
+            "email": self.u1.email,
+            "password": "WheelsOn2026*",
+        })
+        self.assertEqual(res_post.status_code, 302)
+        self.assertEqual(self.client.session.get("active_user_uid"), self.u1.uid)
+
+    def test_auth_registro_workflow(self):
+        # 1. GET Registro Page
+        res_get = self.client.get(reverse("core:registro") + "?force=1")
+        self.assertEqual(res_get.status_code, 200)
+        self.assertContains(res_get, "Únete a WheelsOn")
+
+        # 2. POST Registro
+        nuevo_email = "nuevo.dev@wheelson.com"
+        res_post = self.client.post(reverse("core:registro"), {
+            "nombre": "Estudiante",
+            "apellido": "Universitario",
+            "email": nuevo_email,
+            "titulo_profesional": "Graph Researcher",
+            "ubicacion": "Bogotá, Colombia",
+            "biografia": "Interesado en redes complejas",
+            "password": "Password123*",
+            "password_confirm": "Password123*",
+        })
+        self.assertEqual(res_post.status_code, 302)
+
+        # Verificar que el usuario fue creado y logueado
+        nuevo_user = UsuarioService.get_by_email(nuevo_email)
+        self.assertIsNotNone(nuevo_user)
+        self.assertEqual(self.client.session.get("active_user_uid"), nuevo_user.uid)
+
+    def test_auth_logout_workflow(self):
+        # Establecer sesión
+        session = self.client.session
+        session["active_user_uid"] = self.u1.uid
+        session.save()
+
+        # Logout
+        res_logout = self.client.get(reverse("core:logout"))
+        self.assertEqual(res_logout.status_code, 302)
+        self.assertNotIn("active_user_uid", self.client.session)
+
+
 
 
 
