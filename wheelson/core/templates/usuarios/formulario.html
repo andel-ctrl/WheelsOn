@@ -12,7 +12,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Informacion Personal y Profesional
+                Información Personal y Profesional
             </h2>
 
             <form method="POST" class="space-y-4">
@@ -38,25 +38,30 @@
                         {% if form.email.errors %}<span class="text-error text-xs">{{ form.email.errors.0 }}</span>{% endif %}
                     </div>
                     <div>
-                        <label class="label"><span class="label-text font-semibold">Contrasena {% if accion == "Editar" %}(opcional){% else %}*{% endif %}</span></label>
+                        <label class="label"><span class="label-text font-semibold">Contraseña {% if accion == "Editar" %}(opcional){% else %}*{% endif %}</span></label>
                         {{ form.password }}
                         {% if form.password.errors %}<span class="text-error text-xs">{{ form.password.errors.0 }}</span>{% endif %}
+                        {% if form.password_actual %}
+                        <label class="label py-1" for="{{ form.password_actual.id_for_label }}"><span class="label-text">Contraseña actual (solo si vas a cambiarla)</span></label>
+                        {{ form.password_actual }}
+                        {% if form.password_actual.errors %}<span class="text-error text-xs">{{ form.password_actual.errors.0 }}</span>{% endif %}
+                        {% endif %}
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="label"><span class="label-text font-semibold">Titulo Profesional</span></label>
+                        <label class="label"><span class="label-text font-semibold">Título Profesional</span></label>
                         {{ form.titulo_profesional }}
                     </div>
                     <div>
-                        <label class="label"><span class="label-text font-semibold">Ubicacion</span></label>
+                        <label class="label"><span class="label-text font-semibold">Ubicación</span></label>
                         {{ form.ubicacion }}
                     </div>
                 </div>
 
                 <div>
-                    <label class="label"><span class="label-text font-semibold">Biografia Profesional</span></label>
+                    <label class="label"><span class="label-text font-semibold">Biografía Profesional</span></label>
                     {{ form.biografia }}
                 </div>
 

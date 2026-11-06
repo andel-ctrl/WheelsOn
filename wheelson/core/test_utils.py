@@ -45,7 +45,7 @@ class Neo4jTestRunner(DiscoverRunner):
             )
 
         # Los tests corren sin DEBUG; así no hace falta ejecutar collectstatic antes.
-        self._estaticos = override_settings(STORAGES={
+        self._estaticos = override_settings(WHEELSON_MODO_DEMO=True, STORAGES={
             "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
             "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
         })

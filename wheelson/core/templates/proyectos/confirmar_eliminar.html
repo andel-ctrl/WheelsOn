@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Eliminar Proyecto | WheelsOn{% endblock %}
-{% block page_title %}Confirmar Eliminacion{% endblock %}
+{% block page_title %}Confirmar Eliminación{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto space-y-6 animate-fade-in-up">
@@ -16,7 +16,7 @@
 
             <h3 class="font-bold text-lg text-base-content">¿Eliminar este Proyecto?</h3>
             <p class="text-xs text-base-content/70 mt-1">
-                Esta accion eliminara el nodo del proyecto y sus asociaciones de colaboracion del grafo.
+                Esta acción eliminará el proyecto y su equipo dejará de estar vinculado a él.
             </p>
 
             <div class="bg-base-300 p-3 rounded-lg my-4 text-xs font-semibold">
@@ -26,7 +26,7 @@
             <form method="POST" class="flex justify-center gap-2">
                 {% csrf_token %}
                 <a href="javascript:history.back()" class="btn btn-sm btn-ghost">Cancelar</a>
-                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminacion</button>
+                <button type="submit" class="btn btn-sm btn-error">Confirmar Eliminación</button>
             </form>
         </div>
     </div>

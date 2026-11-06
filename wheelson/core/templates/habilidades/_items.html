@@ -1,0 +1,14 @@
+{% load wheelson_ui %}
+{% for h in habilidades %}
+<article class="ws-catalogo__item">
+    <div class="ws-catalogo__nombre">
+        <h2>{{ h.nombre }}</h2>
+        <p>{% if h.categoria == 'tecnica' %}Técnica{% elif h.categoria == 'blanda' %}Blanda{% elif h.categoria == 'idioma' %}Idioma{% else %}{{ h.categoria }}{% endif %}</p>
+    </div>
+    <p class="ws-catalogo__uso"><strong>{{ h.uso.personas }}</strong> persona{{ h.uso.personas|pluralize }}<br><strong>{{ h.uso.empleos }}</strong> empleo{{ h.uso.empleos|pluralize }}</p>
+    {% if permisos.es_admin %}<form method="POST" action="{% url 'core:habilidad_eliminar' hid=h.hid %}" data-confirmar="¿Seguro que deseas eliminar la habilidad '{{ h.nombre }}' del catálogo?" onsubmit="return confirm(this.dataset.confirmar);">
+        {% csrf_token %}
+        <button type="submit" class="ws-quitar" title="Eliminar {{ h.nombre }}" aria-label="Eliminar {{ h.nombre }}">{% icono "x" "regular" 14 %}</button>
+    </form>{% endif %}
+</article>
+{% endfor %}

@@ -1,0 +1,37 @@
+{% load wheelson_ui %}
+{% for p in proyectos %}
+<article class="ws-carpeta ws-carpeta--{{ p.estado|default:'activo' }}">
+    <div class="ws-carpeta__espalda" aria-hidden="true"></div>
+    <p class="ws-carpeta__pestana">{% if p.estado == 'activo' %}En desarrollo{% elif p.estado == 'completado' %}Completado{% elif p.estado == 'pausado' %}Pausado{% else %}{{ p.estado }}{% endif %}</p>
+    <div class="ws-carpeta__hoja ws-carpeta__hoja--atras" aria-hidden="true"></div>
+    <div class="ws-carpeta__hoja">
+        {% if p.ultimo_avance %}
+        <span class="ws-carpeta__rotulo">Último avance · {{ p.total_avances }} en total</span>
+        <span class="ws-carpeta__nota">{{ p.ultimo_avance }}</span>
+        {% else %}
+        <span class="ws-carpeta__rotulo">Sin avances todavía</span>
+        {% endif %}
+    </div>
+    <div class="ws-carpeta__frente">
+        <h2 class="ws-carpeta__nombre"><a href="{% url 'core:proyecto_detalle' pid=p.pid %}">{{ p.nombre }}</a></h2>
+        <p class="ws-carpeta__texto">{{ p.descripcion|default:"Este proyecto todavía no tiene descripción."|truncatewords:26 }}</p>
+        {% if p.tecnologias %}<p class="ws-carpeta__stack">{{ p.tecnologias|join:" / " }}</p>{% endif %}
+        <div class="ws-carpeta__pie">
+            <div class="ws-equipo" title="{{ p.total_miembros }} participante{{ p.total_miembros|pluralize }}">
+                {% for inicial in p.iniciales %}<span>{{ inicial }}</span>{% endfor %}
+                {% if p.mas_miembros %}<span class="ws-equipo__mas">+{{ p.mas_miembros }}</span>{% endif %}
+            </div>
+            <div class="ws-carpeta__acciones">
+                {% if p|editable_por:permisos %}
+                <a class="ws-enlace ws-persona__editar" href="{% url 'core:proyecto_editar' pid=p.pid %}">Editar</a>
+                <form method="POST" action="{% url 'core:proyecto_eliminar' pid=p.pid %}" data-confirmar="¿Seguro que deseas eliminar este proyecto?" onsubmit="return confirm(this.dataset.confirmar);">
+                    {% csrf_token %}
+                    <button type="submit" class="ws-enlace ws-persona__quitar">Eliminar</button>
+                </form>
+                {% endif %}
+                <a class="ws-btn ws-btn--primario" href="{% url 'core:proyecto_detalle' pid=p.pid %}">Ver Proyecto {% icono "arrow-right" "regular" 15 %}</a>
+            </div>
+        </div>
+    </div>
+</article>
+{% endfor %}

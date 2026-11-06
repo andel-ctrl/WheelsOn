@@ -1,0 +1,37 @@
+{% load wheelson_ui %}
+{# Una oferta como pasaje: de ti hasta la empresa. La ruta y la compatibilidad son datos reales. #}
+<article class="ws-boleto{% if o.estado != 'abierta' %} ws-boleto--cerrado{% endif %}">
+    <div class="ws-boleto__papel">
+    <div class="ws-boleto__cuerpo">
+        <div class="ws-ruta">
+            <span class="ws-ruta__punto">Tú</span>
+            <span class="ws-ruta__linea"><em>{{ o.b_ruta }}</em></span>
+            {% if o.b_empresa %}<a class="ws-ruta__punto ws-ruta__destino" href="{% url 'core:empresa_detalle' eid=o.b_empresa.eid %}">{{ o.b_empresa.nombre }}</a>{% else %}<span class="ws-ruta__punto ws-ruta__destino">Sin empresa</span>{% endif %}
+        </div>
+        <h2 class="ws-boleto__titulo"><a href="{% url 'core:oferta_detalle' oid=o.oid %}">{{ o.titulo }}</a></h2>
+        <dl class="ws-boleto__datos">
+            <div><dt>Modalidad</dt><dd>{{ o.get_modalidad_display|default:o.modalidad }}</dd></div>
+            <div><dt>Lugar</dt><dd>{{ o.ubicacion|default:"No especificado" }}</dd></div>
+            <div><dt>Salario</dt><dd>{% if o.salario_min or o.salario_max %}${{ o.salario_min|floatformat:"0g" }} a ${{ o.salario_max|floatformat:"0g" }}{% else %}A convenir{% endif %}</dd></div>
+        </dl>
+        {% if o.b_postulado %}<span class="ws-tinta" aria-label="Ya te postulaste">Postulado</span>{% elif o.estado != 'abierta' %}<span class="ws-tinta ws-tinta--neutra">Cerrada</span>{% endif %}
+    </div>
+    <div class="ws-boleto__talon">
+        {% if o.b_pct is not None %}
+        <p class="ws-boleto__cifra">{{ o.b_pct }}<small>%</small></p>
+        <p class="ws-boleto__leyenda">compatible contigo</p>
+        {% else %}
+        <p class="ws-boleto__leyenda">Sin requisitos publicados</p>
+        {% endif %}
+        <a class="ws-btn ws-btn--primario" href="{% url 'core:oferta_detalle' oid=o.oid %}">Ver empleo</a>
+        {% if postular and not o.b_postulado %}
+        <form method="POST" action="{% url 'core:oferta_postular' oid=o.oid %}">
+            {% csrf_token %}
+            <input type="hidden" name="carta_presentacion" value="Postulación rápida originada desde el Motor de Recomendaciones.">
+            <button type="submit" class="ws-enlace ws-persona__editar">Postular</button>
+        </form>
+        {% endif %}
+        {% if o|editable_por:permisos %}<a class="ws-enlace ws-persona__editar" href="{% url 'core:oferta_editar' oid=o.oid %}">Editar</a>{% endif %}
+    </div>
+    </div>
+</article>

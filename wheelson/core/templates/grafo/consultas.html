@@ -1,63 +1,53 @@
 {% extends "base.html" %}
+{% load wheelson_ui %}
 
 {% block title %}Consultas Avanzadas de Grafo | WheelsOn{% endblock %}
 {% block page_title %}Consultas Avanzadas de Grafo (Cypher){% endblock %}
 
 {% block content %}
-<div class="space-y-6 animate-fade-in-up">
+<div class="ws-pagina">
+    {% include "componentes/encabezado.html" with titulo="Consultas Cypher" bajada="Preguntas que solo un grafo responde bien: quién te conecta con quién, qué tienen en común y qué pide el mercado. Cada una deja ver su Cypher." total=8 unidad="consultas sobre la red" %}
 
-    <!-- Header Hero Banner (Camuflado al fondo oscuro) -->
-    <div class="peer-card p-6 sm:p-7 rounded-2xl bg-[#0e1116] border border-[#181c24] space-y-2">
-        <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
-            Explorador de Consultas Avanzadas
-        </h1>
-        <p class="text-xs text-gray-400 max-w-2xl leading-relaxed">
-            Ejecuta algoritmos de grafos sobre la red profesional: caminos mínimos (BFS / Dijkstra), contactos mutuos, afinidad de competencias, rutas de referidos y análisis de demanda laboral.
-        </p>
-    </div>
-
-    <!-- Navigation Tabs (Píldoras redondeadas exactas a ejemplo.png) -->
-    <div class="inline-flex rounded-full bg-[#12151b] border border-[#1e232d] p-1 text-xs font-semibold flex-wrap gap-1">
+    <div class="ws-barra"><div class="ws-filtros">
         <a href="?tab=camino{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if uid2 %}&uid2={{ uid2 }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'camino' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            1. Ruta más Corta (Shortest Path)
+           class="{% if tab == 'camino' %}is-activo{% endif %}">
+            Ruta más corta
         </a>
         <a href="?tab=comun{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if uid2 %}&uid2={{ uid2 }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'comun' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            2. Contactos en Común
+           class="{% if tab == 'comun' %}is-activo{% endif %}">
+            Contactos en común
         </a>
         <a href="?tab=similares{% if uid1 %}&uid1={{ uid1 }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'similares' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            3. Habilidades Similares
+           class="{% if tab == 'similares' %}is-activo{% endif %}">
+            Habilidades similares
         </a>
         <a href="?tab=ruta_empresa{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if eid %}&eid={{ eid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'ruta_empresa' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            4. Ruta a Empresa (Networking)
+           class="{% if tab == 'ruta_empresa' %}is-activo{% endif %}">
+            Ruta a una empresa
         </a>
         <a href="?tab=demandadas"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'demandadas' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            5. Habilidades Demandadas
+           class="{% if tab == 'demandadas' %}is-activo{% endif %}">
+            Habilidades demandadas
         </a>
-        <a href="?tab=candidatos{% if oid %}&oid={{ oid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'candidatos' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            6. Match para Oferta
-        </a>
+        {% if ofertas_gestionadas %}<a href="?tab=candidatos"
+           class="{% if tab == 'candidatos' %}is-activo{% endif %}">
+            Candidatos para un empleo
+        </a>{% endif %}
         <a href="?tab=ruta_oferta{% if uid1 %}&uid1={{ uid1 }}{% endif %}{% if oid %}&oid={{ oid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'ruta_oferta' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            7. Ruta a Oferta
+           class="{% if tab == 'ruta_oferta' %}is-activo{% endif %}">
+            Ruta a un empleo
         </a>
         <a href="?tab=proyectos{% if pid %}&pid={{ pid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'proyectos' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            8. Proyectos Relacionados
+           class="{% if tab == 'proyectos' %}is-activo{% endif %}">
+            Proyectos relacionados
         </a>
-    </div>
+    </div></div>
 
     <!-- TAB 1: RUTA MAS CORTA (SHORTEST PATH) -->
     {% if tab == 'camino' %}
     <div class="space-y-5">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
                 Calcular Ruta Mínima entre Usuarios
             </h2>
 
@@ -85,12 +75,7 @@
             </form>
 
             <!-- Cypher Code Inspector -->
-            <details class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22]" {% if dev_mode %}open{% endif %}>
-                <summary class="cursor-pointer font-bold text-xs text-[#00b84c] flex items-center justify-between">
-                    <span>Consulta Cypher en el Grafo (Modo Dev)</span>
-                    <span class="text-[10px] font-mono text-gray-500">shortestPath()</span>
-                </summary>
-                <div class="mt-2 font-mono text-[11px] text-gray-400 overflow-x-auto">
+            <details class="ws-cypher"><summary>La consulta en Cypher: shortestPath()</summary><div class="ws-cypher__codigo">
                     MATCH (u1:Usuario {uid: '{{ uid1 }}'}), (u2:Usuario {uid: '{{ uid2 }}'})<br>
                     MATCH p = shortestPath((u1)-[:CONECTA_CON*..6]-(u2))<br>
                     RETURN p, length(p) AS grados_separacion;
@@ -106,17 +91,17 @@
                     <h3 class="font-bold text-sm text-white">Ruta Óptima Encontrada</h3>
                     <p class="text-xs text-gray-400">Camino más corto en la red de contactos.</p>
                 </div>
-                <span class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold text-xs">
-                    {{ res_camino.grados }} Grado(s) de Separación
+                <span class="ws-dato">
+                    {{ res_camino.grados }} grado{{ res_camino.grados|pluralize }} de separación
                 </span>
             </div>
 
             <!-- Path Visualization -->
-            <div class="flex flex-wrap items-center justify-center gap-3 py-4">
+            <div class="ws-camino">
                 {% for nodo in res_camino.camino %}
-                <div class="flex items-center gap-3">
-                    <div class="p-3 rounded-2xl bg-[#090b0e] border border-[#161a22] text-center min-w-36">
-                        <div class="w-9 h-9 rounded-xl bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs mx-auto mb-1 shadow">
+                <div class="ws-camino__paso">
+                    <div class="ws-parada">
+                        <div class="ws-parada__foto">
                             {{ nodo.nombre|slice:":1" }}{{ nodo.apellido|slice:":1" }}
                         </div>
                         <a href="{% url 'core:usuario_detalle' uid=nodo.uid %}" class="font-bold text-xs text-white hover:text-[#00b84c] truncate block">
@@ -126,10 +111,7 @@
                     </div>
 
                     {% if not forloop.last %}
-                    <div class="text-[#00b84c] font-black text-xl flex flex-col items-center">
-                        <span class="text-[9px] uppercase font-mono text-gray-600 tracking-widest">:CONECTA</span>
-                        &rarr;
-                    </div>
+                    <span class="ws-camino__tramo"><em>CONECTA</em></span>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -147,7 +129,6 @@
     <div class="space-y-5">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
                 Identificar Contactos en Común (Mutual Friends)
             </h2>
 
@@ -174,11 +155,8 @@
                 </div>
             </form>
 
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-[#00b84c] font-bold">// Consulta Cypher:</span><br>
-                MATCH (u1:Usuario {uid: '{{ uid1 }}'})-[:CONECTA_CON]-(comun:Usuario)-[:CONECTA_CON]-(u2:Usuario {uid: '{{ uid2 }}'})<br>
-                RETURN DISTINCT comun;
-            </div>
+            <details class="ws-cypher"><summary>Consulta Cypher</summary><div class="ws-cypher__codigo">MATCH (u1:Usuario {uid: '{{ uid1 }}'})-[:CONECTA_CON]-(comun:Usuario)-[:CONECTA_CON]-(u2:Usuario {uid: '{{ uid2 }}'})<br>
+                RETURN DISTINCT comun;</div></details>
         </div>
 
         {% if res_comun is not None %}
@@ -215,7 +193,6 @@
     <div class="space-y-5">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
                 Descubrir Colegas con Habilidades Similares
             </h2>
 
@@ -234,11 +211,8 @@
                 </div>
             </form>
 
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-purple-400 font-bold">// Consulta Cypher de Similitud Semántica:</span><br>
-                MATCH (u1:Usuario {uid: '{{ uid1 }}'})-[:TIENE_HABILIDAD]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u2:Usuario)<br>
-                RETURN u2, count(h) AS compartidas, collect(h.nombre) AS habilidades ORDER BY compartidas DESC;
-            </div>
+            <details class="ws-cypher"><summary>Consulta Cypher de Similitud Semántica</summary><div class="ws-cypher__codigo">MATCH (u1:Usuario {uid: '{{ uid1 }}'})-[:TIENE_HABILIDAD]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u2:Usuario)<br>
+                RETURN u2, count(h) AS compartidas, collect(h.nombre) AS habilidades ORDER BY compartidas DESC;</div></details>
         </div>
 
         {% if res_similares is not None %}
@@ -266,8 +240,8 @@
                         </div>
                     </div>
 
-                    <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs font-bold">
-                        {{ item.total_compartidas }} compartida(s)
+                    <span class="ws-dato">
+                        {{ item.total_compartidas }} compartida{{ item.total_compartidas|pluralize }}
                     </span>
                 </div>
                 {% endfor %}
@@ -284,7 +258,6 @@
     <div class="space-y-5">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
                 Ruta de Networking hacia Empresa Objetivo
             </h2>
 
@@ -311,32 +284,29 @@
                 </div>
             </form>
 
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-cyan-400 font-bold">// Consulta Cypher de Camino Heterogéneo:</span><br>
-                MATCH (u:Usuario {uid: '{{ uid1 }}'}), (e:Empresa {eid: '{{ eid }}'})<br>
+            <details class="ws-cypher"><summary>Consulta Cypher de Camino Heterogéneo</summary><div class="ws-cypher__codigo">MATCH (u:Usuario {uid: '{{ uid1 }}'}), (e:Empresa {eid: '{{ eid }}'})<br>
                 MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN*..6]-(e))<br>
-                RETURN p;
-            </div>
+                RETURN p;</div></details>
         </div>
 
         {% if res_empresa and res_empresa.encontrado %}
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-6 rounded-2xl space-y-4">
             <h3 class="font-bold text-sm text-white">
-                Cadena de Contactos Encontrada ({{ res_empresa.longitud }} paso(s))
+                Cadena de Contactos Encontrada ({{ res_empresa.longitud }} paso{{ res_empresa.longitud|pluralize }})
             </h3>
 
-            <div class="flex flex-wrap items-center justify-center gap-3 py-4">
+            <div class="ws-camino">
                 {% for paso in res_empresa.camino %}
-                <div class="flex items-center gap-3">
-                    <div class="p-3 rounded-xl bg-[#090b0e] border border-[#161a22] text-center min-w-36">
-                        <span class="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase {% if paso.tipo == 'Empresa' %}bg-cyan-500/20 text-cyan-400{% else %}bg-[#00b84c]/20 text-[#00b84c]{% endif %} mb-1 inline-block">
+                <div class="ws-camino__paso">
+                    <div class="ws-parada">
+                        <span class="ws-dato">
                             {{ paso.tipo }}
                         </span>
                         <p class="font-bold text-xs text-white">{{ paso.nombre }}</p>
                     </div>
 
                     {% if not forloop.last %}
-                    <span class="text-[#00b84c] font-black text-xl">&rarr;</span>
+                    <span class="ws-camino__tramo" aria-hidden="true"></span>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -356,19 +326,15 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
                     <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                         Habilidades más Demandadas en el Ecosistema
                     </h2>
-                    <p class="text-[11px] text-gray-500 font-mono">Agregación en tiempo real de competencias exigidas por las ofertas abiertas.</p>
+                    <p class="text-[11px] text-gray-500">Agregación en tiempo real de competencias exigidas por las ofertas abiertas.</p>
                 </div>
-                <span class="text-[10px] font-mono text-[#00b84c] bg-[#090b0e] border border-[#161a22] px-2 py-0.5 rounded-full">Arista [:REQUIERE]</span>
+                <span class="ws-dato">Arista [:REQUIERE]</span>
             </div>
 
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-amber-400 font-bold">// Consulta Cypher de Agregación:</span><br>
-                MATCH (h:Habilidad)<-[r:REQUIERE]-(o:Oferta {estado: 'abierta'})<br>
-                RETURN h.nombre, count(o) AS demanda ORDER BY demanda DESC;
-            </div>
+            <details class="ws-cypher"><summary>Consulta Cypher de Agregación</summary><div class="ws-cypher__codigo">MATCH (h:Habilidad)<-[r:REQUIERE]-(o:Oferta {estado: 'abierta'})<br>
+                RETURN h.nombre, count(o) AS demanda ORDER BY demanda DESC;</div></details>
 
             <div class="overflow-x-auto mt-4">
                 <table class="w-full text-left text-xs divide-y divide-[#181c24]">
@@ -377,7 +343,7 @@
                             <th class="py-3 px-4">Ranking</th>
                             <th class="py-3 px-4">Habilidad</th>
                             <th class="py-3 px-4">Categoría</th>
-                            <th class="py-3 px-4">Vacantes Abiertas</th>
+                            <th class="py-3 px-4">Empleos abiertos</th>
                             <th class="py-3 px-4">Exigencia Obligatoria</th>
                             <th class="py-3 px-4">Deseables</th>
                         </tr>
@@ -387,10 +353,10 @@
                         <tr class="hover:bg-[#11141b] transition">
                             <td class="py-3 px-4 font-black text-amber-400">#{{ forloop.counter }}</td>
                             <td class="py-3 px-4 font-bold text-white">{{ item.habilidad }}</td>
-                            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono uppercase">{{ item.categoria }}</span></td>
+                            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono uppercase">{{ item.categoria|legible }}</span></td>
                             <td class="py-3 px-4 font-bold text-white">{{ item.total_ofertas }}</td>
-                            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold text-[10px]">{{ item.obligatorias }}</span></td>
-                            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 text-[10px]">{{ item.deseables }}</span></td>
+                            <td class="py-3 px-4"><span class="ws-dato">{{ item.obligatorias }}</span></td>
+                            <td class="py-3 px-4"><span class="ws-dato">{{ item.deseables }}</span></td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="6" class="text-center py-6 text-gray-500">No hay datos de demanda registrados.</td></tr>
@@ -402,20 +368,23 @@
     </div>
 
     <!-- TAB 6: MATCH PARA OFERTA -->
+    {% elif tab == 'candidatos' and not ofertas_gestionadas %}
+    <div class="peer-card bg-[#0e1116] border border-[#181c24] p-8 text-center rounded-2xl">
+        <p class="text-xs text-gray-400">Los candidatos sugeridos son para la empresa que publica la oferta.</p>
+    </div>
     {% elif tab == 'candidatos' %}
     <div class="space-y-5">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
-                Recomendación de Candidatos para Vacante
+                Recomendación de Candidatos para Empleo
             </h2>
 
             <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <input type="hidden" name="tab" value="candidatos">
                 <div class="md:col-span-9">
-                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Seleccionar Vacante:</label>
+                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Seleccionar empleo:</label>
                     <select name="oid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none">
-                        {% for o in ofertas %}
+                        {% for o in ofertas_gestionadas %}
                         <option value="{{ o.oid }}" {% if oid == o.oid %}selected{% endif %}>{{ o.titulo }} ({{ o.modalidad }})</option>
                         {% endfor %}
                     </select>
@@ -425,12 +394,9 @@
                 </div>
             </form>
 
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-[#00b84c] font-bold">// Consulta Cypher de Match (competencias y conexiones):</span><br>
-                MATCH (o:Oferta {oid: '{{ oid }}'})-[:REQUIERE]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u:Usuario)<br>
+            <details class="ws-cypher"><summary>Consulta Cypher de Match (competencias y conexiones)</summary><div class="ws-cypher__codigo">MATCH (o:Oferta {oid: '{{ oid }}'})-[:REQUIERE]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u:Usuario)<br>
                 OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[:TRABAJA_EN]->(:Empresa)-[:PUBLICA]->(o)<br>
-                RETURN u, count(DISTINCT h) AS competencias, count(DISTINCT c) AS contactos;
-            </div>
+                RETURN u, count(DISTINCT h) AS competencias, count(DISTINCT c) AS contactos;</div></details>
         </div>
 
         {% if res_candidatos is not None %}
@@ -444,7 +410,7 @@
                 {% for cand in res_candidatos %}
                 <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#00b84c] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                        <div class="ws-parada__foto">
                             {{ cand.usuario.nombre|slice:":1" }}{{ cand.usuario.apellido|slice:":1" }}
                         </div>
                         <div>
@@ -464,11 +430,11 @@
                     </div>
 
                     <div class="flex flex-col items-start sm:items-end gap-1.5">
-                        <span class="px-3 py-1 rounded-full bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 text-xs font-bold">
-                            {{ cand.total_coincidencias }} requisito(s) cubierto(s)
+                        <span class="ws-dato">
+                            {{ cand.total_coincidencias }} requisito{{ cand.total_coincidencias|pluralize }} cubierto{{ cand.total_coincidencias|pluralize }}
                         </span>
                         <span class="text-[11px] text-gray-400">
-                            {{ cand.contactos_en_empresa|length }} contacto(s) &bull; Puntaje {{ cand.score }}{% if cand.ya_postulado %} &bull; Ya se postuló{% endif %}
+                            {{ cand.contactos_en_empresa|length }} contacto{{ cand.contactos_en_empresa|length|pluralize }} &bull; Puntaje {{ cand.score }}{% if cand.ya_postulado %} &bull; Ya se postuló{% endif %}
                         </span>
                     </div>
                 </div>
@@ -486,7 +452,6 @@
     <div class="space-y-5">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
                 Camino hacia una Oportunidad Laboral
             </h2>
 
@@ -513,25 +478,22 @@
                 </div>
             </form>
 
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-rose-400 font-bold">// Consulta Cypher de Camino hacia Oferta:</span><br>
-                MATCH (u:Usuario {uid: '{{ uid1 }}'}), (o:Oferta {oid: '{{ oid }}'})<br>
+            <details class="ws-cypher"><summary>Consulta Cypher de Camino hacia Oferta</summary><div class="ws-cypher__codigo">MATCH (u:Usuario {uid: '{{ uid1 }}'}), (o:Oferta {oid: '{{ oid }}'})<br>
                 MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN|PUBLICA*..7]-(o))<br>
-                RETURN p;
-            </div>
+                RETURN p;</div></details>
         </div>
 
         {% if res_ruta_oferta and res_ruta_oferta.encontrado %}
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-6 rounded-2xl space-y-4">
             <h3 class="font-bold text-sm text-white">
-                Camino Encontrado ({{ res_ruta_oferta.longitud }} paso(s)){% if res_ruta_oferta.ya_postulado %} &bull; Ya se postuló a esta oferta{% endif %}
+                Camino Encontrado ({{ res_ruta_oferta.longitud }} paso{{ res_ruta_oferta.longitud|pluralize }}){% if res_ruta_oferta.ya_postulado %} &bull; Ya se postuló a esta oferta{% endif %}
             </h3>
 
-            <div class="flex flex-wrap items-center justify-center gap-3 py-4">
+            <div class="ws-camino">
                 {% for paso in res_ruta_oferta.camino %}
-                <div class="flex items-center gap-3">
-                    <div class="p-3 rounded-xl bg-[#090b0e] border border-[#161a22] text-center min-w-36">
-                        <span class="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase {% if paso.tipo == 'Oferta' %}bg-rose-500/20 text-rose-400{% elif paso.tipo == 'Empresa' %}bg-cyan-500/20 text-cyan-400{% else %}bg-[#00b84c]/20 text-[#00b84c]{% endif %} mb-1 inline-block">
+                <div class="ws-camino__paso">
+                    <div class="ws-parada">
+                        <span class="ws-dato">
                             {{ paso.tipo }}
                         </span>
                         <p class="font-bold text-xs text-white">{{ paso.nombre }}</p>
@@ -561,7 +523,6 @@
     <div class="space-y-5">
         <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
                 Proyectos que Comparten Tecnologías o Miembros
             </h2>
 
@@ -580,13 +541,10 @@
                 </div>
             </form>
 
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-purple-400 font-bold">// Consulta Cypher de Proyectos Relacionados:</span><br>
-                MATCH (p:Proyecto {pid: '{{ pid }}'}), (otro:Proyecto) WHERE otro &lt;&gt; p<br>
+            <details class="ws-cypher"><summary>Consulta Cypher de Proyectos Relacionados</summary><div class="ws-cypher__codigo">MATCH (p:Proyecto {pid: '{{ pid }}'}), (otro:Proyecto) WHERE otro &lt;&gt; p<br>
                 OPTIONAL MATCH (p)&lt;-[:PARTICIPA_EN]-(m:Usuario)-[:PARTICIPA_EN]-&gt;(otro)<br>
                 OPTIONAL MATCH (p)&lt;-[:PARTICIPA_EN]-(a:Usuario)-[:CONECTA_CON]-(b:Usuario)-[:PARTICIPA_EN]-&gt;(otro)<br>
-                RETURN otro, tecnologías en común, m, a, b;
-            </div>
+                RETURN otro, tecnologías en común, m, a, b;</div></details>
         </div>
 
         {% if res_proyectos is not None %}
@@ -599,7 +557,7 @@
                 <div class="p-4 rounded-xl bg-[#090b0e] border border-[#161a22] space-y-2">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <a href="{% url 'core:proyecto_detalle' pid=item.proyecto.pid %}" class="font-bold text-sm text-white hover:text-[#00b84c]">{{ item.proyecto.nombre }}</a>
-                        <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs font-bold">Puntaje {{ item.score }}</span>
+                        <span class="ws-dato">Puntaje {{ item.score }}</span>
                     </div>
                     <p class="text-xs text-gray-400"><span class="font-bold text-gray-300">Tecnologías en común ({{ item.tecnologias_comunes|length }}):</span> {{ item.tecnologias_comunes|join:", "|default:"ninguna" }}</p>
                     <p class="text-xs text-gray-400"><span class="font-bold text-gray-300">Miembros en común ({{ item.miembros_comunes|length }}):</span> {{ item.miembros_comunes|join:", "|default:"ninguno" }}</p>

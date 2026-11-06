@@ -1,191 +1,160 @@
 {% extends "base.html" %}
+{% load wheelson_ui %}
 
 {% block title %}{{ proyecto.nombre }} | Proyecto WheelsOn{% endblock %}
 {% block page_title %}Detalle de Proyecto{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'overview', showMemberModal: false, copied: false }">
+<div class="ws-pagina" x-data="{ showMemberModal: false }">
+    <a class="ws-volver" href="{% url 'core:proyectos_lista' %}">{% icono "arrow-left" "regular" 16 %}Proyectos</a>
 
-    <!-- Top Action Bar -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <a href="{% url 'core:proyectos_lista' %}" class="btn btn-sm btn-ghost gap-2 rounded-xl">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Volver a Proyectos
-        </a>
-        <div class="flex items-center gap-2">
-            <button type="button" @click="navigator.clipboard.writeText('{{ proyecto.pid }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                    class="btn btn-sm btn-ghost border border-base-300 rounded-xl gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
-                <span x-text="copied ? '¡PID Copiado!' : 'Copiar ID'"></span>
-            </button>
-            <a href="{% url 'core:proyecto_editar' pid=proyecto.pid %}" class="btn btn-sm btn-info rounded-xl gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Editar
-            </a>
-            <a href="{% url 'core:proyecto_eliminar' pid=proyecto.pid %}" class="btn btn-sm btn-error btn-outline rounded-xl">
-                Eliminar
-            </a>
-        </div>
-    </div>
-
-    <!-- Project Hero Card -->
-    <div class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl">
-        <div class="h-28 bg-gradient-to-r from-info/25 via-primary/20 to-accent/20 relative p-6 flex justify-between items-start">
-            <span class="badge badge-info badge-outline font-mono text-xs shadow-sm bg-base-100/80">PID: {{ proyecto.pid|slice:":12" }}</span>
-            <span class="badge font-bold uppercase tracking-wider text-xs px-3 py-2 {% if proyecto.estado == 'activo' %}badge-success text-success-content{% elif proyecto.estado == 'completado' %}badge-info text-info-content{% else %}badge-warning text-warning-content{% endif %}">
-                {{ proyecto.estado|default:"activo" }}
-            </span>
-        </div>
-
-        <div class="card-body p-6 sm:p-8 pt-0 -mt-8 relative space-y-6">
-            <div class="space-y-1">
-                <h1 class="text-2xl sm:text-3xl font-black text-base-content tracking-tight">{{ proyecto.nombre }}</h1>
-                <p class="text-xs sm:text-sm font-medium text-info">Proyecto Colaborativo &bull; Ecosistema WheelsOn</p>
-            </div>
-
-            <!-- Specs Bar -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-base-100/60 border border-base-300">
-                <div class="space-y-1">
-                    <span class="text-[11px] uppercase tracking-wider font-bold text-base-content/50">Estado</span>
-                    <p class="text-sm font-semibold capitalize flex items-center gap-1.5 text-base-content">
-                        <span class="w-2 h-2 rounded-full {% if proyecto.estado == 'activo' %}bg-success{% elif proyecto.estado == 'completado' %}bg-info{% else %}bg-warning{% endif %}"></span>
-                        {{ proyecto.estado }}
-                    </p>
+    <section class="ws-expediente ws-expediente--ficha ws-expediente--{{ proyecto.estado|default:'activo' }}">
+        <p class="ws-expediente__pestana">{% if proyecto.estado == 'completado' %}Completado{% elif proyecto.estado == 'pausado' %}Pausado{% else %}En desarrollo{% endif %}</p>
+        <div class="ws-expediente__espalda" aria-hidden="true"></div>
+        <div class="ws-expediente__frente">
+            <div class="ws-ficha__cabeza">
+                <div>
+                    <h1 class="ws-ficha__titulo">{{ proyecto.nombre }}</h1>
+                    <p class="ws-ficha__bajada">{% if lider %}Lo lidera <a class="ws-enlace" href="{% url 'core:usuario_detalle' uid=lider.uid %}">{{ lider.nombre_completo }}</a>{% else %}Proyecto colaborativo{% endif %}</p>
                 </div>
-                <div class="space-y-1">
-                    <span class="text-[11px] uppercase tracking-wider font-bold text-base-content/50">Fecha de Inicio</span>
-                    <p class="text-sm font-semibold text-base-content">{{ proyecto.fecha_inicio|default:"No registrada" }}</p>
-                </div>
-                <div class="space-y-1">
-                    <span class="text-[11px] uppercase tracking-wider font-bold text-base-content/50">Fecha de Finalización</span>
-                    <p class="text-sm font-semibold text-base-content">{{ proyecto.fecha_fin|default:"En desarrollo activo" }}</p>
-                </div>
-            </div>
-
-            <!-- Tab Navigation -->
-            <div class="border-b border-base-300 flex gap-2">
-                <button type="button" @click="activeTab = 'overview'"
-                        :class="activeTab === 'overview' ? 'border-b-2 border-info text-info font-bold' : 'text-base-content/60 hover:text-base-content'"
-                        class="pb-3 px-4 text-sm transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-                    </svg>
-                    Visión General
-                </button>
-                <button type="button" @click="activeTab = 'stack'"
-                        :class="activeTab === 'stack' ? 'border-b-2 border-info text-info font-bold' : 'text-base-content/60 hover:text-base-content'"
-                        class="pb-3 px-4 text-sm transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                    Stack Tecnológico
-                </button>
-                <button type="button" @click="activeTab = 'equipo'"
-                        :class="activeTab === 'equipo' ? 'border-b-2 border-info text-info font-bold' : 'text-base-content/60 hover:text-base-content'"
-                        class="pb-3 px-4 text-sm transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    Equipo & Participantes ({{ miembros_rel|length }})
-                </button>
-            </div>
-
-            <!-- Tab 1: Visión General -->
-            <div x-show="activeTab === 'overview'" class="space-y-4">
-                <h3 class="font-bold text-base text-base-content">Descripción del Proyecto</h3>
-                {% if proyecto.descripcion %}
-                <div class="prose prose-sm max-w-none text-base-content/80 whitespace-pre-line leading-relaxed bg-base-100/40 p-5 rounded-2xl border border-base-300">
-                    {{ proyecto.descripcion }}
-                </div>
-                {% else %}
-                <p class="text-sm text-base-content/50 italic py-6 text-center">No hay descripción registrada para este proyecto.</p>
+                {% if puede_gestionar %}
+                <span class="ws-ficha__admin">
+                    <a class="ws-enlace" href="{% url 'core:proyecto_editar' pid=proyecto.pid %}">Editar</a>
+                    <a class="ws-enlace ws-persona__quitar" href="{% url 'core:proyecto_eliminar' pid=proyecto.pid %}">Eliminar</a>
+                </span>
                 {% endif %}
             </div>
-
-            <!-- Tab 2: Stack Tecnológico -->
-            <div x-show="activeTab === 'stack'" class="space-y-4" style="display: none;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-base text-base-content">Tecnologías Utilizadas</h3>
-                        <p class="text-xs text-base-content/60">Herramientas, frameworks y lenguajes empleados en este proyecto.</p>
-                    </div>
-                </div>
-
-                <div class="p-6 rounded-2xl bg-base-100/40 border border-base-300">
-                    {% if proyecto.tecnologias %}
-                    <div class="flex flex-wrap gap-2">
-                        {% for tech in proyecto.tecnologias %}
-                        <span class="badge badge-lg badge-outline border-info/50 text-info font-bold px-3 py-2 bg-info/5">
-                            {{ tech }}
-                        </span>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <p class="text-xs text-base-content/50 italic text-center">No se han registrado tecnologías específicas.</p>
-                    {% endif %}
-                </div>
+            <dl class="ws-hechos">
+                <div><dt>Inicio</dt><dd>{{ proyecto.fecha_inicio|default:"No registrada" }}</dd></div>
+                <div><dt>Fin</dt><dd>{% if proyecto.fecha_fin %}{{ proyecto.fecha_fin }}{% elif proyecto.estado == "activo" %}En desarrollo activo{% else %}Sin fecha definida{% endif %}</dd></div>
+                <div><dt>Equipo</dt><dd>{{ miembros_rel|length }} persona{{ miembros_rel|length|pluralize }}</dd></div>
+                <div><dt>Avances</dt><dd>{{ avances_rel|length }}</dd></div>
+            </dl>
+            {% if estado_union == "invitado" %}
+            <div class="ws-aviso-union">
+                <span>Te invitaron a colaborar en este proyecto.</span>
+                {% url 'core:proyecto_invitacion_responder' pid=proyecto.pid as url_responder %}
+                {% include "componentes/responder.html" with url=url_responder %}
             </div>
+            {% elif estado_union == "solicitada" %}
+            <form method="POST" action="{% url 'core:proyecto_unirse_cancelar' pid=proyecto.pid %}" class="ws-aviso-union">
+                {% csrf_token %}
+                <span>Pediste unirte. Falta que quien lidera el proyecto responda.</span>
+                <button type="submit" class="ws-btn ws-btn--secundario ws-btn--sm">Cancelar solicitud</button>
+            </form>
+            {% elif puede_solicitar_union %}
+            <form method="POST" action="{% url 'core:proyecto_unirse' pid=proyecto.pid %}">
+                {% csrf_token %}
+                <button type="submit" class="ws-btn ws-btn--primario">Solicitar unirme</button>
+            </form>
+            {% endif %}
+        </div>
+    </section>
 
-            <!-- Tab 3: Equipo & Participantes -->
-            <div x-show="activeTab === 'equipo'" class="space-y-4" style="display: none;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-base text-base-content">Colaboradores en el Grafo (:Usuario)</h3>
-                        <p class="text-xs text-base-content/60">Arista semántica <code class="text-info font-mono">[:PARTICIPA_EN]</code> con rol y vigencia.</p>
-                    </div>
-                    <button type="button" @click="showMemberModal = true" class="btn btn-xs btn-info rounded-lg font-bold">+ Añadir Colaborador</button>
-                </div>
+    <div class="ws-ficha__columnas">
+        <div class="ws-ficha__principal">
+            <section class="ws-bloque" aria-label="Descripción">
+                <div class="ws-bloque__cabecera"><h2 class="ws-bloque__titulo">De qué se trata</h2></div>
+                {% if proyecto.descripcion %}<p class="ws-entrada__texto">{{ proyecto.descripcion }}</p>{% else %}<p class="ws-bloque__vacio">No hay descripción registrada para este proyecto.</p>{% endif %}
+            </section>
 
-                {% if miembros_rel %}
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {% for m in miembros_rel %}
-                    <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center justify-between">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="avatar placeholder">
-                                <div class="bg-info/20 text-info font-bold rounded-xl w-10 h-10 text-xs">
-                                    {{ m.usuario.nombre|slice:":1" }}{{ m.usuario.apellido|slice:":1" }}
-                                </div>
-                            </div>
-                            <div class="min-w-0">
-                                <a href="{% url 'core:usuario_detalle' uid=m.usuario.uid %}" class="font-bold text-xs text-base-content hover:text-info truncate block">
-                                    {{ m.usuario.nombre_completo }}
-                                </a>
-                                <span class="badge badge-xs badge-info font-bold uppercase text-[9px]">{{ m.rol }}</span>
-                            </div>
+            <section class="ws-bloque" aria-label="Avances" id="avances">
+                <div class="ws-bloque__cabecera"><h2 class="ws-bloque__titulo">Avances</h2></div>
+                {% if puede_gestionar %}
+                <details class="ws-plegable"><summary>Registrar un avance</summary>{% include "componentes/avance_form.html" %}</details>
+                {% endif %}
+                {% if avances_rel %}
+                <div x-data="{ todo: false }">
+                <ol class="ws-avances ws-corta ws-corta--4" :class="todo && 'is-toda'">
+                    {% for a in avances_rel %}
+                    <li class="ws-avance">
+                        <div class="ws-avance__cabecera">
+                            <span>{{ a.avance.fecha|date:"j \d\e F \d\e Y" }}{% if a.autor %} · {{ a.autor.nombre_completo }}{% endif %}</span>
+                            <span class="ws-pastilla">{{ a.estado_texto }}</span>
                         </div>
-
-                        <form method="POST" action="{% url 'core:proyecto_colaborador_eliminar' pid=proyecto.pid uid=m.usuario.uid %}"
-                              onsubmit="return confirm('¿Quitar a {{ m.usuario.nombre_completo }} del proyecto?');">
+                        <p class="ws-avance__texto">{{ a.avance.texto }}</p>
+                        {% if puede_gestionar %}
+                        <form method="POST" action="{% url 'core:proyecto_avance_eliminar' pid=proyecto.pid aid=a.avance.aid %}" data-confirmar="¿Eliminar este avance?" onsubmit="return confirm(this.dataset.confirmar);">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-ghost btn-xs text-error p-1 hover:bg-error/10 rounded-lg" title="Quitar">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
+                            <button type="submit" class="ws-enlace ws-persona__quitar">Eliminar</button>
                         </form>
-                    </div>
+                        {% endif %}
+                    </li>
                     {% endfor %}
+                </ol>
+                {% include "componentes/corta.html" with total=avances_rel|length limite=4 %}
                 </div>
                 {% else %}
-                <div class="p-8 rounded-2xl bg-base-100/40 border border-base-300 text-center space-y-3">
-                    <p class="text-xs text-base-content/60">No hay colaboradores vinculados a esta iniciativa aún.</p>
-                    <button type="button" @click="showMemberModal = true" class="btn btn-sm btn-info rounded-xl font-bold">Sumar Primer Miembro</button>
-                </div>
+                <p class="ws-bloque__vacio">Este proyecto todavía no tiene avances registrados.</p>
                 {% endif %}
-            </div>
-
+            </section>
         </div>
+
+        <aside class="ws-ficha__lateral">
+            <section class="ws-bloque" aria-label="Equipo">
+                <div class="ws-bloque__cabecera">
+                    <h2 class="ws-bloque__titulo">Equipo</h2>
+                    {% if puede_gestionar %}<button type="button" @click="showMemberModal = true" class="ws-enlace ws-bloque__accion">Invitar</button>{% endif %}
+                </div>
+                {% for m in miembros_rel %}
+                <div class="ws-renglon">
+                    <span class="ws-avatar ws-avatar--marca ws-avatar--sm" aria-hidden="true">{{ m.usuario.nombre|slice:":1" }}{{ m.usuario.apellido|slice:":1" }}</span>
+                    <span class="ws-renglon__texto">
+                        <a class="ws-renglon__titulo" href="{% url 'core:usuario_detalle' uid=m.usuario.uid %}">{{ m.usuario.nombre_completo }}</a>
+                        <span class="ws-renglon__detalle">{{ m.rol }}</span>
+                    </span>
+                    {% if m.puede_quitar %}<form method="POST" action="{% url 'core:proyecto_colaborador_eliminar' pid=proyecto.pid uid=m.usuario.uid %}" data-confirmar="¿Quitar a {{ m.usuario.nombre_completo }} del proyecto?" onsubmit="return confirm(this.dataset.confirmar);">
+                        {% csrf_token %}
+                        <button type="submit" class="ws-quitar" title="Quitar a {{ m.usuario.nombre_completo }}" aria-label="Quitar a {{ m.usuario.nombre_completo }}">{% icono "x" "regular" 14 %}</button>
+                    </form>{% endif %}
+                </div>
+                {% empty %}
+                <p class="ws-bloque__vacio">Todavía no hay colaboradores.</p>
+                {% endfor %}
+            </section>
+
+            <section class="ws-bloque" aria-label="Tecnologías">
+                <div class="ws-bloque__cabecera"><h2 class="ws-bloque__titulo">Tecnologías</h2></div>
+                {% if proyecto.tecnologias %}<p class="ws-carpeta__stack">{{ proyecto.tecnologias|join:" / " }}</p>{% else %}<p class="ws-bloque__vacio">No se han registrado tecnologías.</p>{% endif %}
+            </section>
+            {% if puede_gestionar %}
+            {% if solicitudes_union %}
+            <section class="ws-transferir" aria-label="Solicitudes para unirse">
+                <h4 class="text-xs font-bold">Quieren unirse al proyecto</h4>
+                {% for s in solicitudes_union %}
+                <div class="ws-transferir__form" style="align-items:center">
+                    <a class="text-xs ws-enlace" style="flex:1" href="{% url 'core:usuario_detalle' uid=s.usuario.uid %}">{{ s.usuario.nombre_completo }}</a>
+                    {% url 'core:proyecto_union_responder' pid=proyecto.pid uid=s.usuario.uid as url_responder %}
+                    {% include "componentes/responder.html" with url=url_responder %}
+                </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+            {% if invitaciones_pendientes %}
+            <section class="ws-transferir" aria-label="Invitaciones pendientes">
+                <h4 class="text-xs font-bold">Invitaciones pendientes</h4>
+                {% for i in invitaciones_pendientes %}
+                <form method="POST" action="{% url 'core:proyecto_invitacion_cancelar' pid=proyecto.pid uid=i.usuario.uid %}" class="ws-transferir__form" style="align-items:center">
+                    {% csrf_token %}
+                    <span class="text-xs" style="flex:1">{{ i.usuario.nombre_completo }}{% if i.rol %} · {{ i.rol }}{% endif %}</span>
+                    <button type="submit" class="ws-btn ws-btn--secundario ws-btn--sm">Cancelar</button>
+                </form>
+                {% endfor %}
+            </section>
+            {% endif %}
+            {% url 'core:proyecto_transferir' pid=proyecto.pid as url_transferir %}
+            {% if transferencia_pendiente %}{% url 'core:proyecto_invitacion_cancelar' pid=proyecto.pid uid=transferencia_pendiente.uid as url_cancelar %}{% endif %}
+            {% include "componentes/transferir.html" with url=url_transferir recurso="proyecto" miembros="colaboradores" candidatos=candidatos_transferencia pendiente=transferencia_pendiente url_cancelar=url_cancelar %}
+            {% endif %}
+        </aside>
     </div>
 
     <!-- Modal Añadir Colaborador -->
+    {% if puede_gestionar %}
     <div x-show="showMemberModal" class="modal modal-open" style="display: none;">
         <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
-            <h3 class="font-black text-lg text-base-content">Incorporar Colaborador al Proyecto</h3>
-            <p class="text-xs text-base-content/70">Crea la relación <code class="font-mono text-info">(:Usuario)-[:PARTICIPA_EN]->(:Proyecto)</code>.</p>
+            <h3 class="font-black text-lg text-base-content">Invitar al proyecto</h3>
+            <p class="text-xs text-base-content/70">La persona se suma cuando acepte la invitación. Si ya participa, se actualiza su rol.</p>
 
             <form method="POST" action="{% url 'core:proyecto_colaborador_agregar' pid=proyecto.pid %}" class="space-y-3">
                 {% csrf_token %}
@@ -209,11 +178,13 @@
 
                 <div class="modal-action">
                     <button type="button" @click="showMemberModal = false" class="btn btn-sm btn-ghost rounded-xl">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-info rounded-xl font-bold">Vincular al Equipo</button>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-xl font-bold">Enviar invitación</button>
                 </div>
             </form>
         </div>
     </div>
+    {% endif %}
+
 
 </div>
 {% endblock %}

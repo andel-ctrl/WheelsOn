@@ -1,24 +1,21 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Analítica de Grafos | WheelsOn{% endblock %}
 {% block page_title %}Analítica de Red & Grafos{% endblock %}
 
 {% block extra_css %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'vendor/chart-4.4.7.umd.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'influencia' }">
-
-    <!-- Header Principal Estilo Peerlist -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#181c24]">
+<div class="ws-pagina" x-data="{ activeTab: 'influencia' }">
+    <header class="ws-seccion">
         <div>
-            <h1 class="text-xl font-black text-white tracking-tight">Panel de Analítica de Grafos</h1>
-            <p class="text-xs text-gray-400 mt-0.5">
-                Evaluación matemática de la red social, centralidad estructural, comunidades profesionales y mercado de competencias.
-            </p>
+            <h1 class="ws-seccion__titulo">Analítica</h1>
+            <p class="ws-seccion__bajada">Quién influye, quién conecta a quién y qué pide el mercado, calculado sobre la red real.</p>
         </div>
-    </div>
+    </header>
 
     <!-- Tira Unificada de Métricas Topológicas (Sin cajas genéricas) -->
     <div class="peer-card bg-[#0e1116] border border-[#181c24] rounded-2xl p-4">
@@ -68,35 +65,15 @@
     </div>
 
     <!-- Pestañas Minimalistas en Español -->
-    <div class="flex items-center gap-2 border-b border-[#181c24] pb-2 text-xs font-semibold overflow-x-auto">
-        <button @click="activeTab = 'influencia'"
-                :class="activeTab === 'influencia' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
-                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            <span>Influencia & PageRank</span>
-        </button>
+    <div class="ws-barra"><div class="ws-filtros" role="tablist" aria-label="Secciones de analítica">
+        <button type="button" @click="activeTab = 'influencia'" :class="activeTab === 'influencia' && 'is-activo'">Influencia & PageRank</button>
 
-        <button @click="activeTab = 'comunidades'"
-                :class="activeTab === 'comunidades' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
-                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            <span>Comunidades & Clústeres</span>
-        </button>
+        <button type="button" @click="activeTab = 'comunidades'" :class="activeTab === 'comunidades' && 'is-activo'">Comunidades & Clústeres</button>
 
-        <button @click="activeTab = 'habilidades'"
-                :class="activeTab === 'habilidades' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
-                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span>Oferta vs Demanda de Talento</span>
-        </button>
+        <button type="button" @click="activeTab = 'habilidades'" :class="activeTab === 'habilidades' && 'is-activo'">Oferta vs Demanda de Talento</button>
 
-        <button @click="activeTab = 'formulas'"
-                :class="activeTab === 'formulas' ? 'bg-[#181c24] text-[#00b84c] border-[#00b84c]' : 'text-gray-400 hover:text-white border-transparent'"
-                class="px-4 py-2 rounded-xl border transition flex items-center gap-2 whitespace-nowrap">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            <span>Teoría de Grafos</span>
-        </button>
-    </div>
+        <button type="button" @click="activeTab = 'formulas'" :class="activeTab === 'formulas' && 'is-activo'">Teoría de Grafos</button>
+    </div></div>
 
     <!-- ========================================================================= -->
     <!-- TAB 1: INFLUENCIA & PAGERANK -->
@@ -132,7 +109,7 @@
                     <span class="text-[10px] font-mono text-[#00b84c] bg-[#00b84c]/10 px-2 py-0.5 rounded border border-[#00b84c]/20">d = 0.85</span>
                 </div>
 
-                <div class="divide-y divide-[#181c24]">
+                <div x-data="{ todo: false }"><div class="divide-y divide-[#181c24] ws-corta ws-corta--5" :class="todo && 'is-toda'">
                     {% for item in pagerank %}
                     <div class="py-2.5 flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3 min-w-0">
@@ -160,7 +137,7 @@
                     {% empty %}
                     <p class="text-xs text-gray-500 py-4 text-center">Sin datos de conexiones aún.</p>
                     {% endfor %}
-                </div>
+                </div>{% include "componentes/corta.html" with total=pagerank|length limite=5 %}</div>
             </div>
 
             <!-- Ranking Degree Centrality -->
@@ -173,7 +150,7 @@
                     <span class="text-[10px] font-mono text-gray-400 bg-[#161a22] px-2 py-0.5 rounded border border-[#222731]">deg(v)</span>
                 </div>
 
-                <div class="divide-y divide-[#181c24]">
+                <div x-data="{ todo: false }"><div class="divide-y divide-[#181c24] ws-corta ws-corta--5" :class="todo && 'is-toda'">
                     {% for item in centralidad %}
                     <div class="py-2.5 flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3 min-w-0">
@@ -199,7 +176,7 @@
                     {% empty %}
                     <p class="text-xs text-gray-500 py-4 text-center">Sin datos de conexiones aún.</p>
                     {% endfor %}
-                </div>
+                </div>{% include "componentes/corta.html" with total=centralidad|length limite=5 %}</div>
             </div>
         </div>
 
@@ -453,11 +430,12 @@
     </div>
 </div>
 
+{{ chart_data|json_script:"datos-analitica" }}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const rawData = {{ chart_data_json|safe }};
+    const rawData = JSON.parse(document.getElementById('datos-analitica').textContent);
     
-    Chart.defaults.color = '#9ca3af';
+    Chart.defaults.color = '#574759';
     Chart.defaults.font.family = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
     Chart.defaults.font.size = 11;
 
@@ -472,14 +450,14 @@ document.addEventListener("DOMContentLoaded", function() {
                     {
                         label: 'Conexiones Directas',
                         data: rawData.influencia.grado,
-                        backgroundColor: '#00b84c',
+                        backgroundColor: '#6B5F5C',
                         borderRadius: 6,
                         barPercentage: 0.6,
                     },
                     {
                         label: 'PageRank Relativo (%)',
                         data: rawData.influencia.pagerank,
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#D9483B',
                         borderRadius: 6,
                         barPercentage: 0.6,
                     }
@@ -490,8 +468,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#6b7280' } },
-                    y: { grid: { color: '#181c24' }, ticks: { color: '#6b7280' } }
+                    x: { grid: { display: false }, ticks: { color: '#574759' } },
+                    y: { grid: { color: '#EBE3E4' }, ticks: { color: '#574759' } }
                 }
             }
         });
@@ -507,9 +485,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     data: rawData.comunidades.datos,
                     backgroundColor: [
-                        '#00b84c', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'
+                        '#6B5F5C', '#D9483B', '#455DD1', '#14A3B0', '#9A831C', '#958698'
                     ],
-                    borderColor: '#0e1116',
+                    borderColor: '#FFFFFF',
                     borderWidth: 3,
                 }]
             },
@@ -519,7 +497,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { boxWidth: 10, padding: 12, color: '#9ca3af' }
+                        labels: { boxWidth: 10, padding: 12, color: '#574759' }
                     }
                 },
                 cutout: '68%'
@@ -538,14 +516,14 @@ document.addEventListener("DOMContentLoaded", function() {
                     {
                         label: 'Oferta (Candidatos)',
                         data: rawData.habilidades.oferta,
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#D9483B',
                         borderRadius: 6,
                         barPercentage: 0.6,
                     },
                     {
                         label: 'Demanda (Empresas)',
                         data: rawData.habilidades.demanda,
-                        backgroundColor: '#00b84c',
+                        backgroundColor: '#6B5F5C',
                         borderRadius: 6,
                         barPercentage: 0.6,
                     }
@@ -556,8 +534,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#6b7280' } },
-                    y: { grid: { color: '#181c24' }, ticks: { color: '#6b7280', stepSize: 1 } }
+                    x: { grid: { display: false }, ticks: { color: '#574759' } },
+                    y: { grid: { color: '#EBE3E4' }, ticks: { color: '#574759', stepSize: 1 } }
                 }
             }
         });

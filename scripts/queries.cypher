@@ -45,6 +45,7 @@ LIMIT $limit;
 // ------------------------------------------------------------------------------
 MATCH (u:Usuario {uid: $uid}), (e:Empresa {eid: $eid})
 MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN*..6]-(e))
+WHERE all(r IN relationships(p) WHERE type(r) <> 'TRABAJA_EN' OR coalesce(r.actual, true))
 RETURN [n IN nodes(p) | {
     tipo: labels(n)[0],
     id: coalesce(n.uid, n.eid),
@@ -104,7 +105,8 @@ WITH yo, otro, count(DISTINCT amigo) AS amigos_comun,
 OPTIONAL MATCH (yo)-[:TIENE_HABILIDAD]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(otro)
 WITH yo, otro, amigos_comun, nombres_amigos, count(DISTINCT h) AS habs_comun,
      collect(DISTINCT h.nombre) AS nombres_habs
-OPTIONAL MATCH (yo)-[:TRABAJA_EN]->(e:Empresa)<-[:TRABAJA_EN]-(otro)
+OPTIONAL MATCH (yo)-[t1:TRABAJA_EN]->(e:Empresa)<-[t2:TRABAJA_EN]-(otro)
+WHERE coalesce(t1.actual, true) AND coalesce(t2.actual, true)
 WITH otro, amigos_comun, nombres_amigos, habs_comun, nombres_habs, count(DISTINCT e) AS emps_comun
 WITH otro, amigos_comun, nombres_amigos, habs_comun, nombres_habs, emps_comun,
      amigos_comun * 4 + habs_comun * 2 + emps_comun * 3 AS score
@@ -159,11 +161,12 @@ MATCH (e:Empresa {eid: $eid})
 OPTIONAL MATCH (e)-[:PUBLICA]->(:Oferta {estado: 'abierta'})-[:REQUIERE]->(req:Habilidad)
 WITH e, collect(DISTINCT req) AS requeridas
 MATCH (u:Usuario)
-WHERE NOT (u)-[:TRABAJA_EN]->(e)
+WHERE NOT EXISTS { (u)-[t:TRABAJA_EN]->(e) WHERE coalesce(t.actual, true) }
 OPTIONAL MATCH (u)-[:TIENE_HABILIDAD]->(h:Habilidad)
 WHERE h IN requeridas
 WITH e, u, collect(DISTINCT h.nombre) AS habilidades
-OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[:TRABAJA_EN]->(e)
+OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[t:TRABAJA_EN]->(e)
+WHERE coalesce(t.actual, true)
 WITH u, habilidades, count(DISTINCT c) AS conexiones
 WITH u, habilidades, conexiones, size(habilidades) * 4 + conexiones * 3 AS score
 WHERE score > 0
@@ -181,7 +184,7 @@ RETURN a.uid, b.uid;
 // ------------------------------------------------------------------------------
 // CONSULTA 12: Relaciones del grafo interactivo
 // ------------------------------------------------------------------------------
-MATCH (a)-[r:CONECTA_CON|TRABAJA_EN|TIENE_HABILIDAD|PARTICIPA_EN|PUBLICA|REQUIERE|POSTULA_A]->(b)
+MATCH (a)-[r:CONECTA_CON|TRABAJA_EN|TIENE_HABILIDAD|PARTICIPA_EN|PUBLICA|REQUIERE|POSTULA_A|ADMINISTRA|LIDERA]->(b)
 RETURN coalesce(a.uid, a.eid, a.hid, a.pid, a.oid) AS origen,
        coalesce(b.uid, b.eid, b.hid, b.pid, b.oid) AS destino,
        type(r) AS tipo,
@@ -193,6 +196,7 @@ RETURN coalesce(a.uid, a.eid, a.hid, a.pid, a.oid) AS origen,
 // ------------------------------------------------------------------------------
 MATCH (u:Usuario {uid: $uid}), (o:Oferta {oid: $oid})
 MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN|PUBLICA*..7]-(o))
+WHERE all(r IN relationships(p) WHERE type(r) <> 'TRABAJA_EN' OR coalesce(r.actual, true))
 RETURN [n IN nodes(p) | {
     tipo: labels(n)[0],
     id: coalesce(n.uid, n.eid, n.oid),
@@ -227,3 +231,38 @@ WHERE score > 0
 RETURN otro.pid AS pid, otro.nombre AS nombre, tecnologias, miembros_comunes, conectados, score
 ORDER BY score DESC, nombre ASC
 LIMIT $limit;
+
+// ------------------------------------------------------------------------------
+// CONSULTA 15: Lo que administra un usuario
+// Empresas, proyectos y ofertas sobre los que tiene permiso de gestion.
+// ------------------------------------------------------------------------------
+MATCH (u:Usuario {uid: $uid})
+OPTIONAL MATCH (u)-[:ADMINISTRA]->(e:Empresa)
+OPTIONAL MATCH (e)-[:PUBLICA]->(o:Oferta)
+OPTIONAL MATCH (u)-[:LIDERA]->(p:Proyecto)
+RETURN u.rol AS rol,
+       collect(DISTINCT e.nombre) AS empresas,
+       collect(DISTINCT o.titulo) AS ofertas,
+       collect(DISTINCT p.nombre) AS proyectos;
+
+// ------------------------------------------------------------------------------
+// CONSULTA 16: Dueno de cada empresa y proyecto
+// ------------------------------------------------------------------------------
+MATCH (u:Usuario)-[r:ADMINISTRA|LIDERA]->(recurso)
+RETURN u.nombre + ' ' + u.apellido AS dueno,
+       type(r) AS relacion,
+       labels(recurso)[0] AS tipo,
+       recurso.nombre AS nombre
+ORDER BY tipo, nombre;
+
+// ------------------------------------------------------------------------------
+// Cupos y postulaciones de un empleo
+// Aceptar una postulación crea (:Usuario)-[:TRABAJA_EN]->(:Empresa) con el título del
+// empleo como cargo. Al llenarse los cupos, el empleo se cierra y quienes seguían en
+// proceso quedan como 'no_seleccionada'.
+// ------------------------------------------------------------------------------
+MATCH (e:Empresa)-[:PUBLICA]->(o:Oferta {oid: $oid})
+RETURN o.titulo AS empleo, e.nombre AS empresa, o.estado AS estado,
+       coalesce(o.cupos, 1) AS cupos,
+       COUNT { (:Usuario)-[:POSTULA_A]->(o) } AS postulaciones,
+       COUNT { (:Usuario)-[r:POSTULA_A]->(o) WHERE r.estado = 'aceptada' } AS contratados;

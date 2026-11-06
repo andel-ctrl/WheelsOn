@@ -1,4 +1,9 @@
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django import forms
+
+from core.models import ESTADOS_PROYECTO
 
 
 class BaseTailwindForm(forms.Form):
@@ -15,29 +20,63 @@ class BaseTailwindForm(forms.Form):
                 field.widget.attrs.setdefault("class", "input input-bordered w-full")
 
 
+def _validar_rango(formulario, datos, inicio, fin, campo_error, mensaje):
+    """Marca un error si `fin` es anterior a `inicio`. Un valor vacío no se compara."""
+    if datos.get(inicio) and datos.get(fin) and datos[fin] < datos[inicio]:
+        formulario.add_error(campo_error, mensaje)
+
+
 class UsuarioForm(BaseTailwindForm):
+    def __init__(self, *args, verificar_clave_de=None, **kwargs):
+        """Con `verificar_clave_de`, cambiar la contraseña exige escribir la actual de esa cuenta."""
+        super().__init__(*args, **kwargs)
+        self.verificar_clave_de = verificar_clave_de
+        if verificar_clave_de is not None:
+            self.fields["password_actual"] = forms.CharField(
+                widget=forms.PasswordInput(attrs={"class": "input input-bordered w-full", "autocomplete": "current-password"}),
+                required=False,
+                label="Contraseña actual",
+            )
+
+    def clean_email(self):
+        return self.cleaned_data["email"].strip().lower()
+
+    def clean_password(self):
+        clave = self.cleaned_data.get("password")
+        if clave:
+            validate_password(clave)
+        return clave
+
+    def clean(self):
+        datos = super().clean()
+        if self.verificar_clave_de is not None:
+            actual = datos.pop("password_actual", "")
+            if datos.get("password") and not check_password(actual, self.verificar_clave_de.password_hash or ""):
+                self.add_error("password_actual", "Escribe tu contraseña actual para poder cambiarla.")
+        return datos
+
     nombre = forms.CharField(max_length=100, label="Nombre")
     apellido = forms.CharField(max_length=100, label="Apellido")
-    email = forms.EmailField(label="Correo Electronico")
+    email = forms.EmailField(label="Correo Electrónico")
     password = forms.CharField(
         widget=forms.PasswordInput(),
         required=False,
-        label="Contrasena",
+        label="Contraseña",
     )
     titulo_profesional = forms.CharField(
         max_length=150,
         required=False,
-        label="Titulo Profesional",
+        label="Título profesional",
     )
     ubicacion = forms.CharField(
         max_length=150,
         required=False,
-        label="Ubicacion",
+        label="Ubicación",
     )
     biografia = forms.CharField(
         widget=forms.Textarea(),
         required=False,
-        label="Biografia",
+        label="Biografía",
     )
 
 
@@ -47,13 +86,13 @@ class EmpresaForm(BaseTailwindForm):
     ubicacion = forms.CharField(
         max_length=150,
         required=False,
-        label="Ubicacion",
+        label="Ubicación",
         initial="No especificada",
     )
     descripcion = forms.CharField(
         widget=forms.Textarea(),
         required=False,
-        label="Descripcion",
+        label="Descripción",
     )
     sitio_web = forms.URLField(
         required=False,
@@ -61,13 +100,38 @@ class EmpresaForm(BaseTailwindForm):
     )
     tamano = forms.ChoiceField(
         choices=[
-            ("pequena", "Pequena (1-50)"),
+            ("pequena", "Pequeña (1-50)"),
             ("mediana", "Mediana (51-250)"),
             ("grande", "Grande (250+)"),
         ],
         label="Tamano de Empresa",
         initial="mediana",
     )
+
+
+class PublicacionForm(BaseTailwindForm):
+    texto = forms.CharField(
+        max_length=2000,
+        widget=forms.Textarea(),
+        label="Publicación",
+        error_messages={
+            "required": "Escribe algo para publicar.",
+            "max_length": "La publicación no puede pasar de 2000 caracteres.",
+        },
+    )
+
+
+class AvanceForm(BaseTailwindForm):
+    texto = forms.CharField(
+        max_length=1000,
+        widget=forms.Textarea(),
+        label="¿Qué hay de nuevo?",
+        error_messages={
+            "required": "Cuenta qué hay de nuevo en el proyecto.",
+            "max_length": "El avance no puede pasar de 1000 caracteres.",
+        },
+    )
+    estado = forms.ChoiceField(choices=list(ESTADOS_PROYECTO.items()), label="Estado del proyecto")
 
 
 class HabilidadForm(BaseTailwindForm):
@@ -78,13 +142,13 @@ class HabilidadForm(BaseTailwindForm):
             ("blanda", "Blanda"),
             ("idioma", "Idioma"),
         ],
-        label="Categoria",
+        label="Categoría",
         initial="tecnica",
     )
     descripcion = forms.CharField(
         widget=forms.Textarea(),
         required=False,
-        label="Descripcion",
+        label="Descripción",
     )
 
 
@@ -93,15 +157,15 @@ class ProyectoForm(BaseTailwindForm):
     descripcion = forms.CharField(
         widget=forms.Textarea(),
         required=False,
-        label="Descripcion",
+        label="Descripción",
     )
     fecha_inicio = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         required=False,
         label="Fecha de Inicio",
     )
     fecha_fin = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         required=False,
         label="Fecha de Fin",
     )
@@ -116,35 +180,53 @@ class ProyectoForm(BaseTailwindForm):
     )
     tecnologias = forms.CharField(
         required=False,
-        label="Tecnologias (separadas por coma)",
+        label="Tecnologías (separadas por coma)",
         help_text="Ejemplo: Python, Django, Neo4j",
     )
 
+    def clean(self):
+        datos = super().clean()
+        _validar_rango(self, datos, "fecha_inicio", "fecha_fin", "fecha_fin", "La fecha de fin no puede ser anterior a la de inicio.")
+        return datos
+
 
 class OfertaForm(BaseTailwindForm):
-    titulo = forms.CharField(max_length=150, label="Titulo de la Vacante")
+    def clean_cupos(self):
+        return self.cleaned_data.get("cupos") or 1
+
+    def __init__(self, *args, empresas=None, **kwargs):
+        """Al crear, `empresas` son las que puede usar esta persona para publicar la oferta."""
+        super().__init__(*args, **kwargs)
+        if empresas is not None:
+            self.fields["eid"] = forms.ChoiceField(
+                label="Empresa que publica",
+                choices=[(empresa.eid, empresa.nombre) for empresa in empresas],
+                widget=forms.Select(attrs={"class": "select select-bordered w-full"}),
+            )
+
+    titulo = forms.CharField(max_length=150, label="Título del empleo")
     descripcion = forms.CharField(
         widget=forms.Textarea(),
         required=False,
-        label="Descripcion de la Vacante",
+        label="Descripción",
     )
     salario_min = forms.FloatField(
         required=False,
         min_value=0,
-        label="Salario Minimo",
+        label="Salario mínimo",
         initial=0.0,
     )
     salario_max = forms.FloatField(
         required=False,
         min_value=0,
-        label="Salario Maximo",
+        label="Salario máximo",
         initial=0.0,
     )
     modalidad = forms.ChoiceField(
         choices=[
             ("remoto", "Remoto"),
             ("presencial", "Presencial"),
-            ("hibrido", "Hibrido"),
+            ("hibrido", "Híbrido"),
         ],
         label="Modalidad",
         initial="remoto",
@@ -152,8 +234,16 @@ class OfertaForm(BaseTailwindForm):
     ubicacion = forms.CharField(
         max_length=150,
         required=False,
-        label="Ubicacion",
+        label="Ubicación",
         initial="No especificada",
+    )
+    cupos = forms.IntegerField(
+        min_value=1,
+        max_value=100,
+        initial=1,
+        required=False,
+        label="Cupos",
+        help_text="Cuántas personas vas a contratar. Al llenarse, el empleo se cierra.",
     )
     estado = forms.ChoiceField(
         choices=[
@@ -163,6 +253,11 @@ class OfertaForm(BaseTailwindForm):
         label="Estado",
         initial="abierta",
     )
+
+    def clean(self):
+        datos = super().clean()
+        _validar_rango(self, datos, "salario_min", "salario_max", "salario_max", "El salario máximo no puede ser menor que el mínimo.")
+        return datos
 
 
 # ==============================================================================
@@ -174,7 +269,7 @@ class ConectarUsuarioForm(BaseTailwindForm):
     mensaje = forms.CharField(
         max_length=250,
         required=False,
-        label="Mensaje de Invitacion",
+        label="Mensaje de Invitación",
         widget=forms.TextInput(attrs={"placeholder": "Hola, me gustaria conectar contigo en WheelsOn..."}),
     )
 
@@ -183,7 +278,7 @@ class VincularHabilidadUsuarioForm(BaseTailwindForm):
     hid = forms.CharField(max_length=64, label="Habilidad")
     nivel = forms.ChoiceField(
         choices=[
-            ("basico", "Basico"),
+            ("basico", "Básico"),
             ("intermedio", "Intermedio"),
             ("avanzado", "Avanzado"),
             ("experto", "Experto"),
@@ -199,18 +294,28 @@ class VincularHabilidadUsuarioForm(BaseTailwindForm):
 
 
 class ExperienciaLaboralForm(BaseTailwindForm):
+    ERROR_FECHA = {"invalid": "La fecha no es valida. Usa el formato AAAA-MM-DD."}
+
     eid = forms.CharField(max_length=64, label="Empresa")
     cargo = forms.CharField(max_length=150, label="Cargo / Posicion")
     fecha_inicio = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         required=False,
         label="Fecha de Inicio",
+        error_messages=ERROR_FECHA,
     )
     fecha_fin = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         required=False,
         label="Fecha de Finalizacion",
+        error_messages=ERROR_FECHA,
     )
+
+    def clean(self):
+        datos = super().clean()
+        _validar_rango(self, datos, "fecha_inicio", "fecha_fin", "fecha_fin", "La fecha de fin no puede ser anterior a la de inicio.")
+        return datos
+
     actual = forms.BooleanField(
         required=False,
         initial=True,
@@ -227,7 +332,7 @@ class ParticipacionProyectoForm(BaseTailwindForm):
         label="Rol / Responsabilidad",
     )
     fecha_inicio = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         required=False,
         label="Fecha de Ingreso",
     )
@@ -241,13 +346,13 @@ class RequisitoOfertaForm(BaseTailwindForm):
     hid = forms.CharField(max_length=64, label="Habilidad Requerida")
     nivel_minimo = forms.ChoiceField(
         choices=[
-            ("basico", "Basico"),
+            ("basico", "Básico"),
             ("intermedio", "Intermedio"),
             ("avanzado", "Avanzado"),
             ("experto", "Experto"),
         ],
         initial="basico",
-        label="Nivel Minimo Exigido",
+        label="Nivel mínimo exigido",
     )
     prioridad = forms.ChoiceField(
         choices=[
@@ -302,15 +407,18 @@ class CandidatosOfertaForm(BaseTailwindForm):
 class LoginForm(BaseTailwindForm):
     email = forms.EmailField(
         label="Correo Electrónico",
-        widget=forms.EmailInput(attrs={"autocomplete": "email"})
+        widget=forms.EmailInput(attrs={"autocomplete": "email", "placeholder": "tu@correo.com", "autofocus": True})
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}),
+        widget=forms.PasswordInput(attrs={"autocomplete": "current-password", "placeholder": "Tu contraseña"}),
         label="Contraseña"
     )
 
 
 class RegistroForm(BaseTailwindForm):
+    def clean_email(self):
+        return self.cleaned_data["email"].strip().lower()
+
     nombre = forms.CharField(
         max_length=100,
         label="Nombre",
@@ -357,6 +465,11 @@ class RegistroForm(BaseTailwindForm):
         p2 = cleaned_data.get("password_confirm")
         if p1 and p2 and p1 != p2:
             self.add_error("password_confirm", "Las contraseñas no coinciden.")
+        if p1:
+            try:
+                validate_password(p1)
+            except ValidationError as error:
+                self.add_error("password", error)
         return cleaned_data
 
 

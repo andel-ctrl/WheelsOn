@@ -17,7 +17,7 @@ class RecommendationEngine:
         filas = consulta(
             """
             MATCH (yo:Usuario {uid: $uid}), (otro:Usuario)
-            WHERE otro <> yo AND NOT (yo)-[:CONECTA_CON]-(otro)
+            WHERE otro <> yo AND NOT (yo)-[:CONECTA_CON]-(otro) AND NOT (yo)-[:SOLICITA_CONEXION]-(otro)
             OPTIONAL MATCH (yo)-[:CONECTA_CON]-(amigo:Usuario)-[:CONECTA_CON]-(otro)
             WITH yo, otro,
                  count(DISTINCT amigo) AS amigos_comun,
@@ -26,7 +26,8 @@ class RecommendationEngine:
             WITH yo, otro, amigos_comun, nombres_amigos,
                  count(DISTINCT h) AS habs_comun,
                  collect(DISTINCT h.nombre) AS nombres_habs
-            OPTIONAL MATCH (yo)-[:TRABAJA_EN]->(e:Empresa)<-[:TRABAJA_EN]-(otro)
+            OPTIONAL MATCH (yo)-[t1:TRABAJA_EN]->(e:Empresa)<-[t2:TRABAJA_EN]-(otro)
+            WHERE coalesce(t1.actual, true) AND coalesce(t2.actual, true)
             WITH otro, amigos_comun, nombres_amigos, habs_comun, nombres_habs,
                  count(DISTINCT e) AS emps_comun
             WITH otro, amigos_comun, nombres_amigos, habs_comun, nombres_habs, emps_comun,
@@ -43,9 +44,9 @@ class RecommendationEngine:
         for otro, score, amigos, muestra, habs, nombres_habs, emps in filas:
             motivos = []
             if amigos:
-                motivos.append(f"{amigos} contacto(s) en común")
+                motivos.append(f"{amigos} contacto{'s' if amigos != 1 else ''} en común")
             if habs:
-                motivos.append(f"{habs} habilidad(es) compartida(s)")
+                motivos.append("1 habilidad compartida" if habs == 1 else f"{habs} habilidades compartidas")
             if emps:
                 motivos.append("Misma empresa")
             recomendaciones.append({
@@ -62,14 +63,14 @@ class RecommendationEngine:
 
     @staticmethod
     def recomendar_empleos(uid, limit=10):
-        """Ofertas abiertas a las que no te has postulado y con las que compartes alguna habilidad."""
+        """Ofertas abiertas de otras empresas, a las que no te has postulado y con habilidades en común."""
         if not uid:
             return []
 
         filas = consulta(
             """
             MATCH (u:Usuario {uid: $uid}), (o:Oferta {estado: 'abierta'})
-            WHERE NOT (u)-[:POSTULA_A]->(o)
+            WHERE NOT (u)-[:POSTULA_A]->(o) AND NOT (u)-[:ADMINISTRA]->(:Empresa)-[:PUBLICA]->(o)
             MATCH (o)-[r:REQUIERE]->(h:Habilidad)
             WITH u, o, r, h, EXISTS { (u)-[:TIENE_HABILIDAD]->(h) } AS la_tiene
             WITH o,
@@ -150,11 +151,12 @@ class RecommendationEngine:
             OPTIONAL MATCH (e)-[:PUBLICA]->(:Oferta {estado: 'abierta'})-[:REQUIERE]->(req:Habilidad)
             WITH e, collect(DISTINCT req) AS requeridas
             MATCH (u:Usuario)
-            WHERE NOT (u)-[:TRABAJA_EN]->(e)
+            WHERE NOT EXISTS { (u)-[t:TRABAJA_EN]->(e) WHERE coalesce(t.actual, true) }
             OPTIONAL MATCH (u)-[:TIENE_HABILIDAD]->(h:Habilidad)
             WHERE h IN requeridas
             WITH e, u, collect(DISTINCT h.nombre) AS habilidades
-            OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[:TRABAJA_EN]->(e)
+            OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[t:TRABAJA_EN]->(e)
+            WHERE coalesce(t.actual, true)
             WITH u, habilidades, count(DISTINCT c) AS conexiones
             WITH u, habilidades, conexiones, size(habilidades) * 4 + conexiones * 3 AS score
             WHERE score > 0

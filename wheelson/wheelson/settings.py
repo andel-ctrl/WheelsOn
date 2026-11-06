@@ -6,6 +6,8 @@ Red profesional basada en base de datos de grafos (Neo4j).
 
 import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde .env
@@ -19,14 +21,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # CORE SETTINGS
 # ==============================================================================
 
-SECRET_KEY = os.getenv(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-wheelson-dev-key-change-in-production-2024'
-)
+# Sin archivo .env la app arranca en modo seguro: sin depuración, y exige una clave propia
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured('Define DJANGO_SECRET_KEY: copia wheelson/.env.example a wheelson/.env.')
+    SECRET_KEY = 'django-insecure-solo-para-desarrollo-local'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,*').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+
+# Modo demo: habilita el acceso rápido y Cambiar perspectiva, útiles para probar y presentar.
+WHEELSON_MODO_DEMO = os.getenv('WHEELSON_MODO_DEMO', str(DEBUG)).lower() in ('true', '1', 'yes')
+
+SESSION_COOKIE_SECURE = not DEBUG and os.getenv('WHEELSON_HTTPS', 'False').lower() in ('true', '1', 'yes')
+CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
 
 
 # ==============================================================================
@@ -58,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',           # Soporte HTMX
+    'core.middleware.SesionRequeridaMiddleware',       # Exige sesión y carga al usuario actual
     'core.middleware.Neo4jNoDisponibleMiddleware',     # Error claro si Neo4j no responde
 ]
 

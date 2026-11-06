@@ -17,50 +17,23 @@ class GrafoVisualizacionService:
     de la red social y transformarlos al formato de nodos y aristas de Vis.js.
     """
 
+    # Cada tipo de nodo tiene color y forma propios, para distinguirlos también con daltonismo.
     COLOR_MAP = {
-        "Usuario": {
-            "background": "#00b84c",
-            "border": "#34d399",
-            "highlight": {"background": "#059669", "border": "#6ee7b7"},
-            "font": {"color": "#ffffff"}
-        },
-        "UsuarioActivo": {
-            "background": "#059669",
-            "border": "#10b981",
-            "highlight": {"background": "#047857", "border": "#34d399"},
-            "font": {"color": "#ffffff"}
-        },
-        "Empresa": {
-            "background": "#06b6d4",
-            "border": "#22d3ee",
-            "highlight": {"background": "#0891b2", "border": "#a5f3fc"},
-            "font": {"color": "#ffffff"}
-        },
-        "Habilidad": {
-            "background": "#f59e0b",
-            "border": "#fbbf24",
-            "highlight": {"background": "#d97706", "border": "#fde68a"},
-            "font": {"color": "#ffffff"}
-        },
-        "Proyecto": {
-            "background": "#8b5cf6",
-            "border": "#a78bfa",
-            "highlight": {"background": "#7c3aed", "border": "#ddd6fe"},
-            "font": {"color": "#ffffff"}
-        },
-        "Oferta": {
-            "background": "#f43f5e",
-            "border": "#fb7185",
-            "highlight": {"background": "#e11d48", "border": "#fecdd3"},
-            "font": {"color": "#ffffff"}
-        }
+        "Usuario": {"background": "#455DD1", "border": "#3448AE", "highlight": {"background": "#3448AE", "border": "#2A1A2E"}},
+        "UsuarioActivo": {"background": "#2F3F9E", "border": "#232F78", "highlight": {"background": "#232F78", "border": "#2A1A2E"}},
+        "Empresa": {"background": "#14A3B0", "border": "#0A7C87", "highlight": {"background": "#0A7C87", "border": "#2A1A2E"}},
+        "Habilidad": {"background": "#9A831C", "border": "#7A6815", "highlight": {"background": "#7A6815", "border": "#2A1A2E"}},
+        "Proyecto": {"background": "#9B3096", "border": "#7C2678", "highlight": {"background": "#7C2678", "border": "#2A1A2E"}},
+        "Oferta": {"background": "#A33A20", "border": "#832E19", "highlight": {"background": "#832E19", "border": "#2A1A2E"}},
     }
+    FUENTE_NODO = {"color": "#2A1A2E", "face": "Manrope, sans-serif", "strokeWidth": 3, "strokeColor": "#FFFFFF"}
 
     @classmethod
-    def obtener_datos_grafo(cls, subgrafo_uid=None, tipos_nodo=None, busqueda=None, max_nodos=150):
+    def obtener_datos_grafo(cls, subgrafo_uid=None, tipos_nodo=None, busqueda=None, max_nodos=150, permisos=None):
         """
         Extrae y compila nodos y aristas para Vis.js.
         Soporta filtrado por tipo de entidad, búsqueda y extracción de subgrafos egocéntricos.
+        Las postulaciones son privadas: solo se incluyen las que `permisos` autoriza a ver.
         """
         # 1. Obtener entidades de Neo4j
         usuarios = UsuarioService.all(limit=max_nodos)
@@ -95,9 +68,9 @@ class GrafoVisualizacionService:
                 "to": t_id,
                 "label": label,
                 "title": f"Relación: {label}",
-                "color": {"color": color_edge, "highlight": "#00b84c", "hover": "#ffffff"},
+                "color": {"color": color_edge, "highlight": "#D9483B", "hover": "#D9483B"},
                 "arrows": "to" if dirigida else "",
-                "font": {"color": "#94a3b8", "size": 9, "face": "monospace", "align": "middle", "strokeWidth": 0},
+                "font": {"color": "#756578", "size": 9, "face": "JetBrains Mono, monospace", "align": "middle", "strokeWidth": 3, "strokeColor": "#FFFFFF"},
                 "smooth": {"type": "continuous", "roundness": 0.2},
                 "datos": datos or {}
             }
@@ -106,7 +79,7 @@ class GrafoVisualizacionService:
         # Las relaciones se leen de Neo4j, con los mismos nombres que tienen en el modelo.
         relaciones = consulta(
             """
-            MATCH (a)-[r:CONECTA_CON|TRABAJA_EN|TIENE_HABILIDAD|PARTICIPA_EN|PUBLICA|REQUIERE|POSTULA_A]->(b)
+            MATCH (a)-[r:CONECTA_CON|TRABAJA_EN|TIENE_HABILIDAD|PARTICIPA_EN|PUBLICA|REQUIERE|POSTULA_A|ADMINISTRA|LIDERA]->(b)
             RETURN coalesce(a.uid, a.eid, a.hid, a.pid, a.oid),
                    coalesce(b.uid, b.eid, b.hid, b.pid, b.oid),
                    type(r),
@@ -114,11 +87,13 @@ class GrafoVisualizacionService:
             """
         )
         for origen, destino, tipo, propiedades in relaciones:
+            if tipo == "POSTULA_A" and not (permisos and permisos.ver_postulacion(origen, destino)):
+                continue
             agregar_arista(
                 origen,
                 destino,
                 tipo,
-                "#334155" if tipo == "CONECTA_CON" else "#1e293b",
+                "#A99AAA" if tipo == "CONECTA_CON" else "#C9BEC9",
                 dirigida=tipo != "CONECTA_CON",
                 datos={clave: str(valor) for clave, valor in propiedades.items()},
             )
@@ -129,7 +104,7 @@ class GrafoVisualizacionService:
         # Usuarios
         for u in usuarios:
             k = grados.get(str(u.uid), 0)
-            es_central = (str(u.uid) == str(subgrafo_uid)) or (str(u.uid) == "usr_mateo005")
+            es_central = str(u.uid) in (str(subgrafo_uid), str(permisos.uid if permisos else None))
             color_scheme = cls.COLOR_MAP["UsuarioActivo"] if es_central else cls.COLOR_MAP["Usuario"]
             node_size = 28 if es_central else max(16, min(24, 16 + (k * 1.5)))
             
@@ -140,8 +115,8 @@ class GrafoVisualizacionService:
                 "shape": "dot",
                 "size": node_size,
                 "color": color_scheme,
-                "font": {"color": "#f8fafc", "size": 11, "face": "Helvetica", "strokeWidth": 2, "strokeColor": "#0d0f12"},
-                "title": f"<b>{u.nombre_completo}</b><br>{u.titulo_profesional or 'Profesional'}<br>Conexiones: {k}",
+                "font": {**cls.FUENTE_NODO, "size": 11},
+                "title": f"{u.nombre_completo}\n{u.titulo_profesional or 'Profesional'}\nConexiones: {k}",
                 "properties": {
                     "tipo": "Usuario",
                     "uid": str(u.uid),
@@ -162,11 +137,11 @@ class GrafoVisualizacionService:
                 "id": str(emp.eid),
                 "label": emp.nombre,
                 "group": "Empresa",
-                "shape": "dot",
+                "shape": "square",
                 "size": max(18, min(26, 18 + k)),
                 "color": cls.COLOR_MAP["Empresa"],
-                "font": {"color": "#a5f3fc", "size": 11, "face": "Helvetica", "strokeWidth": 2, "strokeColor": "#0d0f12"},
-                "title": f"<b>Empresa: {emp.nombre}</b><br>{emp.industria}<br>{emp.ubicacion}",
+                "font": {**cls.FUENTE_NODO, "size": 11},
+                "title": f"Empresa: {emp.nombre}\n{emp.industria}\n{emp.ubicacion}",
                 "properties": {
                     "tipo": "Empresa",
                     "eid": str(emp.eid),
@@ -185,11 +160,11 @@ class GrafoVisualizacionService:
                 "id": str(h.hid),
                 "label": h.nombre,
                 "group": "Habilidad",
-                "shape": "dot",
+                "shape": "diamond",
                 "size": max(14, min(22, 14 + k)),
                 "color": cls.COLOR_MAP["Habilidad"],
-                "font": {"color": "#fde68a", "size": 10, "face": "Helvetica", "strokeWidth": 2, "strokeColor": "#0d0f12"},
-                "title": f"<b>Habilidad: {h.nombre}</b><br>Categoría: {h.categoria}<br>Adoptada por {k} nodos",
+                "font": {**cls.FUENTE_NODO, "size": 10},
+                "title": f"Habilidad: {h.nombre}\nCategoría: {h.categoria}\nAdoptada por {k} nodos",
                 "properties": {
                     "tipo": "Habilidad",
                     "hid": str(h.hid),
@@ -206,11 +181,11 @@ class GrafoVisualizacionService:
                 "id": str(p.pid),
                 "label": p.nombre,
                 "group": "Proyecto",
-                "shape": "dot",
+                "shape": "hexagon",
                 "size": max(17, min(25, 17 + k)),
                 "color": cls.COLOR_MAP["Proyecto"],
-                "font": {"color": "#ddd6fe", "size": 11, "face": "Helvetica", "strokeWidth": 2, "strokeColor": "#0d0f12"},
-                "title": f"<b>Proyecto: {p.nombre}</b><br>Estado: {p.estado}<br>Colaboradores: {k}",
+                "font": {**cls.FUENTE_NODO, "size": 11},
+                "title": f"Proyecto: {p.nombre}\nEstado: {p.estado}\nColaboradores: {k}",
                 "properties": {
                     "tipo": "Proyecto",
                     "pid": str(p.pid),
@@ -229,11 +204,11 @@ class GrafoVisualizacionService:
                 "id": str(o.oid),
                 "label": o.titulo,
                 "group": "Oferta",
-                "shape": "dot",
+                "shape": "triangle",
                 "size": max(16, min(23, 16 + k)),
                 "color": cls.COLOR_MAP["Oferta"],
-                "font": {"color": "#fecdd3", "size": 10, "face": "Helvetica", "strokeWidth": 2, "strokeColor": "#0d0f12"},
-                "title": f"<b>Vacante: {o.titulo}</b><br>Modalidad: {o.modalidad}<br>Salario: ${o.salario_min}-${o.salario_max}",
+                "font": {**cls.FUENTE_NODO, "size": 10},
+                "title": f"Vacante: {o.titulo}\nModalidad: {o.modalidad}\nSalario: ${o.salario_min}-${o.salario_max}",
                 "properties": {
                     "tipo": "Oferta",
                     "oid": str(o.oid),

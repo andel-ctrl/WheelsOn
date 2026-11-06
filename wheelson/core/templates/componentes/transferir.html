@@ -1,0 +1,23 @@
+{# Solo se transfiere a un miembro, y el cambio se hace efectivo cuando esa persona lo acepta. #}
+<section class="ws-transferir" x-data="{ abierto: false }">
+    {% if pendiente %}
+    <form method="POST" action="{{ url_cancelar }}" class="ws-transferir__form" style="align-items:center">
+        {% csrf_token %}
+        <span class="text-xs" style="flex:1">Esperando que {{ pendiente.nombre_completo }} acepte la transferencia.</span>
+        <button type="submit" class="ws-btn ws-btn--secundario" style="min-height:32px">Cancelar transferencia</button>
+    </form>
+    {% elif candidatos %}
+    <button type="button" class="ws-btn ws-btn--secundario" @click="abierto = !abierto" :aria-expanded="abierto.toString()">Transferir {{ recurso }} a otra persona</button>
+    <form method="POST" action="{{ url }}" class="ws-transferir__form" x-show="abierto" x-cloak>
+        {% csrf_token %}
+        <label class="ws-oculto-visual" for="transferir-a">Nueva persona responsable</label>
+        <select id="transferir-a" name="uid" class="ws-campo" required>
+            <option value="">Selecciona entre los {{ miembros }}</option>
+            {% for u in candidatos %}<option value="{{ u.uid }}">{{ u.nombre_completo }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="ws-btn ws-btn--secundario">Enviar invitación</button>
+    </form>
+    {% else %}
+    <p class="text-xs text-base-content/60">Para transferir, primero debe haber otros {{ miembros }}.</p>
+    {% endif %}
+</section>

@@ -1,0 +1,34 @@
+{% load wheelson_ui %}
+<div class="ws-avisos" x-data="panelAvisos('{{ current_user.uid|escapejs }}')"
+     @click.outside="cerrar()" @keydown.escape.window="cerrar()">
+    <button type="button" class="ws-campana" @click="alternar()" :aria-expanded="abierto.toString()" aria-expanded="false" aria-controls="ws-panel-avisos">
+        {% icono "bell" "duotone" 22 %}
+        <span class="ws-oculto-visual">Notificaciones</span>
+        <span class="ws-campana__punto" x-show="cantidadNuevos > 0" x-text="cantidadNuevos" x-cloak></span>
+    </button>
+
+    <section id="ws-panel-avisos" class="ws-panel-avisos" :class="{ 'is-abierto': abierto }" aria-label="Notificaciones">
+        <header class="ws-panel-avisos__cabecera">
+            <h2 class="ws-panel-avisos__titulo">Actividad en tu red</h2>
+        </header>
+        {% if avisos %}
+        <ul class="ws-panel-avisos__lista">
+            {% for aviso in avisos %}
+            <li class="ws-aviso ws-aviso--{{ aviso.tipo }}" style="--i:{{ forloop.counter0 }}"
+                data-aviso="{{ aviso.id }}" :class="{ 'es-nuevo': esNuevo('{{ aviso.id|escapejs }}') }">
+                <a class="ws-aviso__enlace" href="{{ aviso.url }}">
+                    <span class="ws-aviso__nodo">{% icono aviso.icono "duotone" 18 %}</span>
+                    <span>
+                        <span class="ws-aviso__titulo">{{ aviso.titulo }}<span class="ws-aviso__nuevo" x-show="esNuevo('{{ aviso.id|escapejs }}')" x-cloak>Nuevo</span></span>
+                        <span class="ws-aviso__detalle">{{ aviso.detalle }}{% if aviso.detalle and aviso.fecha_texto %} · {% endif %}{{ aviso.fecha_texto }}</span>
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="ws-panel-avisos__vacio">Todavía no hay actividad. Conecta con alguien o agrega habilidades a tu perfil para ver novedades aquí.</p>
+        {% endif %}
+        <p class="ws-panel-avisos__nota">Datos actuales de tu red. La marca «Nuevo» se recuerda solo en este navegador.</p>
+    </section>
+</div>

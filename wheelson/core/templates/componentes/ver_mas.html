@@ -1,0 +1,7 @@
+{# Sin JavaScript sigue siendo un enlace normal: la página llega con más elementos. #}
+{% if ver_mas %}
+<div class="ws-ver-mas">
+    <p class="ws-ver-mas__cuenta">Viendo {{ ver_mas.mostrados }} de {{ total }}</p>
+    <a class="ws-btn ws-btn--secundario" href="{{ ver_mas.url }}" rel="next" data-ws-ver-mas="{{ destino }}">Ver {{ ver_mas.cuantos }} más</a>
+</div>
+{% endif %}

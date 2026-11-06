@@ -1,0 +1,11 @@
+Fotos del feed, de Unsplash. Licencia: https://unsplash.com/license
+
+feed-1.webp: equipo trabajando con portátiles. https://images.unsplash.com/photo-1522071820081-009f0129c71c
+feed-2.webp: la Tierra de noche, con luces conectadas. https://images.unsplash.com/photo-1451187580459-43490279c0fa
+feed-3.webp: código en una pantalla. https://images.unsplash.com/photo-1461749280684-dccba630e2f6
+feed-4.webp: portátil con código en un escritorio. https://images.unsplash.com/photo-1498050108023-c5249f4df085
+feed-5.webp: gráfica financiera en una pantalla. https://images.unsplash.com/photo-1518186285589-2f7649de83e0
+feed-6.webp: cables y servidores. https://images.unsplash.com/photo-1558494949-ef010cbdcc31
+
+Foto del login, de Unsplash:
+acceso.webp: personas trabajando y riendo con portátiles. https://images.unsplash.com/photo-1522202176988-66273c2fd55f

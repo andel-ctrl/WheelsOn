@@ -75,6 +75,7 @@ class GraphAnalyticsService:
             """
             MATCH (u:Usuario {uid: $uid}), (e:Empresa {eid: $eid})
             MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN*..6]-(e))
+            WHERE all(r IN relationships(p) WHERE type(r) <> 'TRABAJA_EN' OR coalesce(r.actual, true))
             RETURN [n IN nodes(p) | {
                 tipo: labels(n)[0],
                 id: coalesce(n.uid, n.eid),
@@ -134,6 +135,7 @@ class GraphAnalyticsService:
             """
             MATCH (u:Usuario {uid: $uid}), (o:Oferta {oid: $oid})
             MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN|PUBLICA*..7]-(o))
+            WHERE all(r IN relationships(p) WHERE type(r) <> 'TRABAJA_EN' OR coalesce(r.actual, true))
             RETURN [n IN nodes(p) | {
                 tipo: labels(n)[0],
                 id: coalesce(n.uid, n.eid, n.oid),

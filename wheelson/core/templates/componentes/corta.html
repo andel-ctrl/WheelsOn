@@ -1,0 +1,2 @@
+{# Botón de una lista corta: los datos ya están en la página, solo se dejan de ocultar. #}
+{% if total > limite %}<button type="button" class="ws-enlace ws-corta__mas" x-show="!todo" @click="todo = true">Ver {{ total }} en total</button>{% endif %}

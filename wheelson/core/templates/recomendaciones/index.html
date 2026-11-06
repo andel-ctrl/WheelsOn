@@ -1,468 +1,147 @@
 {% extends 'base.html' %}
+{% load wheelson_ui %}
 
-{% block title %}Sugerencias & Motor de Recomendaciones | WheelsOn{% endblock %}
-{% block page_title %}Sugerencias y Recomendaciones de Grafo{% endblock %}
+{% block title %}Sugerencias | WheelsOn{% endblock %}
+{% block page_title %}Sugerencias{% endblock %}
 
 {% block content %}
-<div class="space-y-6 animate-fade-in-up">
+<div class="ws-pagina">
+    {% include "componentes/encabezado.html" with titulo="Sugerencias" bajada="Lo que el grafo encuentra para ti: gente cerca de tu red, empleos que encajan y a quién sumar a lo que lideras." total=total_sugerencias unidad="en esta pestaña" %}
 
-    <!-- Header Hero Banner (Camuflado al fondo oscuro) -->
-    <div class="peer-card p-6 sm:p-7 rounded-2xl bg-[#0e1116] border border-[#181c24] space-y-2">
-        <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
-            Recomendaciones Inteligentes
-        </h1>
-        <p class="text-xs text-gray-400 max-w-2xl leading-relaxed">
-            Algoritmos de clausura triádica (amigos de amigos), afinidad de competencias técnicas,
-            matching ponderado de vacantes laborales y conformación óptima de equipos para proyectos.
-        </p>
+    <div class="ws-barra">
+    <div class="ws-filtros">
+        <a href="?tab=contactos"
+           class="{% if tab == 'contactos' %}is-activo{% endif %}">
+            Gente que quizás conoces
+        </a>
+        <a href="?tab=empleos"
+           class="{% if tab == 'empleos' %}is-activo{% endif %}">
+            Empleos para ti
+        </a>
+        {% if proyectos %}<a href="?tab=colaboradores{% if pid %}&pid={{ pid }}{% endif %}"
+           class="{% if tab == 'colaboradores' %}is-activo{% endif %}">
+            Colaboradores para tus proyectos
+        </a>{% endif %}
+        {% if empresas %}<a href="?tab=talento{% if eid %}&eid={{ eid }}{% endif %}"
+           class="{% if tab == 'talento' %}is-activo{% endif %}">
+            Talento para tu empresa
+        </a>{% endif %}
+    </div>
     </div>
 
-    <!-- Navigation Tabs (Píldoras redondeadas exactas a ejemplo.png) -->
-    <div class="inline-flex rounded-full bg-[#12151b] border border-[#1e232d] p-1 text-xs font-semibold flex-wrap gap-1">
-        <a href="?tab=contactos{% if uid %}&uid={{ uid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'contactos' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            1. Gente que Quizás Conozcas
-        </a>
-        <a href="?tab=empleos{% if uid %}&uid={{ uid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'empleos' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            2. Empleos Recomendados
-        </a>
-        <a href="?tab=colaboradores{% if pid %}&pid={{ pid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'colaboradores' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            3. Colaboradores de Proyectos
-        </a>
-        <a href="?tab=talento{% if eid %}&eid={{ eid }}{% endif %}"
-           class="px-4 py-1.5 rounded-full transition text-[11px] font-bold {% if tab == 'talento' %}bg-[#1c212b] text-white shadow-sm{% else %}text-gray-400 hover:text-white{% endif %}">
-            4. Talento para Empresas
-        </a>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- TAB 1: RECOMENDACION DE CONTACTOS -->
-    <!-- ========================================================================= -->
     {% if tab == 'contactos' %}
-    <div class="space-y-5">
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
-            <div>
-                <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-[#00b84c]"></span>
-                    Recomendaciones de Conexión Personalizadas
-                </h2>
-                <p class="text-[11px] text-gray-500 font-mono mt-0.5">
-                    Vecinos de 2do orden (amigos de amigos), habilidades comunes y trayectoria.
-                </p>
-            </div>
-
-            <!-- Selector de Usuario -->
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <input type="hidden" name="tab" value="contactos">
-                <div class="sm:col-span-9">
-                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Ver recomendaciones para:</label>
-                    <select name="uid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none" onchange="this.form.submit()">
-                        {% for u in usuarios %}
-                        <option value="{{ u.uid }}" {% if u.uid == uid %}selected{% endif %}>
-                            {{ u.nombre_completo }} ({{ u.titulo_profesional|default:"Sin cargo" }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="sm:col-span-3">
-                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Actualizar</button>
-                </div>
-            </form>
-
-            <!-- Cypher Inspector -->
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-[#00b84c] font-bold">// Algoritmo Cypher de Clausura Triádica:</span><br>
-                MATCH (u1:Usuario {uid: '{{ uid }}'})-[:CONECTA_CON]-(amigo:Usuario)-[:CONECTA_CON]-(u2:Usuario)<br>
-                WHERE u1 <> u2 AND NOT (u1)-[:CONECTA_CON]-(u2)<br>
-                RETURN u2, count(DISTINCT amigo) AS amigos_en_comun ORDER BY amigos_en_comun DESC LIMIT 12;
-            </div>
+    <details class="ws-cypher">
+        <summary>Por qué te sugerimos a estas personas: la consulta en Cypher</summary>
+        <div class="ws-cypher__codigo">
+            MATCH (u1:Usuario {uid: '{{ uid }}'})-[:CONECTA_CON]-(amigo:Usuario)-[:CONECTA_CON]-(u2:Usuario)<br>
+            WHERE u1 &lt;&gt; u2 AND NOT (u1)-[:CONECTA_CON]-(u2)<br>
+            RETURN u2, count(DISTINCT amigo) AS amigos_en_comun ORDER BY amigos_en_comun DESC LIMIT 12;
         </div>
-
-        <!-- Grid de Tarjetas de Recomendación -->
-        {% if rec_contactos %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for item in rec_contactos %}
-            <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] rounded-2xl p-5 flex flex-col justify-between space-y-3.5 transition">
-                <div class="space-y-3">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-[#00b84c] text-white font-black flex items-center justify-center text-xs shadow flex-shrink-0">
-                            {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
-                        </div>
-                        <span class="px-2 py-0.5 rounded-full bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 text-[10px] font-bold">
-                            Afinidad: {{ item.score }}
-                        </span>
-                    </div>
-
-                    <div>
-                        <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-sm text-white hover:text-[#00b84c] transition block truncate">
-                            {{ item.usuario.nombre_completo }}
-                        </a>
-                        <p class="text-xs text-gray-400 truncate">{{ item.usuario.titulo_profesional|default:"Profesional en red" }}</p>
-                        <p class="text-[10px] text-gray-500 font-mono mt-0.5 flex items-center gap-1">
-                            <svg class="w-3 h-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span>{{ item.usuario.ubicacion|default:"No especificada" }}</span>
-                        </p>
-                    </div>
-
-                    <!-- Motivo de la recomendación -->
-                    <div class="p-2.5 rounded-xl bg-[#090b0e] border border-[#161a22] text-xs space-y-1">
-                        <span class="text-[10px] uppercase font-bold text-[#00b84c] tracking-wider block">Motivo:</span>
-                        <p class="text-[11px] text-gray-300 font-medium">{{ item.motivo }}</p>
-                        {% if item.muestra_amigos %}
-                        <p class="text-[10px] text-gray-500">Amigos mutuos: {{ item.muestra_amigos|join:", " }}</p>
-                        {% endif %}
-                    </div>
-
-                    {% if item.nombres_habs %}
-                    <div class="flex flex-wrap gap-1">
-                        {% for hab in item.nombres_habs %}
-                        <span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ hab }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="pt-3 border-t border-[#181c24] flex items-center justify-between gap-2">
-                    <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="text-xs text-gray-400 hover:text-white">
-                        Ver Perfil
-                    </a>
-                    <form method="POST" action="{% url 'core:conexion_conectar' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="uid_origen" value="{{ uid }}">
-                        <input type="hidden" name="uid_destino" value="{{ item.usuario.uid }}">
-                        <input type="hidden" name="mensaje" value="Hola, vi tu perfil en WheelsOn y me gustaría conectar.">
-                        <button type="submit" class="peer-btn-green px-3.5 py-1 rounded-full text-xs font-bold shadow-sm">
-                            + Conectar
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-12 text-center rounded-2xl space-y-2">
-            <p class="font-bold text-white text-xs">Sin nuevas recomendaciones de contactos</p>
-            <p class="text-[11px] text-gray-500">El usuario ya está conectado con todos los contactos o requiere más interacciones en el grafo.</p>
-        </div>
-        {% endif %}
+    </details>
+    {% if rec_contactos %}
+    <div x-data="{ todo: false }">
+    <div class="ws-personas ws-corta ws-corta--6" :class="todo && 'is-toda'">
+        {% for item in rec_contactos %}{% include "componentes/tarjeta_persona.html" with p=item.usuario nota=item.motivo accion="conectar" %}{% endfor %}
     </div>
+    {% include "componentes/corta.html" with total=rec_contactos|length limite=6 %}
+    </div>
+    {% else %}
+    <div class="ws-vacio">
+            <h2>Sin nuevas personas por ahora</h2>
+            <p>Ya conectaste con todos los que están cerca de tu red.</p>
+        </div>
+    {% endif %}
     {% endif %}
 
-    <!-- ========================================================================= -->
-    <!-- TAB 2: RECOMENDACION DE EMPLEOS -->
-    <!-- ========================================================================= -->
     {% if tab == 'empleos' %}
-    <div class="space-y-5">
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
-            <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-                Vacantes Laborales Sugeridas según tus Competencias
-            </h2>
-            <p class="text-[11px] text-gray-500 font-mono">
-                Ponderación basada en las habilidades que dominas frente a los requerimientos de ofertas abiertas.
-            </p>
-
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <input type="hidden" name="tab" value="empleos">
-                <div class="sm:col-span-9">
-                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Ver empleos para:</label>
-                    <select name="uid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none" onchange="this.form.submit()">
-                        {% for u in usuarios %}
-                        <option value="{{ u.uid }}" {% if u.uid == uid %}selected{% endif %}>
-                            {{ u.nombre_completo }} ({{ u.titulo_profesional|default:"Sin cargo" }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="sm:col-span-3">
-                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Buscar Empleos</button>
-                </div>
-            </form>
-
-            <!-- Cypher Inspector -->
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-cyan-400 font-bold">// Consulta Cypher de Afinidad Laboral:</span><br>
-                MATCH (u:Usuario {uid: '{{ uid }}'})-[:TIENE_HABILIDAD]->(h:Habilidad)<-[:REQUIERE]-(o:Oferta {estado: 'abierta'})<br>
-                WHERE NOT (u)-[:POSTULA_A]->(o)<br>
-                RETURN o, count(h) AS match_habilidades ORDER BY match_habilidades DESC LIMIT 12;
-            </div>
+    <details class="ws-cypher">
+        <summary>Por qué te sugerimos estos empleos: la consulta en Cypher</summary>
+        <div class="ws-cypher__codigo">
+            MATCH (u:Usuario {uid: '{{ uid }}'})-[:TIENE_HABILIDAD]-&gt;(h:Habilidad)&lt;-[:REQUIERE]-(o:Oferta {estado: 'abierta'})<br>
+            WHERE NOT (u)-[:POSTULA_A]-&gt;(o)<br>
+            RETURN o, count(h) AS match_habilidades ORDER BY match_habilidades DESC LIMIT 12;
         </div>
-
-        {% if rec_empleos %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {% for item in rec_empleos %}
-            <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] rounded-2xl p-5 flex flex-col justify-between space-y-3.5 transition">
-                <div class="space-y-3">
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <span class="px-2 py-0.5 rounded-md bg-[#131720] border border-[#1d222e] text-[10px] text-cyan-400 font-mono uppercase">{{ item.oferta.modalidad }}</span>
-                            <a href="{% url 'core:oferta_detalle' oid=item.oferta.oid %}" class="font-bold text-sm text-white hover:text-[#00b84c] block mt-1">
-                                {{ item.oferta.titulo }}
-                            </a>
-                            <p class="text-xs text-gray-400">{{ item.empresa.nombre|default:"Empresa en WheelsOn" }}</p>
-                        </div>
-                        <span class="px-2.5 py-1 rounded-full bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30 font-bold text-xs">
-                            {{ item.match_porcentaje }}% Match
-                        </span>
-                    </div>
-
-                    <!-- Match indicator -->
-                    <div class="space-y-1">
-                        <div class="flex justify-between text-[11px] text-gray-500 font-mono">
-                            <span>Requisitos cubiertos:</span>
-                            <span>{{ item.total_match }} de {{ item.total_requisitos }} habilidades</span>
-                        </div>
-                        <div class="w-full bg-[#090b0e] h-2 rounded-full overflow-hidden border border-[#161a22]">
-                            <div class="bg-[#00b84c] h-full rounded-full transition-all duration-500" style="width: {{ item.match_porcentaje }}%;"></div>
-                        </div>
-                    </div>
-
-                    <!-- Skills matches -->
-                    <div class="space-y-1 pt-1">
-                        <div class="text-[10px] font-bold text-[#00b84c] uppercase tracking-wider">Habilidades que cumples:</div>
-                        <div class="flex flex-wrap gap-1">
-                            {% for hab in item.habilidades_match %}
-                            <span class="px-2 py-0.5 rounded bg-[#00b84c]/15 text-[#00b84c] border border-[#00b84c]/30 text-[10px] font-bold font-mono inline-flex items-center gap-1">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                <span>{{ hab }}</span>
-                            </span>
-                            {% endfor %}
-                        </div>
-                        {% if item.habilidades_faltantes %}
-                        <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider pt-1">Requisitos adicionales:</div>
-                        <div class="flex flex-wrap gap-1">
-                            {% for hab in item.habilidades_faltantes %}
-                            <span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-400 font-mono">+ {{ hab }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="pt-3 border-t border-[#181c24] flex items-center justify-between gap-2">
-                    <a href="{% url 'core:oferta_detalle' oid=item.oferta.oid %}" class="text-xs text-gray-400 hover:text-white">
-                        Ver Detalles
-                    </a>
-                    <form method="POST" action="{% url 'core:oferta_postular' oid=item.oferta.oid %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="uid" value="{{ uid }}">
-                        <input type="hidden" name="carta_presentacion" value="Postulación rápida originada desde el Motor de Recomendaciones WheelsOn.">
-                        <button type="submit" class="peer-btn-green px-4 py-1 rounded-full text-xs font-bold shadow-sm">
-                            Postular
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-12 text-center rounded-2xl space-y-2">
-            <p class="font-bold text-white text-xs">Sin ofertas recomendadas pendientes</p>
-            <p class="text-[11px] text-gray-500">Ya has postulado a todas las vacantes afines o vincula nuevas competencias a tu perfil.</p>
-        </div>
-        {% endif %}
+    </details>
+    {% if rec_empleos %}
+    <div x-data="{ todo: false }">
+    <div class="ws-boletos ws-corta ws-corta--6" :class="todo && 'is-toda'">
+        {% for item in rec_empleos %}{% include "componentes/boleto.html" with o=item.oferta postular=True %}{% endfor %}
     </div>
+    {% include "componentes/corta.html" with total=rec_empleos|length limite=6 %}
+    </div>
+    {% else %}
+    <div class="ws-vacio">
+            <h2>Sin empleos pendientes</h2>
+            <p>Ya te postulaste a los que encajan. Suma habilidades a tu perfil para ver más.</p>
+        </div>
+    {% endif %}
     {% endif %}
 
-    <!-- ========================================================================= -->
-    <!-- TAB 3: RECOMENDACION DE COLABORADORES PARA PROYECTOS -->
-    <!-- ========================================================================= -->
-    {% if tab == 'colaboradores' %}
-    <div class="space-y-5">
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
-            <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-                Recomendación de Colaboradores para Proyectos
-            </h2>
-            <p class="text-[11px] text-gray-500 font-mono">
-                Identifica talentos con las tecnologías del proyecto que además cuentan con conexiones en el equipo.
-            </p>
-
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <input type="hidden" name="tab" value="colaboradores">
-                <div class="sm:col-span-9">
-                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Seleccionar Proyecto:</label>
-                    <select name="pid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none" onchange="this.form.submit()">
-                        {% for p in proyectos %}
-                        <option value="{{ p.pid }}" {% if p.pid == pid %}selected{% endif %}>
-                            {{ p.nombre }} [{{ p.tecnologias|default:"Stack general" }}]
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="sm:col-span-3">
-                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Buscar Candidatos</button>
-                </div>
-            </form>
-
-            <!-- Cypher Inspector -->
-            <div class="p-3 bg-[#090b0e] rounded-xl border border-[#161a22] font-mono text-[11px] text-gray-400 overflow-x-auto">
-                <span class="text-purple-400 font-bold">// Consulta Cypher de Afinidad de Equipo:</span><br>
-                MATCH (p:Proyecto {pid: '{{ pid }}'})<br>
-                MATCH (u:Usuario)-[:TIENE_HABILIDAD]->(h:Habilidad)<br>
-                WHERE NOT (u)-[:PARTICIPA_EN]->(p)<br>
-                RETURN u, count(h) AS tech_match ORDER BY tech_match DESC LIMIT 12;
-            </div>
+    {% if tab == 'colaboradores' and not proyectos %}
+    <div class="ws-vacio">
+            <h2>Aún no lideras un proyecto</h2>
+            <p>Estas sugerencias son para quien lidera un proyecto.</p>
         </div>
-
-        {% if rec_colaboradores %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for item in rec_colaboradores %}
-            <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] rounded-2xl p-5 flex flex-col justify-between space-y-3.5 transition">
-                <div class="space-y-3">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 font-black flex items-center justify-center text-xs flex-shrink-0">
-                            {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
-                        </div>
-                        <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-[10px] font-bold">
-                            Score: {{ item.score }}
-                        </span>
-                    </div>
-
-                    <div>
-                        <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-sm text-white hover:text-[#00b84c] block">
-                            {{ item.usuario.nombre_completo }}
-                        </a>
-                        <p class="text-xs text-gray-400">{{ item.usuario.titulo_profesional|default:"Desarrollador" }}</p>
-                    </div>
-
-                    <div class="space-y-1.5 text-xs">
-                        <div class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Habilidades para el proyecto:</div>
-                        <div class="flex flex-wrap gap-1">
-                            {% for hab in item.habilidades_match %}
-                            <span class="px-2 py-0.5 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ hab }}</span>
-                            {% empty %}
-                            <span class="text-[11px] text-gray-500">Perfil afín</span>
-                            {% endfor %}
-                        </div>
-
-                        {% if item.conexiones_equipo > 0 %}
-                        <div class="p-2 rounded-xl bg-[#090b0e] border border-[#161a22] text-[11px] text-gray-400 flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                            <span>Conecta con: <span class="font-bold text-white">{{ item.nombres_conexiones|join:", " }}</span></span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="pt-3 border-t border-[#181c24] flex items-center justify-between gap-2">
-                    <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="text-xs text-gray-400 hover:text-white">
-                        Ver Perfil
-                    </a>
-                    <form method="POST" action="{% url 'core:proyecto_colaborador_agregar' pid=pid %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="uid" value="{{ item.usuario.uid }}">
-                        <input type="hidden" name="rol" value="Colaborador Técnico">
-                        <button type="submit" class="peer-btn-green px-3.5 py-1 rounded-full text-xs font-bold shadow-sm">
-                            Invitar
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
+    {% elif tab == 'colaboradores' %}
+    <form method="GET" class="ws-selector">
+        <input type="hidden" name="tab" value="colaboradores">
+        <label for="sug-proyecto">Proyecto</label>
+        <select id="sug-proyecto" name="pid" onchange="this.form.submit()">
+            {% for p in proyectos %}<option value="{{ p.pid }}" {% if p.pid == pid %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="ws-btn ws-btn--secundario">Buscar candidatos</button>
+    </form>
+    <details class="ws-cypher">
+        <summary>Cómo elegimos a estas personas: la consulta en Cypher</summary>
+        <div class="ws-cypher__codigo">
+            MATCH (p:Proyecto {pid: '{{ pid }}'})<br>
+            MATCH (u:Usuario)-[:TIENE_HABILIDAD]-&gt;(h:Habilidad)<br>
+            WHERE NOT (u)-[:PARTICIPA_EN]-&gt;(p)<br>
+            RETURN u, count(h) AS tech_match ORDER BY tech_match DESC LIMIT 12;
         </div>
-        {% else %}
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-12 text-center rounded-2xl space-y-2">
-            <p class="font-bold text-white text-xs">Sin nuevos colaboradores sugeridos</p>
-            <p class="text-[11px] text-gray-500">Todos los usuarios ya forman parte del equipo o especifica nuevas tecnologías.</p>
-        </div>
-        {% endif %}
+    </details>
+    {% if rec_colaboradores %}
+    <div x-data="{ todo: false }">
+    <div class="ws-personas ws-corta ws-corta--6" :class="todo && 'is-toda'">
+        {% for item in rec_colaboradores %}{% include "componentes/tarjeta_persona.html" with p=item.usuario nota=item.nota accion="invitar" %}{% endfor %}
     </div>
+    {% include "componentes/corta.html" with total=rec_colaboradores|length limite=6 %}
+    </div>
+    {% else %}
+    <div class="ws-vacio">
+            <h2>Sin colaboradores sugeridos</h2>
+            <p>Todos ya están en el equipo, o el proyecto todavía no tiene tecnologías.</p>
+        </div>
+    {% endif %}
     {% endif %}
 
-    <!-- ========================================================================= -->
-    <!-- TAB 4: RECOMENDACION DE TALENTO PARA EMPRESAS -->
-    <!-- ========================================================================= -->
-    {% if tab == 'talento' %}
-    <div class="space-y-5">
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-5 rounded-2xl space-y-4">
-            <h2 class="font-bold text-sm text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                Headhunting Inteligente: Talento para Empresas
-            </h2>
-            <p class="text-[11px] text-gray-500 font-mono">
-                Candidatos que dominan las tecnologías solicitadas en las vacantes abiertas de la empresa.
-            </p>
-
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <input type="hidden" name="tab" value="talento">
-                <div class="sm:col-span-9">
-                    <label class="text-[11px] font-bold text-gray-400 block mb-1">Seleccionar Empresa:</label>
-                    <select name="eid" class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] text-white rounded-full text-xs px-4 py-2 focus:outline-none" onchange="this.form.submit()">
-                        {% for e in empresas %}
-                        <option value="{{ e.eid }}" {% if e.eid == eid %}selected{% endif %}>
-                            {{ e.nombre }} ({{ e.industria|default:"Sector General" }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="sm:col-span-3">
-                    <button type="submit" class="peer-btn-green w-full py-2 rounded-full text-xs font-bold shadow-sm">Localizar Talento</button>
-                </div>
-            </form>
+    {% if tab == 'talento' and not empresas %}
+    <div class="ws-vacio">
+            <h2>Aún no administras una empresa</h2>
+            <p>Estas sugerencias son para quien administra una empresa.</p>
         </div>
-
-        {% if rec_talento %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for item in rec_talento %}
-            <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] rounded-2xl p-5 flex flex-col justify-between space-y-3.5 transition">
-                <div class="space-y-3">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 font-black flex items-center justify-center text-xs flex-shrink-0">
-                            {{ item.usuario.nombre|slice:":1" }}{{ item.usuario.apellido|slice:":1" }}
-                        </div>
-                        <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold">
-                            Score: {{ item.score }}
-                        </span>
-                    </div>
-
-                    <div>
-                        <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="font-bold text-sm text-white hover:text-[#00b84c] block">
-                            {{ item.usuario.nombre_completo }}
-                        </a>
-                        <p class="text-xs text-gray-400">{{ item.usuario.titulo_profesional|default:"Especialista" }}</p>
-                    </div>
-
-                    <div class="space-y-1.5 text-xs">
-                        <div class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Habilidades coincidentes:</div>
-                        <div class="flex flex-wrap gap-1">
-                            {% for hab in item.habilidades_match %}
-                            <span class="px-2 py-0.5 rounded bg-[#00b84c]/15 text-[#00b84c] border border-[#00b84c]/30 text-[10px] font-bold font-mono">{{ hab }}</span>
-                            {% empty %}
-                            <span class="text-[11px] text-gray-500">Talento disponible</span>
-                            {% endfor %}
-                        </div>
-
-                        {% if item.conexiones_internas > 0 %}
-                        <div class="text-[10px] text-[#00b84c] font-medium font-mono pt-1 flex items-center gap-1.5">
-                            <svg class="w-3 h-3 text-[#00b84c] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span>Conoce a {{ item.conexiones_internas }} colaborador(es) actual(es) de la empresa.</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="pt-3 border-t border-[#181c24] flex items-center justify-between gap-2">
-                    <a href="{% url 'core:usuario_detalle' uid=item.usuario.uid %}" class="text-xs text-gray-400 hover:text-white">
-                        Ver Perfil
-                    </a>
-                    <a href="{% url 'core:conexiones_red' %}?uid={{ item.usuario.uid }}" class="peer-btn-green px-3.5 py-1 rounded-full text-xs font-bold">
-                        Explorar Red
-                    </a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="peer-card bg-[#0e1116] border border-[#181c24] p-12 text-center rounded-2xl space-y-2">
-            <p class="font-bold text-white text-xs">Sin candidatos coincidentes</p>
-            <p class="text-[11px] text-gray-500">Publica ofertas con habilidades requeridas para localizar candidatos afines.</p>
-        </div>
-        {% endif %}
+    {% elif tab == 'talento' %}
+    <form method="GET" class="ws-selector">
+        <input type="hidden" name="tab" value="talento">
+        <label for="sug-empresa">Empresa</label>
+        <select id="sug-empresa" name="eid" onchange="this.form.submit()">
+            {% for e in empresas %}<option value="{{ e.eid }}" {% if e.eid == eid %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="ws-btn ws-btn--secundario">Localizar talento</button>
+    </form>
+    {% if rec_talento %}
+    <div x-data="{ todo: false }">
+    <div class="ws-personas ws-corta ws-corta--6" :class="todo && 'is-toda'">
+        {% for item in rec_talento %}{% include "componentes/tarjeta_persona.html" with p=item.usuario nota=item.nota accion="equipo" eid=eid %}{% endfor %}
     </div>
+    {% include "componentes/corta.html" with total=rec_talento|length limite=6 %}
+    </div>
+    {% else %}
+    <div class="ws-vacio">
+            <h2>Sin candidatos coincidentes</h2>
+            <p>Publica empleos con habilidades requeridas para encontrar gente afín.</p>
+        </div>
     {% endif %}
-
+    {% endif %}
 </div>
 {% endblock %}

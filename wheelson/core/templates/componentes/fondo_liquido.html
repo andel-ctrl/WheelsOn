@@ -1,0 +1,20 @@
+{# Fondo de toda la app: formas líquidas que fluyen y reaccionan al puntero. Solo se anima transform. #}
+<div class="ws-fondo" data-ws-fondo aria-hidden="true">
+    <svg width="0" height="0" style="position:absolute" focusable="false">
+        <defs>
+            <linearGradient id="fondo-lila" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9DDF0"/><stop offset="1" stop-color="#D9C6E6" stop-opacity=".55"/></linearGradient>
+            <linearGradient id="fondo-rosa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE6E1"/><stop offset="1" stop-color="#F6D5CF" stop-opacity=".5"/></linearGradient>
+            <radialGradient id="fondo-coral" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#FAD3C9"/><stop offset="1" stop-color="#F4B5A7" stop-opacity=".45"/></radialGradient>
+        </defs>
+    </svg>
+    <div class="ws-fondo__capa" style="--p:22"><svg class="ws-forma ws-forma--coral" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><circle cx="175" cy="300" r="175" fill="url(#fondo-coral)"/></svg></div>
+    <div class="ws-fondo__capa" style="--p:-16"><svg class="ws-forma ws-forma--lila" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><path d="M880 -60C820 120 930 210 1090 230C1270 252 1340 340 1560 300V-60Z" fill="url(#fondo-lila)"/></svg></div>
+    <div class="ws-fondo__capa" style="--p:30"><svg class="ws-forma ws-forma--rosa" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><path d="M1160 -60C1120 90 1190 150 1300 150C1370 150 1410 180 1560 170V-60Z" fill="url(#fondo-rosa)"/></svg></div>
+    <div class="ws-fondo__capa" style="--p:-24"><svg class="ws-forma ws-forma--lila-baja" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><path d="M1560 470C1290 410 1190 500 1090 590C980 690 860 690 760 780C700 835 680 870 640 1000H1560Z" fill="url(#fondo-lila)" opacity=".62"/></svg></div>
+    <div class="ws-fondo__capa" style="--p:36"><svg class="ws-forma ws-forma--rosa-baja" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><path d="M1560 620C1330 590 1260 650 1190 720C1120 790 1040 830 960 1000H1560Z" fill="url(#fondo-rosa)" opacity=".9"/></svg></div>
+    <div class="ws-fondo__capa" style="--p:18"><svg class="ws-forma ws-forma--rosa-izq" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><path d="M-120 720C90 690 190 740 250 820C275 855 290 900 300 1000H-120Z" fill="url(#fondo-rosa)" opacity=".7"/></svg></div>
+    <div class="ws-fondo__capa" style="--p:-46"><svg class="ws-forma ws-forma--gota" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><circle cx="1010" cy="430" r="58" fill="url(#fondo-coral)" opacity=".75"/></svg></div>
+    <div class="ws-fondo__capa" style="--p:52"><svg class="ws-forma ws-forma--gota-2" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><circle cx="520" cy="770" r="38" fill="url(#fondo-lila)"/></svg></div>
+    <span class="ws-fondo__puntos ws-fondo__puntos--der"></span>
+    <span class="ws-fondo__puntos ws-fondo__puntos--izq"></span>
+</div>

@@ -1,102 +1,98 @@
 {% extends "base.html" %}
+{% load wheelson_ui %}
 
 {% block title %}{{ empresa.nombre }} | WheelsOn{% endblock %}
 {% block page_title %}Ficha Empresarial{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6 animate-fade-in-up" x-data="{ activeTab: 'info' }">
+<div class="ws-pagina" x-data="{ activeTab: '{{ tab_inicial }}' }">
+    <a class="ws-volver" href="{% url 'core:empresas_lista' %}">{% icono "arrow-left" "regular" 16 %}Empresas</a>
 
-    <!-- Company Hero Card -->
-    <div class="card bg-base-200 border border-base-300 shadow-xl overflow-hidden rounded-3xl">
-        <div class="h-32 sm:h-40 bg-gradient-to-r from-secondary/30 via-accent/20 to-primary/30 relative">
-            <div class="absolute top-4 right-4 flex gap-2">
-                <a href="{% url 'core:empresa_editar' eid=empresa.eid %}" class="btn btn-xs btn-secondary shadow rounded-lg gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    Editar
-                </a>
-                <a href="{% url 'core:empresa_eliminar' eid=empresa.eid %}" class="btn btn-xs btn-error btn-outline shadow rounded-lg">Eliminar</a>
-            </div>
+    <section class="ws-edificio ws-edificio--ficha">
+        <div class="ws-edificio__cielo" aria-hidden="true">
+            <span class="ws-edificio__sol"></span>
+            {% skyline empresa.eid empresa.tamano equipo|length %}
         </div>
-
-        <div class="card-body p-6 sm:p-8 pt-0 relative">
-            <div class="flex flex-col sm:flex-row items-center sm:items-end gap-5 -mt-16 sm:-mt-20 mb-4">
-                <div class="avatar placeholder ring ring-base-100 ring-offset-4 ring-offset-base-200 rounded-3xl shadow-2xl">
-                    <div class="bg-gradient-to-tr from-secondary to-accent text-secondary-content font-black rounded-3xl w-24 h-24 sm:w-28 sm:h-28 text-3xl flex items-center justify-center">
-                        {{ empresa.nombre|slice:":2"|upper }}
-                    </div>
+        <div class="ws-edificio__placa">
+            <div class="ws-ficha__cabeza">
+                <div>
+                    <h1 class="ws-ficha__titulo">{{ empresa.nombre }}</h1>
+                    <p class="ws-edificio__rubro">{{ empresa.industria }}</p>
                 </div>
-
-                <div class="flex-1 text-center sm:text-left space-y-1">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <h2 class="text-2xl sm:text-3xl font-black text-base-content">{{ empresa.nombre }}</h2>
-                        <span class="badge badge-secondary badge-outline text-xs self-center sm:self-auto font-mono">ID: {{ empresa.eid|slice:":10" }}...</span>
-                    </div>
-
-                    <p class="text-sm sm:text-base font-semibold text-secondary">{{ empresa.industria }}</p>
-
-                    <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 text-xs text-base-content/70 pt-1">
-                        <span class="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {{ empresa.ubicacion|default:"No especificada" }}
-                        </span>
-                        <span>&bull;</span>
-                        <span class="capitalize">Tamaño: {{ empresa.tamano }}</span>
-                        {% if empresa.sitio_web %}
-                        <span>&bull;</span>
-                        <a href="{{ empresa.sitio_web }}" target="_blank" class="text-secondary hover:underline flex items-center gap-1">
-                            {{ empresa.sitio_web }}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
+                {% if puede_gestionar %}
+                <span class="ws-ficha__admin">
+                    <a class="ws-enlace" href="{% url 'core:empresa_editar' eid=empresa.eid %}">Editar</a>
+                    <a class="ws-enlace ws-persona__quitar" href="{% url 'core:empresa_eliminar' eid=empresa.eid %}">Eliminar</a>
+                </span>
+                {% endif %}
             </div>
-
-            <!-- Tabs -->
-            <div class="tabs tabs-bordered mt-6 border-b border-base-300">
-                <button type="button" @click="activeTab = 'info'" :class="activeTab === 'info' ? 'tab-active font-bold text-secondary border-secondary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Acerca de la Empresa
-                </button>
-                <button type="button" @click="activeTab = 'vacantes'" :class="activeTab === 'vacantes' ? 'tab-active font-bold text-secondary border-secondary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Ofertas Publicadas ({{ ofertas_rel|length }})
-                </button>
-                <button type="button" @click="activeTab = 'empleados'" :class="activeTab === 'empleados' ? 'tab-active font-bold text-secondary border-secondary' : ''" class="tab gap-2 text-xs sm:text-sm">
-                    Equipo de Trabajo ({{ empleados_rel|length }})
-                </button>
+            <dl class="ws-hechos">
+                <div><dt>Ubicación</dt><dd>{{ empresa.ubicacion|default:"No especificada" }}</dd></div>
+                <div><dt>Tamaño</dt><dd>{{ empresa.tamano|legible }}</dd></div>
+                {% if administrador %}<div><dt>La administra</dt><dd><a class="ws-enlace" href="{% url 'core:usuario_detalle' uid=administrador.uid %}">{{ administrador.nombre_completo }}</a></dd></div>{% endif %}
+                {% if empresa.sitio_web %}<div><dt>Sitio web</dt><dd><a class="ws-enlace" href="{{ empresa.sitio_web }}" target="_blank" rel="noopener">{{ empresa.sitio_web }}</a></dd></div>{% endif %}
+            </dl>
+            {% if estado_equipo == "miembro" %}
+            <div class="ws-aviso-union">
+                <span>{% if es_administrador_empresa %}Administras esta empresa y haces parte de su equipo.{% else %}Haces parte de este equipo.{% endif %}</span>
+                {% if not es_administrador_empresa %}<form method="POST" action="{% url 'core:empresa_equipo_terminar' eid=empresa.eid uid=current_user.uid %}" data-confirmar="¿Dejar este empleo? Queda en tu trayectoria como anterior." onsubmit="return confirm(this.dataset.confirmar);">
+                    {% csrf_token %}
+                    <button type="submit" class="ws-btn ws-btn--secundario ws-btn--sm">Dejé este empleo</button>
+                </form>{% endif %}
             </div>
+            {% elif estado_equipo == "invitado" %}
+            <div class="ws-aviso-union">
+                <span>Te invitaron a este equipo como {{ invitacion_equipo.cargo }}.</span>
+                {% url 'core:empresa_equipo_invitacion_responder' eid=empresa.eid as url_responder %}
+                {% include "componentes/responder.html" with url=url_responder %}
+            </div>
+            {% elif estado_equipo == "solicitada" %}
+            <form method="POST" action="{% url 'core:usuario_experiencia_cancelar' uid=current_user.uid eid=empresa.eid %}" class="ws-aviso-union">
+                {% csrf_token %}
+                <span>Pediste confirmar que trabajas aquí. Falta que la empresa responda.</span>
+                <button type="submit" class="ws-btn ws-btn--secundario ws-btn--sm">Cancelar solicitud</button>
+            </form>
+            {% else %}
+            <details class="ws-plegable">
+                <summary>¿Trabajas aquí?</summary>
+                <form method="POST" action="{% url 'core:empresa_trabajo_aqui' eid=empresa.eid %}" class="ws-catalogo__form">
+                    {% csrf_token %}
+                    <label><span>Tu cargo</span><input type="text" name="cargo" maxlength="120" required class="ws-campo" placeholder="Ej. Backend Developer"></label>
+                    <button type="submit" class="ws-btn ws-btn--primario">Pedir que lo confirmen</button>
+                </form>
+            </details>
+            {% endif %}
+        </div>
+    </section>
 
-            <!-- Tab Content -->
-            <div class="py-6">
+    <div class="ws-barra">
+        <div class="ws-filtros" role="tablist" aria-label="Secciones de la empresa">
+            <button type="button" @click="activeTab = 'info'" :class="activeTab === 'info' && 'is-activo'">Acerca de</button>
+            <button type="button" @click="activeTab = 'vacantes'" :class="activeTab === 'vacantes' && 'is-activo'">Empleos ({{ ofertas_rel|length }})</button>
+            <button type="button" @click="activeTab = 'empleados'" :class="activeTab === 'empleados' && 'is-activo'">Equipo ({{ equipo|length }})</button>
+            <button type="button" @click="activeTab = 'publicaciones'" :class="activeTab === 'publicaciones' && 'is-activo'">Publicaciones ({{ publicaciones_rel|length }})</button>
+            {% if puede_gestionar %}<button type="button" @click="activeTab = 'gestion'" :class="activeTab === 'gestion' && 'is-activo'">Gestión{% if pendientes_gestion %} ({{ pendientes_gestion }}){% endif %}</button>{% endif %}
+        </div>
+    </div>
+
+    <div class="ws-bloque">
                 <!-- Info Tab -->
                 <div x-show="activeTab === 'info'" class="space-y-4">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/50">Resumen y Misión</h3>
                     {% if empresa.descripcion %}
-                    <p class="text-sm leading-relaxed text-base-content/80 whitespace-pre-line bg-base-300/30 p-5 rounded-2xl border border-base-300">
-                        {{ empresa.descripcion }}
-                    </p>
+                    <p class="ws-entrada__texto">{{ empresa.descripcion }}</p>
                     {% else %}
                     <div class="p-6 text-center rounded-2xl bg-base-300/20 border border-base-300">
                         <p class="text-xs text-base-content/50">Esta empresa aún no tiene una descripción registrada.</p>
-                        <a href="{% url 'core:empresa_editar' eid=empresa.eid %}" class="btn btn-xs btn-secondary btn-outline mt-3">Completar Información</a>
+                        {% if puede_gestionar %}<a href="{% url 'core:empresa_editar' eid=empresa.eid %}" class="btn btn-xs btn-secondary btn-outline mt-3">Completar Información</a>{% endif %}
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- Vacantes Tab -->
+                <!-- Empleos Tab -->
                 <div x-show="activeTab === 'vacantes'" style="display: none;" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Vacantes Publicadas (:Oferta)</h3>
-                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-accent font-mono">[:PUBLICA]</code>.</p>
-                        </div>
-                        <a href="{% url 'core:oferta_crear' %}" class="btn btn-xs btn-accent rounded-xl font-bold">+ Publicar Nueva Oferta</a>
+                        <h3 class="ws-bloque__titulo">Empleos publicados</h3>
+                        {% if puede_gestionar %}<a href="{% url 'core:oferta_crear' %}?empresa={{ empresa.eid }}" class="btn btn-xs btn-accent rounded-xl font-bold">+ Publicar Nueva Oferta</a>{% endif %}
                     </div>
 
                     {% if ofertas_rel %}
@@ -114,64 +110,124 @@
                             <p class="text-xs text-base-content/60 line-clamp-2">{{ ofr.descripcion|default:"Sin descripción" }}</p>
                             <div class="flex justify-between items-center pt-2 border-t border-base-300/60 text-[11px] text-base-content/50">
                                 <span class="capitalize">{{ ofr.modalidad }}</span>
-                                <a href="{% url 'core:oferta_detalle' oid=ofr.oid %}" class="text-accent font-semibold hover:underline">Ver Vacante &rarr;</a>
+                                <a href="{% url 'core:oferta_detalle' oid=ofr.oid %}" class="text-accent font-semibold hover:underline">Ver empleo &rarr;</a>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                     {% else %}
                     <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300 space-y-2">
-                        <p class="text-xs text-base-content/60">No hay ofertas vinculadas actualmente a esta empresa.</p>
-                        <a href="{% url 'core:oferta_crear' %}" class="btn btn-xs btn-accent font-bold">Publicar Primera Vacante</a>
+                        <p class="text-xs text-base-content/60">Esta empresa no tiene empleos publicados.</p>
+                        {% if puede_gestionar %}<a href="{% url 'core:oferta_crear' %}?empresa={{ empresa.eid }}" class="btn btn-xs btn-accent font-bold">Publicar el primer empleo</a>{% endif %}
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- Empleados Tab -->
-                <div x-show="activeTab === 'empleados'" style="display: none;" class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-sm uppercase tracking-wider text-base-content/70">Equipo de Trabajo (:Usuario)</h3>
-                            <p class="text-xs text-base-content/50">Arista semántica <code class="text-secondary font-mono">[:TRABAJA_EN]</code>.</p>
-                        </div>
+                <!-- Publicaciones Tab -->
+                <div x-show="activeTab === 'publicaciones'" style="display: none;" class="space-y-4">
+                    {% if puede_gestionar %}
+                    <form method="POST" action="{% url 'core:dashboard' %}" class="ws-avance-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="como" value="{{ empresa.eid }}">
+                        <h4 class="ws-avance-form__titulo">Publicar como {{ empresa.nombre }}</h4>
+                        <label class="ws-oculto-visual" for="empresa-publicacion">Publicación</label>
+                        <textarea id="empresa-publicacion" name="texto" rows="3" maxlength="2000" required class="ws-campo" placeholder="Comparte una novedad de la empresa..."></textarea>
+                        <div class="ws-avance-form__pie"><button type="submit" class="ws-btn ws-btn--primario" style="margin-left:auto">Publicar</button></div>
+                    </form>
+                    {% endif %}
+                    {% for p in publicaciones_rel %}
+                    <div class="border-t border-base-300 pt-3" id="pub-{{ p.publicacion.pubid }}">
+                        <p class="text-xs text-base-content/60">{{ p.publicacion.fecha|date:"j \d\e F \d\e Y" }}</p>
+                        <p class="text-sm text-base-content" style="white-space:pre-line">{{ p.publicacion.texto }}</p>
+                        {% include "componentes/percepcion.html" %}
                     </div>
+                    {% empty %}
+                    <p class="text-xs text-base-content/60 text-center py-4">Esta empresa todavía no tiene publicaciones.</p>
+                    {% endfor %}
+                </div>
 
-                    {% if empleados_rel %}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {% for emp in empleados_rel %}
-                        <div class="card bg-base-100 border border-base-300 p-3 rounded-2xl shadow-sm flex flex-row items-center gap-3">
-                            <div class="avatar placeholder">
-                                <div class="bg-secondary/20 text-secondary font-bold rounded-xl w-10 h-10 text-xs">
-                                    {{ emp.usuario.nombre|slice:":1" }}{{ emp.usuario.apellido|slice:":1" }}
-                                </div>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <a href="{% url 'core:usuario_detalle' uid=emp.usuario.uid %}" class="font-bold text-xs text-base-content hover:text-secondary truncate block">
-                                    {{ emp.usuario.nombre_completo }}
-                                </a>
-                                <p class="text-[11px] text-secondary font-semibold truncate">{{ emp.cargo }}</p>
-                                <span class="text-[10px] text-base-content/40">
-                                    {% if emp.actual %}Empleado Actual{% else %}Histórico{% endif %}
-                                </span>
-                            </div>
+                {% if puede_gestionar %}
+                <!-- Gestión: solo para quien administra la empresa -->
+                <div x-show="activeTab === 'gestion'" style="display: none;" class="space-y-6">
+                    <section class="space-y-2" aria-label="Empleos por confirmar">
+                        <h3 class="font-bold text-sm text-base-content">Empleos por confirmar</h3>
+                        {% for s in solicitudes_empleo %}
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-base-300 pt-2">
+                            <span class="text-xs"><a class="ws-enlace" href="{% url 'core:usuario_detalle' uid=s.usuario.uid %}">{{ s.usuario.nombre_completo }}</a> dice que trabaja aquí como <strong>{{ s.cargo }}</strong></span>
+                            {% url 'core:empresa_empleo_responder' eid=empresa.eid uid=s.usuario.uid as url_responder %}
+                            {% include "componentes/responder.html" with url=url_responder %}
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-base-content/60">No hay empleos esperando confirmación.</p>
+                        {% endfor %}
+                    </section>
+
+                    <section class="space-y-2" aria-label="Administrador">
+                        <h3 class="font-bold text-sm text-base-content">Administrador</h3>
+                        {% if administrador %}<a class="text-xs ws-enlace" href="{% url 'core:usuario_detalle' uid=administrador.uid %}">{{ administrador.nombre_completo }}</a>{% endif %}
+                        {% url 'core:empresa_transferir' eid=empresa.eid as url_transferir %}
+                        {% url 'core:empresa_invitacion_cancelar' eid=empresa.eid as url_cancelar %}
+                        {% include "componentes/transferir.html" with url=url_transferir recurso="empresa" miembros="empleados" candidatos=candidatos_transferencia pendiente=transferencia_pendiente url_cancelar=url_cancelar %}
+                    </section>
+
+                    <section class="space-y-2" aria-label="Invitar al equipo">
+                        <h3 class="font-bold text-sm text-base-content">Invitar al equipo</h3>
+                        <p class="ws-bloque__nota">La persona entra cuando acepte. Para contratar por un empleo publicado, acepta su postulación en ese empleo.</p>
+                        <form method="POST" action="{% url 'core:empresa_equipo_invitar' eid=empresa.eid %}" class="ws-catalogo__form">
+                            {% csrf_token %}
+                            <label><span>Persona</span>
+                                <select name="uid" class="ws-campo" required>
+                                    <option value="">Elige a alguien</option>
+                                    {% for u in personas_para_invitar %}<option value="{{ u.uid }}"{% if u.uid == invitar_uid %} selected{% endif %}>{{ u.nombre_completo }}</option>{% endfor %}
+                                </select>
+                            </label>
+                            <label><span>Cargo</span><input type="text" name="cargo" maxlength="120" required class="ws-campo" placeholder="Ej. Backend Developer"></label>
+                            <button type="submit" class="ws-btn ws-btn--primario">Invitar</button>
+                        </form>
+                        {% for i in invitaciones_equipo %}
+                        <div class="ws-renglon">
+                            <span>Esperando a <a class="ws-enlace" href="{% url 'core:usuario_detalle' uid=i.usuario.uid %}">{{ i.usuario.nombre_completo }}</a> · {{ i.cargo }}</span>
+                            <form method="POST" action="{% url 'core:empresa_equipo_invitacion_cancelar' eid=empresa.eid uid=i.usuario.uid %}">
+                                {% csrf_token %}
+                                <button type="submit" class="ws-btn ws-btn--secundario ws-btn--sm">Cancelar</button>
+                            </form>
                         </div>
                         {% endfor %}
+                    </section>
+                </div>
+                {% endif %}
+
+                <!-- Equipo -->
+                <div x-show="activeTab === 'empleados'" style="display: none;">
+                    <p class="ws-bloque__nota">Quienes trabajan aquí hoy. Estar en el equipo te muestra en esta página y te vuelve ruta para que tus contactos lleguen a la empresa; publicar empleos y responder solicitudes lo hace quien la administra.</p>
+                    {% for emp in equipo %}
+                    <div class="ws-renglon">
+                        <span class="ws-avatar ws-avatar--marca ws-avatar--sm" aria-hidden="true">{{ emp.usuario.nombre|slice:":1" }}{{ emp.usuario.apellido|slice:":1" }}</span>
+                        <span class="ws-renglon__texto">
+                            <a class="ws-renglon__titulo" href="{% url 'core:usuario_detalle' uid=emp.usuario.uid %}">{{ emp.usuario.nombre_completo }}</a>
+                            <span class="ws-renglon__detalle">{{ emp.cargo }}{% if emp.es_administrador %} · Administra la empresa{% endif %}</span>
+                        </span>
+                        {% if puede_gestionar and not emp.es_administrador %}<form method="POST" action="{% url 'core:empresa_equipo_terminar' eid=empresa.eid uid=emp.usuario.uid %}" data-confirmar="¿Quitar a {{ emp.usuario.nombre_completo }} del equipo? El empleo queda en su trayectoria como anterior." onsubmit="return confirm(this.dataset.confirmar);">
+                            {% csrf_token %}
+                            <button type="submit" class="ws-enlace ws-persona__quitar">Quitar del equipo</button>
+                        </form>{% endif %}
                     </div>
-                    {% else %}
-                    <div class="p-8 text-center rounded-2xl bg-base-300/20 border border-base-300">
-                        <p class="text-xs text-base-content/60">No hay colaboradores vinculados a esta empresa aún en el grafo.</p>
+                    {% empty %}
+                    <p class="ws-bloque__vacio">Todavía no hay personas en esta empresa.</p>
+                    {% endfor %}
+                    {% if antiguos %}
+                    <h3 class="ws-bloque__subtitulo">Antes trabajaron aquí</h3>
+                    {% for emp in antiguos %}
+                    <div class="ws-renglon">
+                        <span class="ws-renglon__texto">
+                            <a class="ws-renglon__titulo" href="{% url 'core:usuario_detalle' uid=emp.usuario.uid %}">{{ emp.usuario.nombre_completo }}</a>
+                            <span class="ws-renglon__detalle">{{ emp.cargo }}</span>
+                        </span>
                     </div>
+                    {% endfor %}
                     {% endif %}
                 </div>
             </div>
-
-            <div class="card-actions justify-start pt-4 border-t border-base-300">
-                <a href="{% url 'core:empresas_lista' %}" class="btn btn-sm btn-ghost gap-2">
-                    &larr; Volver al Directorio
-                </a>
-            </div>
-        </div>
     </div>
-
 </div>
 {% endblock %}
