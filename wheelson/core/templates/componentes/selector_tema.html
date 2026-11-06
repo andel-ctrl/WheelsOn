@@ -1,6 +1,17 @@
-{# Claro u oscuro. La elección se guarda en este navegador; wheelson.js la aplica. #}
-<div class="ws-tema" role="group" aria-label="Tema de la app">
-    <span class="ws-tema__rotulo">Tema</span>
-    <button type="button" data-ws-tema="claro" aria-pressed="true">Claro</button>
-    <button type="button" data-ws-tema="oscuro" aria-pressed="false">Oscuro</button>
+{# Interruptor de tema: de día un atardecer, de noche estrellas. La elección se guarda en este navegador; wheelson.js la aplica. #}
+<div class="ws-tema">
+    <button type="button" class="ws-interruptor" role="switch" aria-checked="false" aria-label="Modo oscuro" title="Cambiar el tema" data-ws-tema-interruptor>
+        <span class="ws-interruptor__cielo" aria-hidden="true">
+            <svg class="ws-interruptor__nube ws-interruptor__nube--1" viewBox="0 0 32 16"><path d="M8 16a6 6 0 0 1-1-11.9A8 8 0 0 1 21.6 3.2 6.5 6.5 0 1 1 25 16Z"/></svg>
+            <svg class="ws-interruptor__nube ws-interruptor__nube--2" viewBox="0 0 32 16"><path d="M8 16a6 6 0 0 1-1-11.9A8 8 0 0 1 21.6 3.2 6.5 6.5 0 1 1 25 16Z"/></svg>
+            <svg class="ws-interruptor__estrella ws-interruptor__estrella--1" viewBox="0 0 16 16"><path d="M8 0c.6 5 3 7.4 8 8-5 .6-7.4 3-8 8-.6-5-3-7.4-8-8 5-.6 7.4-3 8-8Z"/></svg>
+            <svg class="ws-interruptor__estrella ws-interruptor__estrella--2" viewBox="0 0 16 16"><path d="M8 0c.6 5 3 7.4 8 8-5 .6-7.4 3-8 8-.6-5-3-7.4-8-8 5-.6 7.4-3 8-8Z"/></svg>
+            <svg class="ws-interruptor__estrella ws-interruptor__estrella--3" viewBox="0 0 16 16"><path d="M8 0c.6 5 3 7.4 8 8-5 .6-7.4 3-8 8-.6-5-3-7.4-8-8 5-.6 7.4-3 8-8Z"/></svg>
+            <span class="ws-interruptor__astro">
+                <i class="ws-interruptor__crater ws-interruptor__crater--1"></i>
+                <i class="ws-interruptor__crater ws-interruptor__crater--2"></i>
+                <i class="ws-interruptor__crater ws-interruptor__crater--3"></i>
+            </span>
+        </span>
+    </button>
 </div>

@@ -4591,11 +4591,24 @@ class ConcurrenciaTest(_ConReglas):
         self.assertEqual(db.cypher_query("MATCH (:Usuario {uid: $u})-[r:SOLICITA_UNIRSE]->(:Proyecto {pid: 'proy_fintech02'}) RETURN count(r)", {"u": WILSON})[0][0][0], 1)
 
 
+def pathlib_templates():
+    import pathlib
+    from django.conf import settings
+
+    return pathlib.Path(settings.BASE_DIR, "core", "templates")
+
+
 class TemaOscuroTest(_ConDatosDeEjemplo):
-    def test_el_selector_esta_en_la_cuenta_y_en_el_acceso(self):
+    def test_el_interruptor_aparece_una_vez_junto_a_la_campana_y_en_el_acceso(self):
+        html = entrar_como(LUIS).get("/").content.decode()
+        self.assertEqual(html.count("data-ws-tema-interruptor"), 1)
+        self.assertLess(html.index('class="ws-campana"'), html.index("data-ws-tema-interruptor"))
+        self.assertNotIn("data-ws-tema-interruptor", html[html.index('class="ws-cuenta"'):html.index("ws-cuenta__pie")])
+
         for html in (entrar_como(LUIS).get("/").content.decode(), ClienteAnonimo().get("/login/").content.decode(), ClienteAnonimo().get("/registro/").content.decode()):
-            self.assertIn('data-ws-tema="oscuro"', html)
-            self.assertIn('data-ws-tema="claro"', html)
+            self.assertIn("data-ws-tema-interruptor", html)
+            self.assertIn('role="switch"', html)
+            self.assertIn('aria-label="Modo oscuro"', html)
 
     def test_el_tema_se_aplica_antes_de_cargar_los_estilos(self):
         html = ClienteAnonimo().get("/login/").content.decode()
@@ -4624,6 +4637,13 @@ class TemaOscuroTest(_ConDatosDeEjemplo):
         css = open(finders.find("css/wheelson-oscuro.css"), encoding="utf-8").read()
         for selector in (".ws-panel-avisos", "#ola-trazo", "rueda-mini-verde"):
             self.assertIn(selector, css)
+
+    def test_el_interruptor_usa_la_paleta_y_no_repite_ids(self):
+        selector = (pathlib_templates() / "componentes" / "selector_tema.html").read_text(encoding="utf-8")
+        self.assertNotIn(' id="', selector)
+        css = open(finders.find("css/wheelson.css"), encoding="utf-8").read()
+        self.assertIn("Uiverse.io (RiccardoRapelli)", css)
+        self.assertNotIn("#2196f3", css)
 
 
 class LoMioPrimeroTest(_ConDatosDeEjemplo):

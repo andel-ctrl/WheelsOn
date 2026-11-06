@@ -58,6 +58,7 @@
     </div>
 
     {% if current_user %}{% include "componentes/notificaciones.html" %}{% endif %}
+    <div class="ws-tema--flotante ws-tema--junto-campana">{% include "componentes/selector_tema.html" %}</div>
     {% endif %}
 
     <div class="ws-contenido {% if '/login/' not in request.path and '/registro/' not in request.path %}con-cabecera{% endif %}">

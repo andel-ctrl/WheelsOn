@@ -231,33 +231,36 @@ function panelAvisos(uid) {
 })();
 
 /* Tema claro u oscuro. Se guarda en este navegador. Los gráficos y el grafo se dibujan en
-   un lienzo con sus colores ya calculados, así que esas páginas se recargan al cambiar. */
+   un lienzo con sus colores ya calculados, así que esas páginas se recargan al cambiar,
+   después de que termine la animación del interruptor. */
 (function () {
     var CLAVE = 'wheelson-tema';
-    function actual() { return document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro'; }
+    var raiz = document.documentElement;
+    function oscuro() { return raiz.getAttribute('data-tema') === 'oscuro'; }
     function marcar() {
-        var tema = actual();
-        document.querySelectorAll('[data-ws-tema]').forEach(function (boton) {
-            boton.setAttribute('aria-pressed', boton.getAttribute('data-ws-tema') === tema ? 'true' : 'false');
+        document.querySelectorAll('[data-ws-tema-interruptor]').forEach(function (boton) {
+            boton.setAttribute('aria-checked', oscuro() ? 'true' : 'false');
+            boton.setAttribute('title', oscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
         });
         var color = document.querySelector('meta[name="theme-color"]');
-        if (color) { color.setAttribute('content', tema === 'oscuro' ? '#07090C' : '#FAF7F6'); }
+        if (color) { color.setAttribute('content', oscuro() ? '#07090C' : '#FAF7F6'); }
+    }
+    function aplicar(tema) {
+        if (tema === 'oscuro') { raiz.setAttribute('data-tema', 'oscuro'); } else { raiz.removeAttribute('data-tema'); }
+        marcar();
     }
     document.addEventListener('click', function (evento) {
-        var boton = evento.target.closest ? evento.target.closest('[data-ws-tema]') : null;
+        var boton = evento.target.closest ? evento.target.closest('[data-ws-tema-interruptor]') : null;
         if (!boton) { return; }
-        var tema = boton.getAttribute('data-ws-tema');
-        if (tema === actual()) { return; }
-        if (tema === 'oscuro') { document.documentElement.setAttribute('data-tema', 'oscuro'); } else { document.documentElement.removeAttribute('data-tema'); }
+        var tema = oscuro() ? 'claro' : 'oscuro';
+        aplicar(tema);
         try { localStorage.setItem(CLAVE, tema); } catch (e) {}
-        marcar();
-        if (document.querySelector('canvas, #user-constellation-network, #vis-graph-canvas')) { window.location.reload(); }
+        if (document.querySelector('canvas, #user-constellation-network, #vis-graph-canvas')) {
+            setTimeout(function () { window.location.reload(); }, 420);
+        }
     }, true); // En captura: el menú móvil detiene los clics antes de que lleguen al documento
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', marcar); } else { marcar(); }
-    // El login cambia su ola y la foto solo por CSS; otras pestañas se enteran al guardar
     window.addEventListener('storage', function (evento) {
-        if (evento.key !== CLAVE) { return; }
-        if (evento.newValue === 'oscuro') { document.documentElement.setAttribute('data-tema', 'oscuro'); } else { document.documentElement.removeAttribute('data-tema'); }
-        marcar();
+        if (evento.key === CLAVE) { aplicar(evento.newValue); }
     });
 })();

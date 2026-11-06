@@ -221,6 +221,3 @@ html[data-tema="oscuro"] .border-rose-900\/50, html[data-tema="oscuro"] .border-
 html[data-tema="oscuro"] .ws-chip-usuario { background-color: rgba(108, 132, 240, 0.16) !important; color: #A9B8FF !important; border-color: rgba(108, 132, 240, 0.4) !important; }
 html[data-tema="oscuro"] .bg-\[\#00b84c\] { background-color: #2A313D !important; }
 html[data-tema="oscuro"] .bg-gradient-to-tr { background-color: #232A35 !important; }
-
-/* --- Selector de tema -------------------------------------------------------- */
-html[data-tema="oscuro"] .ws-tema--flotante { background: rgba(14, 17, 22, 0.8); border-color: rgba(255, 255, 255, 0.1); }
