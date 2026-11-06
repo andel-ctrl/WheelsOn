@@ -1,199 +1,161 @@
 {% extends "base.html" %}
 
-{% block title %}Launchpad & Proyectos | WheelsOn{% endblock %}
-{% block page_title %}Launchpad de Proyectos{% endblock %}
+{% block title %}Proyectos & Lanzamientos | WheelsOn{% endblock %}
+{% block page_title %}Proyectos & Proof of Work{% endblock %}
 
 {% block content %}
-<div class="space-y-6 animate-fade-in-up" x-data="{ viewMode: 'grid', filterStatus: 'todos' }">
+<div class="max-w-4xl mx-auto space-y-5 animate-fade-in-up" x-data="{ filtroEstado: 'todos' }">
 
-    <!-- KPI & Header Stats Banner (Estilo Peerlist Dark) -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
-            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Total Proyectos</span>
-            <div class="text-2xl font-black text-white">{{ proyectos|length }}</div>
-            <p class="text-[10px] text-gray-500 font-mono">Proof of work en red</p>
-        </div>
-
-        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
-            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">En Desarrollo</span>
-            <div class="text-2xl font-black text-[#00b84c]">
-                {% for p in proyectos %}{% if p.estado == 'activo' %}x{% endif %}{% endfor %}
+    <!-- Header Principal Estilo Peerlist -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#181c24]">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#00b84c]/15 text-[#00b84c] border border-[#00b84c]/30 uppercase tracking-wider">
+                    Proof of Work
+                </span>
+                <span class="text-xs text-gray-500 font-mono">Vitrina de Desarrollo</span>
             </div>
-            <p class="text-[10px] text-gray-500 font-mono">Lanzamientos activos</p>
+            <h1 class="text-xl font-black text-white tracking-tight mt-1">Proyectos & Lanzamientos</h1>
+            <p class="text-xs text-gray-400 mt-0.5">
+                Iniciativas de software, modelos de grafos y productos técnicos creados y colaborados en WheelsOn.
+            </p>
         </div>
 
-        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
-            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Completados</span>
-            <div class="text-2xl font-black text-cyan-400">
-                {% for p in proyectos %}{% if p.estado == 'completado' %}x{% endif %}{% endfor %}
-            </div>
-            <p class="text-[10px] text-gray-500 font-mono">Éxito en producción</p>
-        </div>
-
-        <div class="peer-card p-4 space-y-1 bg-[#0e1116] border border-[#181c24] rounded-2xl">
-            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Stack Grafo</span>
-            <div class="text-2xl font-black text-amber-400">Multi</div>
-            <p class="text-[10px] text-gray-500 font-mono">Neo4j, Cypher, Py</p>
-        </div>
+        <a href="{% url 'core:proyecto_crear' %}" class="peer-btn-green px-4 py-2 rounded-full text-xs font-bold shadow-sm flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            <span>Publicar Proyecto</span>
+        </a>
     </div>
 
-    <!-- Search, Filters and Layout Toolbar -->
-    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 bg-[#0e1116] p-3.5 rounded-2xl border border-[#181c24]">
-        <form method="GET" class="flex-1 flex gap-2 max-w-lg">
+    <!-- Barra de Filtros & Búsqueda Integrada -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#0e1116] p-3 rounded-2xl border border-[#181c24]">
+        <!-- Píldoras de Filtro por Estado -->
+        <div class="inline-flex rounded-full bg-[#12151b] border border-[#1e232d] p-0.5 text-xs">
+            <button type="button" @click="filtroEstado = 'todos'"
+                    :class="filtroEstado === 'todos' ? 'bg-[#1c212b] text-white font-bold' : 'text-gray-400 hover:text-white'"
+                    class="px-3 py-1 rounded-full transition text-[11px]">
+                Todos ({{ proyectos|length }})
+            </button>
+            <button type="button" @click="filtroEstado = 'activo'"
+                    :class="filtroEstado === 'activo' ? 'bg-[#1c212b] text-[#00b84c] font-bold' : 'text-gray-400 hover:text-white'"
+                    class="px-3 py-1 rounded-full transition text-[11px]">
+                En Desarrollo
+            </button>
+            <button type="button" @click="filtroEstado = 'completado'"
+                    :class="filtroEstado === 'completado' ? 'bg-[#1c212b] text-cyan-400 font-bold' : 'text-gray-400 hover:text-white'"
+                    class="px-3 py-1 rounded-full transition text-[11px]">
+                Completados
+            </button>
+        </div>
+
+        <!-- Buscador Minimalista -->
+        <form method="GET" class="flex items-center gap-2 flex-1 sm:max-w-xs">
             <div class="relative w-full">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </span>
                 <input type="text" name="q" value="{{ query|default:'' }}"
-                       placeholder="Buscar por título, tecnología o descripción..."
-                       class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] rounded-full pl-10 pr-4 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none" />
+                       placeholder="Buscar por título o stack..."
+                       class="w-full bg-[#090b0e] border border-[#1a1e27] focus:border-[#00b84c] rounded-full pl-9 pr-8 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none" />
+                {% if query %}
+                <a href="{% url 'core:proyectos_lista' %}" class="absolute right-2.5 top-2 text-xs text-gray-500 hover:text-white">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </a>
+                {% endif %}
             </div>
-            <button type="submit" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">Buscar</button>
-            {% if query %}
-            <a href="{% url 'core:proyectos_lista' %}" class="px-3 py-1.5 rounded-full text-xs text-gray-400 hover:text-white transition">Limpiar</a>
-            {% endif %}
+            <button type="submit" class="px-3 py-1.5 rounded-full text-xs font-bold text-gray-300 hover:text-white bg-[#161a22] hover:bg-[#1f2430] border border-[#222731] transition">
+                Buscar
+            </button>
         </form>
-
-        <div class="flex items-center gap-2.5 self-end md:self-auto">
-            <!-- View Mode Switcher -->
-            <div class="inline-flex rounded-full bg-[#12151b] border border-[#1e232d] p-0.5 text-xs">
-                <button type="button" @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-[#1c212b] text-white' : 'text-gray-400 hover:text-white'" class="px-3 py-1 rounded-full transition text-[11px] font-bold">
-                    Cuadrícula
-                </button>
-                <button type="button" @click="viewMode = 'table'" :class="viewMode === 'table' ? 'bg-[#1c212b] text-white' : 'text-gray-400 hover:text-white'" class="px-3 py-1 rounded-full transition text-[11px] font-bold">
-                    Tabla
-                </button>
-            </div>
-
-            <a href="{% url 'core:proyecto_crear' %}" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold shadow-sm flex items-center gap-1.5">
-                <span>+</span>
-                <span>Nuevo Proyecto</span>
-            </a>
-        </div>
     </div>
 
-    <!-- Main Content Area -->
+    <!-- Feed de Proyectos (Estilo Peerlist / Read.cv) -->
     {% if proyectos %}
-
-    <!-- 1. Grid View (Cards camufladas al fondo) -->
-    <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="space-y-4">
         {% for p in proyectos %}
-        <div class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] transition-all duration-200 rounded-2xl p-5 flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-1 flex-1 min-w-0">
-                        <span class="text-[10px] font-mono text-gray-500 bg-[#090b0e] border border-[#161a22] px-2 py-0.5 rounded-md">PID: {{ p.pid|slice:":8" }}</span>
-                        <h3 class="font-bold text-sm text-white hover:text-[#00b84c] transition truncate pt-1">
-                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}">{{ p.nombre }}</a>
-                        </h3>
+        <div x-show="filtroEstado === 'todos' || filtroEstado === '{{ p.estado|default:'activo' }}'"
+             class="peer-card bg-[#0e1116] hover:bg-[#11141b] border border-[#181c24] hover:border-[#242b38] transition-all duration-200 rounded-2xl p-5 space-y-4">
+
+            <!-- Encabezado de la Tarjeta del Proyecto -->
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-start gap-3.5 min-w-0">
+                    <div class="w-10 h-10 rounded-xl bg-[#161a22] border border-[#222731] text-[#00b84c] font-black flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                        {{ p.nombre|slice:":2"|upper }}
                     </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {% if p.estado == 'activo' %}bg-[#00b84c]/20 text-[#00b84c] border border-[#00b84c]/30{% elif p.estado == 'completado' %}bg-cyan-500/20 text-cyan-400 border border-cyan-500/30{% else %}bg-amber-500/20 text-amber-400 border border-amber-500/30{% endif %}">
-                        {{ p.estado|default:"activo" }}
-                    </span>
-                </div>
-
-                <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">
-                    {{ p.descripcion|default:"Iniciativa tecnológica sin descripción detallada registrada." }}
-                </p>
-
-                <!-- Stack Tecnológico Chips -->
-                <div class="space-y-1">
-                    <div class="flex flex-wrap gap-1.5">
-                        {% for tech in p.tecnologias %}
-                        <span class="px-2 py-0.5 rounded-md bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ tech }}</span>
-                        {% empty %}
-                        <span class="text-[10px] text-gray-500 italic">Sin tecnologías especificadas</span>
-                        {% endfor %}
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="font-bold text-base text-white hover:text-[#00b84c] transition truncate block">
+                                {{ p.nombre }}
+                            </a>
+                            <span class="text-[10px] font-mono text-gray-500">PID: {{ p.pid|slice:":8" }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[11px] text-gray-500 mt-0.5 font-mono">
+                            <span>Iniciado: {{ p.fecha_inicio|default:"Fecha N/A" }}</span>
+                            {% if p.fecha_fin %}
+                            <span>•</span>
+                            <span>Finalizado: {{ p.fecha_fin }}</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
-                <!-- Timeline Info -->
-                <div class="pt-2 flex items-center justify-between text-[11px] text-gray-500 border-t border-[#181c24]">
-                    <span>{{ p.fecha_inicio|default:"Inicio N/A" }}</span>
-                    <span>&rarr;</span>
-                    <span>{{ p.fecha_fin|default:"En curso" }}</span>
-                </div>
+                <!-- Estado del Proyecto -->
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 {% if p.estado == 'activo' %}bg-[#00b84c]/15 text-[#00b84c] border border-[#00b84c]/30{% elif p.estado == 'completado' %}bg-cyan-500/15 text-cyan-400 border border-cyan-500/30{% else %}bg-amber-500/15 text-amber-400 border border-amber-500/30{% endif %}">
+                    {% if p.estado == 'activo' %}En desarrollo{% elif p.estado == 'completado' %}Completado{% else %}{{ p.estado }}{% endif %}
+                </span>
             </div>
 
-            <!-- Card Bottom Bar -->
-            <div class="pt-3 border-t border-[#181c24] flex items-center justify-between">
-                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="text-xs font-bold text-[#00b84c] hover:underline flex items-center gap-1">
-                    Ver Detalles &rarr;
+            <!-- Descripción del Proyecto -->
+            <p class="text-[13px] text-gray-300 leading-relaxed">
+                {{ p.descripcion|default:"Iniciativa tecnológica registrada en la red de grafos WheelsOn sin descripción extendida." }}
+            </p>
+
+            <!-- Stack Tecnológico en Píldoras Minimalistas -->
+            <div class="flex flex-wrap gap-1.5 pt-1">
+                {% for tech in p.tecnologias %}
+                <span class="px-2.5 py-1 rounded-lg bg-[#090b0e] border border-[#181c24] text-[11px] text-gray-300 font-mono">
+                    {{ tech }}
+                </span>
+                {% empty %}
+                <span class="text-[11px] text-gray-500 italic">Sin stack tecnológico especificado</span>
+                {% endfor %}
+            </div>
+
+            <!-- Barra Inferior de Acciones -->
+            <div class="pt-3 border-t border-[#181c24] flex items-center justify-between gap-3 text-xs">
+                <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="peer-btn-green px-4 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1.5">
+                    <span>Ver Proyecto</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </a>
-                <div class="flex items-center gap-2">
+
+                <div class="flex items-center gap-1">
                     <a href="{% url 'core:proyecto_editar' pid=p.pid %}" class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#161a22] transition" title="Editar">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                     </a>
-                    <a href="{% url 'core:proyecto_eliminar' pid=p.pid %}" class="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-900/20 transition" title="Eliminar">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </a>
+                    <form method="POST" action="{% url 'core:proyecto_eliminar' pid=p.pid %}" onsubmit="return confirm('¿Seguro que deseas eliminar este proyecto?');">
+                        {% csrf_token %}
+                        <button type="submit" class="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 transition" title="Eliminar">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- 2. Table View -->
-    <div x-show="viewMode === 'table'" class="peer-card bg-[#0e1116] border border-[#181c24] overflow-hidden rounded-2xl" style="display: none;">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-[#090b0e] text-[11px] uppercase font-bold text-gray-400 border-b border-[#181c24]">
-                    <tr>
-                        <th class="py-3 px-4">Proyecto</th>
-                        <th class="py-3 px-4">Estado</th>
-                        <th class="py-3 px-4">Stack Tecnológico</th>
-                        <th class="py-3 px-4">Fechas</th>
-                        <th class="py-3 px-4 text-right">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[#181c24]">
-                    {% for p in proyectos %}
-                    <tr class="hover:bg-[#11141b] transition">
-                        <td class="py-3 px-4">
-                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="font-bold text-white hover:text-[#00b84c] block">
-                                {{ p.nombre }}
-                            </a>
-                            <span class="text-[10px] text-gray-500 font-mono">PID: {{ p.pid }}</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {% if p.estado == 'activo' %}bg-[#00b84c]/20 text-[#00b84c]{% elif p.estado == 'completado' %}bg-cyan-500/20 text-cyan-400{% else %}bg-amber-500/20 text-amber-400{% endif %}">
-                                {{ p.estado }}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex flex-wrap gap-1 max-w-xs">
-                                {% for tech in p.tecnologias %}
-                                <span class="px-1.5 py-0.2 rounded bg-[#131720] border border-[#1d222e] text-[10px] text-gray-300 font-mono">{{ tech }}</span>
-                                {% empty %}
-                                <span class="text-gray-500 italic text-[11px]">N/A</span>
-                                {% endfor %}
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-gray-400 font-mono text-[11px]">
-                            {{ p.fecha_inicio|default:"N/A" }} &rarr; {{ p.fecha_fin|default:"En curso" }}
-                        </td>
-                        <td class="py-3 px-4 text-right">
-                            <a href="{% url 'core:proyecto_detalle' pid=p.pid %}" class="text-[#00b84c] font-bold hover:underline">Ver &rarr;</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
     {% else %}
     <div class="peer-card p-12 text-center bg-[#0e1116] border border-[#181c24] rounded-2xl space-y-3">
         <p class="text-white font-bold text-sm">No se encontraron proyectos</p>
-        <p class="text-xs text-gray-500">Publica el primer proyecto de tu equipo o ajusta tus filtros de búsqueda.</p>
+        <p class="text-xs text-gray-500">Publica la primera iniciativa técnica de tu equipo o ajusta tus términos de búsqueda.</p>
         <a href="{% url 'core:proyecto_crear' %}" class="peer-btn-green px-5 py-2 rounded-full text-xs font-bold inline-block shadow-md">
-            + Crear Proyecto
+            + Publicar Proyecto
         </a>
     </div>
     {% endif %}
