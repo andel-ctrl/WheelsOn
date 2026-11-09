@@ -154,11 +154,19 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Sin manifiesto ni collectstatic: con DEBUG=False (modo presentación) WhiteNoise sirve los
+# archivos directo desde static/. Así la app corre igual en cualquier computador del equipo.
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
+
+# Un formulario de una pestaña vieja (por ejemplo, tras cambiar de usuario) vuelve a la página
+# con un aviso, en lugar de la página técnica de Django.
+CSRF_FAILURE_VIEW = "core.views.csrf_vencido"
 
 
 # ==============================================================================
