@@ -744,7 +744,25 @@ class AvanceService:
         return filas[0][0] if filas else None
 
     @staticmethod
+    def es_el_cierre(aid):
+        """El único avance 'completado' de un proyecto terminado: sin él no se sabría cómo terminó."""
+        filas = consulta(
+            """
+            MATCH (p:Proyecto {estado: 'completado'})-[:TIENE_AVANCE]->(:Avance {aid: $aid, estado: 'completado'})
+            RETURN COUNT { (p)-[:TIENE_AVANCE]->(:Avance {estado: 'completado'}) } = 1
+            """,
+            aid=str(aid),
+        )
+        return bool(filas and filas[0][0])
+
+    @staticmethod
+    @atomico
     def delete(aid):
+        pid = AvanceService.proyecto_de(aid)
+        if pid:
+            bloquear("Proyecto", "pid", pid)
+        if AvanceService.es_el_cierre(aid):
+            return "cierre"
         filas = consulta("MATCH (a:Avance {aid: $aid}) DETACH DELETE a RETURN 1", aid=str(aid))
         return bool(filas)
 
@@ -1038,11 +1056,25 @@ class EmpleoService:
         })
 
     @staticmethod
+    def contratado_por_empleo(uid, eid):
+        filas = consulta(
+            "RETURN EXISTS { (:Usuario {uid: $uid})-[:POSTULA_A {estado: 'aceptada'}]->(:Oferta)<-[:PUBLICA]-(:Empresa {eid: $eid}) }",
+            uid=str(uid), eid=str(eid),
+        )
+        return filas[0][0]
+
+    @staticmethod
+    @atomico
     def desvincular(uid, eid):
         u = UsuarioService.get(uid)
         e = EmpresaService.get(eid)
         if not u or not e:
             return False
+        bloquear("Empresa", "eid", eid)
+        if EmpleoService.contratado_por_empleo(uid, eid):
+            # La contratación quedó registrada en el empleo: se conserva como empleo anterior
+            EmpleoService.terminar(uid, eid)
+            return "anterior"
         u.empleos.disconnect(e)
         # Quien ya no es miembro no puede recibir la empresa
         consulta("MATCH (:Usuario {uid: $uid})-[r:INVITADO_A_ADMINISTRAR]->(:Empresa {eid: $eid}) DELETE r", uid=str(uid), eid=str(eid))
@@ -1236,6 +1268,18 @@ class RequisitoOfertaService:
         return True
 
     @staticmethod
+    def de_ofertas_abiertas():
+        """Empresa y requisitos de todos los empleos abiertos, en dos consultas: {oid: (empresa, [requisitos])}."""
+        detalle = {}
+        for oid, empresa in consulta("MATCH (o:Oferta {estado: 'abierta'}) OPTIONAL MATCH (e:Empresa)-[:PUBLICA]->(o) RETURN o.oid, e"):
+            detalle[oid] = (Empresa.inflate(empresa) if empresa else None, [])
+        for oid, habilidad, nivel, prioridad in consulta(
+            "MATCH (o:Oferta {estado: 'abierta'})-[r:REQUIERE]->(h:Habilidad) RETURN o.oid, h, r.nivel_minimo, r.prioridad ORDER BY elementId(h)"
+        ):
+            detalle[oid][1].append({"habilidad": Habilidad.inflate(habilidad), "nivel_minimo": nivel, "prioridad": prioridad})
+        return detalle
+
+    @staticmethod
     def listar_por_oferta(oid):
         o = OfertaService.get(oid)
         if not o:
@@ -1314,6 +1358,10 @@ class PostulacionService:
             return False
         u.postulaciones.disconnect(o)
         return True
+
+    @staticmethod
+    def ofertas_postuladas(uid):
+        return {fila[0] for fila in consulta("MATCH (:Usuario {uid: $uid})-[:POSTULA_A]->(o:Oferta) RETURN o.oid", uid=str(uid or ""))}
 
     @staticmethod
     def ha_postulado(uid, oid):
@@ -1414,6 +1462,21 @@ class PostulacionService:
         empresa, aceptadas, cupos = filas[0]
         no_seleccionados = PostulacionService.cerrar_oferta(oid) if aceptadas >= cupos else []
         return {"empresa": Empresa.inflate(empresa), "no_seleccionados": no_seleccionados, "cubierta": aceptadas >= cupos}
+
+    @staticmethod
+    @atomico
+    def reabrir_oferta(oid):
+        """Al volver a abrir, quienes quedaron fuera solo porque se cerró vuelven a estar en proceso."""
+        bloquear("Oferta", "oid", oid)
+        filas = consulta(
+            """
+            MATCH (u:Usuario)-[r:POSTULA_A {estado: 'no_seleccionada'}]->(:Oferta {oid: $oid})
+            SET r.estado = 'enviada', r.fecha_estado = $hoy
+            RETURN u.uid
+            """,
+            oid=str(oid), hoy=date.today().isoformat(),
+        )
+        return [fila[0] for fila in filas]
 
     @staticmethod
     @atomico

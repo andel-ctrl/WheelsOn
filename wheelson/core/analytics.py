@@ -248,17 +248,19 @@ class NetworkAnalyticsService:
         for uid, comunidad in cls._louvain(adj).items():
             grupos[comunidad].append(u_map[uid])
 
+        # Las habilidades de toda la red en una sola consulta, no una por persona
+        habilidades_de = defaultdict(list)
+        for uid, nombre in consulta("MATCH (u:Usuario)-[:TIENE_HABILIDAD]->(h:Habilidad) RETURN u.uid, h.nombre"):
+            habilidades_de[uid].append(nombre)
+
         clusters = []
         nombres_usados = defaultdict(int)
         for cid, miembros in grupos.items():
             # Obtener habilidades de los miembros para inferir temática
             hab_counts = defaultdict(int)
             for m in miembros:
-                habs_m = HabilidadUsuarioService.listar_por_usuario(m.uid)
-                for item in habs_m:
-                    hab = item.get("habilidad")
-                    if hab:
-                        hab_counts[hab.nombre] += 1
+                for nombre in habilidades_de[m.uid]:
+                    hab_counts[nombre] += 1
 
             top_habs = sorted(hab_counts.items(), key=lambda x: (-x[1], x[0]))[:4]
 
@@ -379,25 +381,19 @@ class NetworkAnalyticsService:
         Calcula el ratio de escasez (Skills Shortage Ratio) y brecha neta.
         """
         habilidades = HabilidadService.all()
-        usuarios = UsuarioService.all()
-        ofertas = [o for o in OfertaService.all() if o.estado == "abierta"]
 
-        oferta_conteo = defaultdict(int)
-        for u in usuarios:
-            for item in HabilidadUsuarioService.listar_por_usuario(u.uid):
-                hab = item.get("habilidad")
-                if hab:
-                    oferta_conteo[hab.hid] += 1
-
-        demanda_conteo = defaultdict(int)
-        demanda_obligatoria = defaultdict(int)
-        for of in ofertas:
-            for req in RequisitoOfertaService.listar_por_oferta(of.oid):
-                hab = req.get("habilidad")
-                if hab:
-                    demanda_conteo[hab.hid] += 1
-                    if req.get("prioridad") == "obligatoria":
-                        demanda_obligatoria[hab.hid] += 1
+        # Oferta y demanda se cuentan en Neo4j: dos consultas en vez de una por persona y por empleo
+        oferta_conteo = defaultdict(int, consulta(
+            "MATCH (:Usuario)-[:TIENE_HABILIDAD]->(h:Habilidad) RETURN h.hid, count(*)"
+        ))
+        demanda_conteo, demanda_obligatoria = defaultdict(int), defaultdict(int)
+        for hid, total, obligatorias in consulta(
+            """
+            MATCH (:Oferta {estado: 'abierta'})-[r:REQUIERE]->(h:Habilidad)
+            RETURN h.hid, count(*), sum(CASE WHEN r.prioridad = 'obligatoria' THEN 1 ELSE 0 END)
+            """
+        ):
+            demanda_conteo[hid], demanda_obligatoria[hid] = total, obligatorias
 
         items = []
         for hab in habilidades:
@@ -452,16 +448,19 @@ class NetworkAnalyticsService:
         }
 
     @classmethod
-    def preparar_datos_graficos(cls):
+    def preparar_datos_graficos(cls, comunidades=None, skills_data=None):
         """
         Estructura los datasets en formato JSON nativo para alimentar
         directamente los componentes visuales de Chart.js en el frontend.
+        Recibe comunidades y habilidades si ya se calcularon, para no repetirlas.
         """
         centralidad = cls.ranking_centralidad_grado(limit=7)
         # Sin límite: una persona del top de conexiones puede no estar en el top de PageRank.
         pagerank = cls.ranking_pagerank(limit=None)
-        comunidades = cls.deteccion_comunidades()
-        skills_data = cls.analisis_oferta_demanda_habilidades()
+        if comunidades is None:
+            comunidades = cls.deteccion_comunidades()
+        if skills_data is None:
+            skills_data = cls.analisis_oferta_demanda_habilidades()
 
         # 1. Dataset Gráfico Centralidad vs PageRank
         labels_influencia = [c["usuario"].nombre_completo for c in centralidad]

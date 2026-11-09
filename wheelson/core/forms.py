@@ -1,9 +1,13 @@
+from django.core.validators import MaxLengthValidator
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django import forms
 
 from core.models import ESTADOS_PROYECTO
+
+
+TOPE_TEXTO_LARGO = 3000
 
 
 class BaseTailwindForm(forms.Form):
@@ -16,6 +20,11 @@ class BaseTailwindForm(forms.Form):
                 field.widget.attrs.setdefault("class", "select select-bordered w-full")
             elif isinstance(field.widget, forms.Textarea):
                 field.widget.attrs.setdefault("class", "textarea textarea-bordered w-full h-24")
+                # Ningún texto largo es ilimitado: un texto gigante no debe guardarse ni romper la página
+                if isinstance(field, forms.CharField) and field.max_length is None:
+                    field.max_length = TOPE_TEXTO_LARGO
+                    field.validators.append(MaxLengthValidator(TOPE_TEXTO_LARGO))
+                    field.widget.attrs.setdefault("maxlength", str(TOPE_TEXTO_LARGO))
             else:
                 field.widget.attrs.setdefault("class", "input input-bordered w-full")
 
@@ -213,12 +222,14 @@ class OfertaForm(BaseTailwindForm):
     salario_min = forms.FloatField(
         required=False,
         min_value=0,
+        max_value=1_000_000_000_000,
         label="Salario mínimo",
         initial=0.0,
     )
     salario_max = forms.FloatField(
         required=False,
         min_value=0,
+        max_value=1_000_000_000_000,
         label="Salario máximo",
         initial=0.0,
     )
@@ -288,8 +299,9 @@ class VincularHabilidadUsuarioForm(BaseTailwindForm):
     )
     anios_experiencia = forms.IntegerField(
         min_value=0,
+        max_value=70,
         initial=1,
-        label="Anos de Experiencia",
+        label="Años de experiencia",
     )
 
 

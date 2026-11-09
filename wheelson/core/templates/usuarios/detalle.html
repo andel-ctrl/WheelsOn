@@ -207,7 +207,7 @@
 
     <!-- MODAL AÑADIR HABILIDAD -->
     {% if puede_editar %}
-    <div x-show="showSkillModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+    <div x-show="showSkillModal" class="modal z-50 backdrop-blur-sm" :class="{ 'modal-open': showSkillModal }" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
             <h3 class="font-black text-sm text-base-content">Vincular Nueva Habilidad</h3>
             <form method="POST" action="{% url 'core:usuario_habilidad_agregar' uid=usuario.uid %}" class="space-y-3 mt-3">
@@ -248,7 +248,7 @@
 
     <!-- MODAL CONECTAR -->
     {% if puede_conectar %}
-    <div x-show="showConnectModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+    <div x-show="showConnectModal" class="modal z-50 backdrop-blur-sm" :class="{ 'modal-open': showConnectModal }" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
             <h3 class="font-black text-sm text-base-content">Conectar con {{ usuario.nombre }}</h3>
             <form method="POST" action="{% url 'core:conexion_conectar' %}" class="space-y-3 mt-3">
@@ -269,7 +269,7 @@
 
     <!-- MODAL AÑADIR EXPERIENCIA -->
     {% if puede_editar %}
-    <div x-show="showJobModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+    <div x-show="showJobModal" class="modal z-50 backdrop-blur-sm" :class="{ 'modal-open': showJobModal }" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
             <h3 class="font-black text-sm text-base-content">Añadir Experiencia Laboral</h3>
             <p class="text-xs text-base-content/60 mt-1">Aparecerá en el perfil cuando la empresa lo confirme.</p>
@@ -305,7 +305,7 @@
 
     <!-- MODAL VINCULAR A PROYECTO -->
     {% if proyectos_vinculables %}
-    <div x-show="showProjectModal" class="modal modal-open z-50 backdrop-blur-sm" style="display: none;">
+    <div x-show="showProjectModal" class="modal z-50 backdrop-blur-sm" :class="{ 'modal-open': showProjectModal }" style="display: none;">
         <div class="modal-box rounded-3xl bg-base-200 border border-base-300 max-w-sm">
             <h3 class="font-black text-sm text-base-content">Invitar a un proyecto</h3>
             <form method="POST" id="form-vincular-proyecto" class="space-y-3 mt-3">

@@ -264,3 +264,22 @@ function panelAvisos(uid) {
         if (evento.key === CLAVE) { aplicar(evento.newValue); }
     });
 })();
+
+/* Un formulario se envía una sola vez: un doble clic en "Publicar" o "Crear" no duplica nada.
+   Escucha en burbuja, así una confirmación cancelada (onsubmit) no bloquea el formulario. */
+(function () {
+    document.addEventListener('submit', function (evento) {
+        var formulario = evento.target;
+        if (evento.defaultPrevented || !formulario || (formulario.method || '').toLowerCase() !== 'post') { return; }
+        if (formulario.getAttribute('data-ws-enviando')) { evento.preventDefault(); return; }
+        formulario.setAttribute('data-ws-enviando', '1');
+        formulario.setAttribute('aria-busy', 'true');
+    });
+    // Al volver con el botón Atrás, la página llega de la caché con el formulario marcado
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-ws-enviando]').forEach(function (formulario) {
+            formulario.removeAttribute('data-ws-enviando');
+            formulario.removeAttribute('aria-busy');
+        });
+    });
+})();

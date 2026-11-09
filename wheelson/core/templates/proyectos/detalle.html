@@ -151,7 +151,7 @@
 
     <!-- Modal Añadir Colaborador -->
     {% if puede_gestionar %}
-    <div x-show="showMemberModal" class="modal modal-open" style="display: none;">
+    <div x-show="showMemberModal" class="modal" :class="{ 'modal-open': showMemberModal }" style="display: none;">
         <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
             <h3 class="font-black text-lg text-base-content">Invitar al proyecto</h3>
             <p class="text-xs text-base-content/70">La persona se suma cuando acepte la invitación. Si ya participa, se actualiza su rol.</p>

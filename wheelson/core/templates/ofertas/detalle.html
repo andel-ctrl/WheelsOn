@@ -132,7 +132,7 @@
 
     <!-- Modal Postularse -->
     {% if puede_postular %}
-    <div x-show="showApplyModal" class="modal modal-open" style="display: none;">
+    <div x-show="showApplyModal" class="modal" :class="{ 'modal-open': showApplyModal }" style="display: none;">
         <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
             <h3 class="font-black text-lg text-base-content flex items-center gap-2">
                 Postular a {{ oferta.titulo }}
@@ -156,7 +156,7 @@
 
     <!-- Modal Añadir Requisito -->
     {% if puede_gestionar %}
-    <div x-show="showReqModal" class="modal modal-open" style="display: none;">
+    <div x-show="showReqModal" class="modal" :class="{ 'modal-open': showReqModal }" style="display: none;">
         <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
             <h3 class="font-black text-lg text-base-content">Añadir lo que pide este empleo</h3>
             <form method="POST" action="{% url 'core:oferta_requisito_agregar' oid=oferta.oid %}" class="space-y-3">
@@ -201,7 +201,7 @@
 
     <!-- Modal Asignar Empresa -->
     {% if permisos.es_admin and not empresa_rel %}
-    <div x-show="showEmpresaModal" class="modal modal-open" style="display: none;">
+    <div x-show="showEmpresaModal" class="modal" :class="{ 'modal-open': showEmpresaModal }" style="display: none;">
         <div class="modal-box rounded-3xl border border-base-300 shadow-2xl space-y-4">
             <h3 class="font-black text-lg text-base-content">Asignar empresa</h3>
             <form method="POST" action="{% url 'core:oferta_empresa_asignar' oid=oferta.oid %}" class="space-y-3">

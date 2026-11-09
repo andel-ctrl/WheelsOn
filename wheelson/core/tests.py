@@ -4021,6 +4021,19 @@ class AuditoriaDeCiclosTest(_ConDatosDeEjemplo):
 # Lo que probaría alguien que quiere hacer fallar la app durante la exposición
 # ------------------------------------------------------------------------------
 REGLAS_DE_INTEGRIDAD = {
+    "valor fuera de su lista cerrada": """
+        CALL () { MATCH ()-[r:TIENE_HABILIDAD]->() WHERE NOT r.nivel IN ['basico','intermedio','avanzado','experto'] RETURN 'nivel ' + coalesce(r.nivel,'null') AS malo
+        UNION ALL MATCH ()-[r:REQUIERE]->() WHERE NOT r.prioridad IN ['obligatoria','deseable'] OR NOT r.nivel_minimo IN ['basico','intermedio','avanzado','experto'] RETURN 'requisito' AS malo
+        UNION ALL MATCH (o:Oferta) WHERE NOT o.modalidad IN ['remoto','presencial','hibrido'] OR NOT o.estado IN ['abierta','cerrada'] RETURN 'oferta ' + o.titulo AS malo
+        UNION ALL MATCH (p:Proyecto) WHERE NOT p.estado IN ['activo','pausado','completado'] RETURN 'proyecto ' + p.nombre AS malo
+        UNION ALL MATCH (e:Empresa) WHERE NOT e.tamano IN ['pequena','mediana','grande'] RETURN 'empresa ' + e.nombre AS malo
+        UNION ALL MATCH (h:Habilidad) WHERE NOT h.categoria IN ['tecnica','blanda','idioma'] RETURN 'habilidad ' + h.nombre AS malo
+        UNION ALL MATCH ()-[r:POSTULA_A]->() WHERE NOT r.estado IN ['enviada','revision','entrevista','aceptada','rechazada','no_seleccionada'] RETURN 'postulacion ' + r.estado AS malo
+        UNION ALL MATCH (a:Avance) WHERE NOT a.estado IN ['activo','pausado','completado'] RETURN 'avance' AS malo
+        UNION ALL MATCH ()-[r:PERCIBE]->() WHERE NOT r.tipo IN ['buena','mala'] RETURN 'percepcion' AS malo
+        UNION ALL MATCH (u:Usuario) WHERE NOT u.rol IN ['usuario','admin'] RETURN 'rol ' + u.nombre AS malo }
+        RETURN malo LIMIT 10""",
+    "número imposible": "MATCH (o:Oferta) WHERE o.cupos < 1 OR o.cupos > 100 OR o.salario_min < 0 OR o.salario_max < 0 OR (o.salario_max > 0 AND o.salario_min > o.salario_max) RETURN o.titulo AS malo UNION ALL MATCH ()-[r:TIENE_HABILIDAD]->() WHERE r.anios_experiencia < 0 OR r.anios_experiencia > 70 RETURN 'años' AS malo",
     "empresa sin exactamente un administrador": "MATCH (e:Empresa) WITH e, COUNT { (:Usuario)-[:ADMINISTRA]->(e) } AS n WHERE n <> 1 RETURN e.nombre, n",
     "administrador que no trabaja en su empresa": "MATCH (u:Usuario)-[:ADMINISTRA]->(e:Empresa) WHERE NOT EXISTS { (u)-[t:TRABAJA_EN]->(e) WHERE coalesce(t.actual, true) } RETURN u.nombre, e.nombre",
     "proyecto sin exactamente un líder": "MATCH (p:Proyecto) WITH p, COUNT { (:Usuario)-[:LIDERA]->(p) } AS n WHERE n <> 1 RETURN p.nombre, n",
@@ -4388,8 +4401,10 @@ class ExposicionPermisosTest(_ConReglas):
     def test_sin_token_csrf_se_rechaza(self):
         cliente = ClienteAnonimo(enforce_csrf_checks=True)
         cliente.force_login = None
-        res = cliente.post("/login/", {"email": "mateo@wheelson.com", "password": "x"})
-        self.assertEqual(res.status_code, 403)
+        res = cliente.post("/login/", {"email": "mateo@wheelson.com", "password": clave_demo("mateo@wheelson.com")})
+        # Se rechaza sin iniciar sesión: vuelve con un aviso en vez de la página técnica
+        self.assertEqual(res.status_code, 302)
+        self.assertNotIn("active_user_uid", cliente.session)
 
     def test_entrar_por_url_a_lo_que_no_le_toca(self):
         antes = self._contar()
@@ -4698,3 +4713,144 @@ class LoMioPrimeroTest(_ConDatosDeEjemplo):
         res = entrar_como(MATEO).get("/proyectos/?estado=activo")
         self.assertEqual(res.context["proyectos"][0].relacion, "lidera")
         self.assertTrue(all(p.estado == "activo" for p in res.context["proyectos"]))
+
+
+class AuditoriaFinalTest(_ConReglas):
+    NEXUS = "emp_nexus01"
+
+    def _empleo(self, cupos=1):
+        return PropiedadService.crear_oferta(self.NEXUS, titulo="Reabrir", cupos=cupos).oid
+
+    def _editar(self, oid, estado, cupos):
+        return entrar_como(MATEO).post(f"/ofertas/{oid}/editar/", {"titulo": "Reabrir", "modalidad": "remoto", "estado": estado, "cupos": cupos})
+
+    def test_reabrir_devuelve_a_quienes_quedaron_fuera_por_el_cierre(self):
+        oid = self._empleo(cupos=2)
+        for uid in (LUIS, DUBAL):
+            PostulacionService.postular(uid, oid)
+        PostulacionService.cambiar_estado(DUBAL, oid, "rechazada")
+        self._editar(oid, "cerrada", 2)
+        self.assertEqual(PostulacionService.obtener_estado(LUIS, oid), "no_seleccionada")
+        self._editar(oid, "abierta", 2)
+        self.assertEqual(PostulacionService.obtener_estado(LUIS, oid), "enviada")
+        self.assertEqual(PostulacionService.obtener_estado(DUBAL, oid), "rechazada")
+        self.assertIn("El empleo Reabrir volvió a abrirse", [n["titulo"] for n in NotificacionService.de_usuario(LUIS)])
+        self.assertIntegro()
+
+    def test_ampliar_cupos_y_reabrir_tras_llenarse(self):
+        oid = self._empleo(cupos=1)
+        for uid in (LUIS, DUBAL):
+            PostulacionService.postular(uid, oid)
+        PostulacionService.contratar(LUIS, oid)
+        self._editar(oid, "abierta", 2)
+        self.assertEqual(OfertaService.get(oid).estado, "abierta")
+        self.assertEqual(PostulacionService.obtener_estado(DUBAL, oid), "enviada")
+        self.assertEqual(PostulacionService.obtener_estado(LUIS, oid), "aceptada")
+        self.assertIsNotNone(PostulacionService.contratar(DUBAL, oid))
+        self.assertIntegro()
+
+    def test_anios_y_salarios_imposibles_no_rompen(self):
+        cliente = entrar_como(LUIS)
+        cliente.raise_request_exception = False
+        for anios in ("99999999999999999999999", "-1", "71", "1e309"):
+            with self.subTest(anios=anios):
+                self.assertLess(cliente.post(f"/usuarios/{LUIS}/habilidades/agregar/", {"hid": "hab_py01", "nivel": "experto", "anios_experiencia": anios}).status_code, 500)
+        res = entrar_como(MATEO).post("/ofertas/nueva/", {"eid": self.NEXUS, "titulo": "Caro", "modalidad": "remoto", "estado": "abierta", "cupos": 1, "salario_min": "1e309"})
+        self.assertFalse(res.context["form"].is_valid())
+        self.assertIntegro()
+
+    def test_textos_largos_tienen_tope(self):
+        largo = "x" * 20000
+        entrar_como(MATEO).post("/proyectos/nuevo/", {"nombre": "Largo", "descripcion": largo, "estado": "activo"})
+        entrar_como(LUIS).post("/conexiones/conectar/", {"uid_destino": WILSON, "mensaje": largo})
+        entrar_como(LUIS).post("/ofertas/ofr_arch02/postular/", {"carta_presentacion": largo})
+        filas = db.cypher_query("MATCH (n) WHERE any(k IN keys(n) WHERE n[k] IS :: STRING AND size(n[k]) > 3000) RETURN count(n)")[0][0][0]
+        filas += db.cypher_query("MATCH ()-[r]->() WHERE any(k IN keys(r) WHERE r[k] IS :: STRING AND size(r[k]) > 3000) RETURN count(r)")[0][0][0]
+        self.assertEqual(filas, 0)
+
+    def test_caracteres_de_control_no_se_guardan(self):
+        entrar_como(LUIS).post("/ofertas/ofr_arch02/postular/", {"carta_presentacion": "Hola\x00\x07 mundo"})
+        carta = db.cypher_query("MATCH (:Usuario {uid: $u})-[r:POSTULA_A]->(:Oferta {oid: 'ofr_arch02'}) RETURN r.carta_presentacion", {"u": LUIS})[0][0][0]
+        self.assertEqual(carta, "Hola mundo")
+
+    def test_paginas_de_error_propias(self):
+        with override_settings(DEBUG=False):
+            res = entrar_como(LUIS).get("/esto/no/existe/")
+        self.assertEqual(res.status_code, 404)
+        self.assertContains(res, "Esta página no existe", status_code=404)
+        self.assertContains(res, "Luis Angel", status_code=404)
+        from core.views import error_del_servidor
+        from django.test import RequestFactory
+        self.assertEqual(error_del_servidor(RequestFactory().get("/")).status_code, 500)
+
+    def test_formulario_de_pestana_vieja_vuelve_con_aviso(self):
+        cliente = ClienteAnonimo(enforce_csrf_checks=True)
+        cliente.get(f"/login/?quick_login={LUIS}")
+        res = cliente.post("/", {"texto": "sin token"}, HTTP_REFERER="http://testserver/ofertas/", follow=True)
+        self.assertEqual(res.redirect_chain[0][1], 302)
+        self.assertContains(res, "desactualizada")
+        self.assertFalse(db.cypher_query("MATCH (p:Publicacion {texto: 'sin token'}) RETURN count(p)")[0][0][0])
+
+    def test_las_paginas_privadas_no_quedan_en_cache(self):
+        res = entrar_como(LUIS).get("/usuarios/")
+        self.assertIn("no-store", res["Cache-Control"])
+        self.assertNotIn("no-store", ClienteAnonimo().get("/login/").get("Cache-Control", ""))
+
+    def test_empresa_renombrada_a_otra_existente(self):
+        res = entrar_como(MARIA).post("/empresas/emp_globant03/editar/", {"nombre": "  NEXUS corp ", "industria": "IT", "tamano": "grande"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(EmpresaService.get("emp_globant03").nombre, "Globant Latam")
+
+    # Encontrados por la simulación al azar (usuarios haciendo acciones en cualquier orden)
+    def test_no_se_borra_el_avance_que_cerro_el_proyecto(self):
+        cliente = entrar_como(DUBAL)
+        cliente.post("/proyectos/proy_fintech02/avances/agregar/", {"texto": "Terminamos", "estado": "completado"})
+        cierre = db.cypher_query("MATCH (:Proyecto {pid: 'proy_fintech02'})-[:TIENE_AVANCE]->(a:Avance {estado: 'completado'}) RETURN a.aid")[0][0][0]
+        res = cliente.post(f"/proyectos/proy_fintech02/avances/{cierre}/eliminar/", follow=True)
+        self.assertContains(res, "es el que cerró el proyecto")
+        self.assertIsNotNone(AvanceService.proyecto_de(cierre))
+        self.assertIntegro()
+        # Al reabrir el proyecto, ese avance ya se puede quitar
+        cliente.post("/proyectos/proy_fintech02/avances/agregar/", {"texto": "Seguimos", "estado": "activo"})
+        cliente.post(f"/proyectos/proy_fintech02/avances/{cierre}/eliminar/")
+        self.assertIsNone(AvanceService.proyecto_de(cierre))
+        self.assertIntegro()
+
+    def test_borrar_de_la_experiencia_a_quien_se_contrato_lo_deja_como_anterior(self):
+        oid = self._empleo(cupos=1)
+        PostulacionService.postular(LUIS, oid)
+        PostulacionService.contratar(LUIS, oid)
+        for quien in (MATEO, LUIS):
+            with self.subTest(quien=quien):
+                res = entrar_como(quien).post(f"/usuarios/{LUIS}/experiencia/{self.NEXUS}/eliminar/", follow=True)
+                self.assertContains(res, "queda en la trayectoria como empleo anterior")
+                self.assertFalse(EmpleoService.es_empleado(LUIS, self.NEXUS))
+                self.assertEqual(PostulacionService.obtener_estado(LUIS, oid), "aceptada")
+                self.assertIntegro()
+
+    def test_borrar_una_experiencia_sin_contratacion_si_la_borra(self):
+        EmpleoService.vincular(LUIS, "emp_globant03", cargo="Dev")
+        entrar_como(LUIS).post(f"/usuarios/{LUIS}/experiencia/emp_globant03/eliminar/")
+        self.assertFalse(any(e["empresa"].eid == "emp_globant03" for e in EmpleoService.listar_por_usuario(LUIS)))
+        self.assertIntegro()
+
+    def test_terminar_el_proyecto_desde_editar_deja_su_avance_de_cierre(self):
+        datos = {"nombre": "Fintech", "descripcion": "x", "estado": "completado"}
+        entrar_como(DUBAL).post("/proyectos/proy_fintech02/editar/", datos)
+        self.assertEqual(ProyectoService.get("proy_fintech02").estado, "completado")
+        res = entrar_como(MATEO).post("/proyectos/nuevo/", {**datos, "nombre": "Ya terminado"}, follow=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIntegro()
+        # Editarlo de nuevo sin cambiar el estado no repite el avance
+        entrar_como(DUBAL).post("/proyectos/proy_fintech02/editar/", datos)
+        cierres = db.cypher_query("MATCH (:Proyecto {pid: 'proy_fintech02'})-[:TIENE_AVANCE]->(a:Avance {estado: 'completado'}) RETURN count(a)")[0][0][0]
+        self.assertEqual(cierres, 1)
+
+    def test_ninguna_ventana_cerrada_bloquea_el_scroll(self):
+        # daisyUI bloquea el scroll de toda la página si existe un .modal-open, aunque esté oculto
+        from pathlib import Path
+        plantillas = Path(__file__).resolve().parent / "templates"
+        fijas = [str(p.relative_to(plantillas)) for p in plantillas.rglob("*.html") if re.search(r'(?<![:\w-])class="[^"]*\bmodal-open\b', p.read_text(encoding="utf-8"))]
+        self.assertEqual(fijas, [])
+        html = entrar_como(DUBAL).get(f"/usuarios/{DUBAL}/").content.decode()
+        self.assertNotRegex(html, r'(?<![:\w-])class="[^"]*\bmodal-open\b')

@@ -1,3 +1,4 @@
+from django.utils.cache import add_never_cache_headers
 """
 Muestra un error claro cuando la app no puede usar Neo4j, en lugar de un error
 genérico de Django.
@@ -41,7 +42,11 @@ class SesionRequeridaMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        return self.get_response(request)
+        respuesta = self.get_response(request)
+        # Tras cerrar sesión, el botón Atrás no debe mostrar páginas privadas guardadas
+        if not request.path.startswith(settings.STATIC_URL) and (getattr(request, "usuario", None) or request.session.get("active_user_uid")):
+            add_never_cache_headers(respuesta)
+        return respuesta
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         from core.permisos import Permisos

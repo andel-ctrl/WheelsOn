@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.conf import settings
@@ -60,6 +62,12 @@ def _volver(request, respaldo, ancla=""):
     if anterior and url_has_allowed_host_and_scheme(anterior, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         return redirect(anterior + ancla)
     return redirect(reverse(respaldo) + ancla)
+
+
+def _texto(request, campo, maximo):
+    """Texto libre de un formulario: sin espacios sobrantes, sin caracteres de control y con tope."""
+    valor = "".join(c for c in request.POST.get(campo, "") if c in "\n\t" or c.isprintable())
+    return valor.strip()[:maximo]
 
 
 def _url(nombre, **claves):
@@ -152,10 +160,12 @@ def dashboard(request):
         }
 
     ofertas = OfertaService.all()
+    # Empresa, requisitos y postulaciones de todos los empleos de una vez, no uno por uno
+    detalle_abiertas = RequisitoOfertaService.de_ofertas_abiertas()
+    postuladas = PostulacionService.ofertas_postuladas(uid_ref)
     for o in ofertas:
         if o.estado == "abierta":
-            empresa = PublicacionOfertaService.obtener_empresa(o.oid)
-            reqs = RequisitoOfertaService.listar_por_oferta(o.oid)
+            empresa, reqs = detalle_abiertas.get(o.oid, (None, []))
             for r in reqs:
                 r["tengo"] = str(r["habilidad"].hid) in mis_habilidades
             match_count = sum(1 for r in reqs if r["tengo"])
@@ -167,7 +177,7 @@ def dashboard(request):
                 "requisitos": reqs,
                 "match_count": match_count,
                 "match_pct": match_pct,
-                "ya_postulado": PostulacionService.ha_postulado(uid_ref, o.oid),
+                "ya_postulado": o.oid in postuladas,
                 "es_propia": o.oid in request.permisos.ofertas_administradas,
                 "fecha": getattr(o, "fecha_publicacion", "") or "Reciente",
                 "orden": 2 if match_pct > 0 else 4,
@@ -687,7 +697,7 @@ def empresa_trabajo_aqui(request, eid):
         return redirect("core:empresas_lista")
     if request.method == "POST":
         uid = request.permisos.uid
-        cargo = request.POST.get("cargo", "").strip()
+        cargo = _texto(request, "cargo", 121)
         administrador = PropiedadService.administrador_de(eid)
         if EmpleoService.es_empleado(uid, eid):
             messages.info(request, "Ya haces parte de este equipo.")
@@ -708,7 +718,7 @@ def empresa_equipo_invitar(request, eid):
     exigir(request.permisos.gestionar_empresa(eid), "Solo quien administra esta empresa puede invitar a su equipo.")
     if request.method == "POST":
         uid = request.POST.get("uid", "")
-        cargo = request.POST.get("cargo", "").strip()
+        cargo = _texto(request, "cargo", 121)
         empresa = EmpresaService.get(eid)
         if not cargo or len(cargo) > 120:
             messages.error(request, "Indica el cargo de la persona.")
@@ -854,6 +864,7 @@ def proyecto_crear(request):
         form = ProyectoForm(request.POST)
         if form.is_valid():
             p = PropiedadService.crear_proyecto(request.permisos.uid, **form.cleaned_data)
+            _cerrar_pendientes_si_termino(request, p.pid)
             messages.success(request, f"Proyecto '{p.nombre}' creado exitosamente.")
             return redirect("core:proyecto_detalle", pid=p.pid)
     else:
@@ -899,6 +910,9 @@ def _cerrar_pendientes_si_termino(request, pid):
     """Un proyecto terminado no recibe a nadie más: quien esperaba respuesta se entera."""
     proyecto = ProyectoService.get(pid)
     if proyecto and proyecto.estado == "completado":
+        # Terminarlo desde el formulario también deja el avance que cuenta cómo y cuándo terminó
+        if not any(a["avance"].estado == "completado" for a in AvanceService.de_proyecto(pid)):
+            AvanceService.crear(request.permisos.uid, pid, "Proyecto completado.", "completado")
         for uid in InvitacionService.cerrar_pendientes_de_proyecto(pid):
             _avisar(request, uid, f"{proyecto.nombre} terminó", "Tu solicitud o invitación ya no está vigente.", url=_url("proyecto_detalle", pid=pid), icono="x")
 
@@ -993,8 +1007,10 @@ def proyecto_avance_eliminar(request, pid, aid):
     exigir(request.permisos.gestionar_proyecto(pid), "Solo quien lidera el proyecto puede eliminar avances.")
     if request.method == "POST":
         if AvanceService.proyecto_de(aid) == pid:
-            AvanceService.delete(aid)
-            messages.success(request, "Avance eliminado.")
+            if AvanceService.delete(aid) == "cierre":
+                messages.error(request, "Este avance es el que cerró el proyecto. Para quitarlo, primero cambia el estado del proyecto.")
+            else:
+                messages.success(request, "Avance eliminado.")
         else:
             messages.error(request, "Este avance no existe en el proyecto.")
     return redirect("core:proyecto_detalle", pid=pid)
@@ -1159,6 +1175,9 @@ def oferta_editar(request, oid):
                 for candidato_uid in PostulacionService.cerrar_oferta(oid):
                     _avisar(request, candidato_uid, f"El empleo {oferta.titulo} se cerró", "Tu postulación quedó como no seleccionada.", url=_url("oferta_detalle", oid=oid), icono="briefcase")
             OfertaService.update(oid, **form.cleaned_data)
+            if oferta.estado == "cerrada" and form.cleaned_data["estado"] == "abierta":
+                for candidato_uid in PostulacionService.reabrir_oferta(oid):
+                    _avisar(request, candidato_uid, f"El empleo {oferta.titulo} volvió a abrirse", "Tu postulación sigue en curso.", url=_url("oferta_detalle", oid=oid), icono="briefcase")
             messages.success(request, f"Empleo '{oferta.titulo}' actualizado.")
             return redirect("core:oferta_detalle", oid=oid)
     else:
@@ -1252,7 +1271,7 @@ def conexion_conectar(request):
     # La solicitud siempre sale de quien tiene la sesión, nunca de un dato del formulario
     if request.method == "POST":
         resultado = InvitacionService.solicitar_conexion(
-            request.permisos.uid, request.POST.get("uid_destino"), mensaje=request.POST.get("mensaje", "").strip(),
+            request.permisos.uid, request.POST.get("uid_destino"), mensaje=_texto(request, "mensaje", 250),
         )
         if resultado == "enviada":
             messages.success(request, "Solicitud enviada. La conexión se crea cuando la otra persona la acepte.")
@@ -1365,14 +1384,19 @@ def usuario_experiencia_eliminar(request, uid, eid):
         if _administra_empresa(uid, eid):
             messages.error(request, "Quien administra la empresa no puede dejarla. Transfiérela primero a otra persona.")
             return redirect("core:usuario_detalle", uid=uid)
-        if EmpleoService.es_empleado(uid, eid) or any(e["empresa"].eid == eid for e in EmpleoService.listar_por_usuario(uid)):
+        era_empleado = EmpleoService.es_empleado(uid, eid)
+        tenia_registro = era_empleado or any(e["empresa"].eid == eid for e in EmpleoService.listar_por_usuario(uid))
+        resultado = EmpleoService.desvincular(uid, eid)
+        if tenia_registro and (resultado != "anterior" or era_empleado):
             empresa = EmpresaService.get(eid)
             administrador = PropiedadService.administrador_de(eid)
-            _avisar(request, uid, f"{empresa.nombre} quitó tu empleo de tu perfil", url=_url("usuario_detalle", uid=uid), icono="x")
+            _avisar(request, uid, f"{empresa.nombre} " + ("te quitó de su equipo" if resultado == "anterior" else "quitó tu empleo de tu perfil"), url=_url("usuario_detalle", uid=uid), icono="x")
             if administrador and uid == request.permisos.uid:
                 _avisar(request, administrador.uid, f"{request.usuario.nombre_completo} dejó {empresa.nombre}", url=_url("empresa_detalle", eid=eid), icono="briefcase")
-        EmpleoService.desvincular(uid, eid)
-        messages.success(request, "Experiencia laboral eliminada del perfil.")
+        if resultado == "anterior":
+            messages.info(request, "Este empleo viene de una contratación en WheelsOn, así que queda en la trayectoria como empleo anterior.")
+        else:
+            messages.success(request, "Experiencia laboral eliminada del perfil.")
     return redirect("core:usuario_detalle", uid=uid)
 
 
@@ -1380,7 +1404,7 @@ def proyecto_colaborador_agregar(request, pid):
     exigir(request.permisos.gestionar_proyecto(pid), "Solo quien lidera el proyecto puede sumar colaboradores.")
     if request.method == "POST":
         uid = request.POST.get("uid")
-        rol = request.POST.get("rol", "Colaborador").strip()
+        rol = _texto(request, "rol", 100) or "Colaborador"
         fecha_inicio = request.POST.get("fecha_inicio") or None
         if uid:
             try:
@@ -1479,7 +1503,7 @@ def oferta_postular(request, oid):
         if not permisos.postularse(oid):
             messages.error(request, "No puedes postularte a un empleo que administras.")
         else:
-            carta = request.POST.get("carta_presentacion", "").strip()
+            carta = _texto(request, "carta_presentacion", 2000)
             resultado = PostulacionService.postular_si_abierta(permisos.uid, oid, carta_presentacion=carta)
             if resultado == "enviada":
                 messages.success(request, "Tu postulación fue enviada.")
@@ -1693,7 +1717,7 @@ def analitica_dashboard(request):
     intermediacion = NetworkAnalyticsService.ranking_intermediacion(limit=10)
     comunidades = NetworkAnalyticsService.deteccion_comunidades()
     habilidades_balance = NetworkAnalyticsService.analisis_oferta_demanda_habilidades()
-    chart_data = NetworkAnalyticsService.preparar_datos_graficos()
+    chart_data = NetworkAnalyticsService.preparar_datos_graficos(comunidades, habilidades_balance)
 
     context = {
         "metricas": metricas,
@@ -1835,7 +1859,29 @@ def grafo_data_api(request):
     return JsonResponse(datos)
 
 
+# ==============================================================================
+# PÁGINAS DE ERROR
+# ==============================================================================
+
+def no_encontrado(request, exception=None):
+    # Una dirección que no existe no pasa por las vistas: se carga la sesión para mostrar el menú
+    if getattr(request, "usuario", None) is None:
+        from core.permisos import Permisos
+        try:
+            usuario = UsuarioService.get(request.session.get("active_user_uid"))
+        except Exception:
+            usuario = None
+        request.usuario = usuario
+        request.permisos = Permisos(usuario)
+    return render(request, "404.html", status=404)
 
 
+def error_del_servidor(request):
+    # Página sin consultas ni contexto: si algo falló, dibujarla no puede volver a fallar.
+    return HttpResponse(render_to_string("500.html"), status=500)
 
 
+def csrf_vencido(request, reason=""):
+    """El formulario venía de una página desactualizada: se vuelve a ella con un aviso."""
+    messages.warning(request, "La página estaba desactualizada y no se guardó nada. Inténtalo de nuevo.")
+    return _volver(request, "core:dashboard")
