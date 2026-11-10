@@ -1,0 +1,1070 @@
+% =============================================================================
+% WheelsOn - Documento del Proyecto de Investigación y Desarrollo (I+D)
+% Bases de Datos - Bases de datos orientadas a grafos
+% Compilar con XeLaTeX o Tectonic:  tectonic main.tex
+% =============================================================================
+\documentclass[11pt, a4paper]{article}
+
+% ----------------------------------------------------------------- paquetes
+\usepackage{fontspec}
+\usepackage[spanish, es-noshorthands, es-tabla]{babel}
+\usepackage[margin=2.5cm, headheight=16pt]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[section]{placeins}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{xltabular}
+\usepackage{ragged2e}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+\usepackage{microtype}
+\usepackage{needspace}
+\usepackage[hidelinks]{hyperref}
+
+% ----------------------------------------------------------------- fuentes
+\setmainfont{texgyrepagella}[
+  Extension = .otf,
+  UprightFont = *-regular,
+  BoldFont = *-bold,
+  ItalicFont = *-italic,
+  BoldItalicFont = *-bolditalic]
+\setmonofont{Inconsolatazi4}[
+  Extension = .otf,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold,
+  Scale = 0.92]
+
+% ----------------------------------------------------------------- colores
+\definecolor{azul}      {RGB}{20, 48, 89}     % azul marino principal
+\definecolor{azulmedio} {RGB}{41, 88, 150}
+\definecolor{azulclaro} {RGB}{152, 180, 216}
+\definecolor{azulfondo} {RGB}{236, 242, 250}
+\definecolor{azulfila}  {RGB}{245, 248, 252}
+\definecolor{tinta}     {RGB}{33, 37, 43}
+\definecolor{gris}      {RGB}{100, 108, 120}
+\definecolor{borde}     {RGB}{205, 216, 230}
+\definecolor{codfondo}  {RGB}{16, 27, 45}
+\definecolor{codtexto}  {RGB}{226, 233, 242}
+\definecolor{codclave}  {RGB}{122, 178, 255}
+\definecolor{codcoment} {RGB}{128, 146, 170}
+\definecolor{codtexto2} {RGB}{158, 214, 172}
+
+\color{tinta}
+
+% ----------------------------------------------------------------- encabezado
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{azul}{\small\textbf{WheelsOn}}}
+\fancyhead[R]{\textcolor{azul}{\small\textbf{Bases de Datos --- Grafos con Neo4j}}}
+\fancyfoot[C]{\textcolor{gris}{\small\thepage}}
+\renewcommand{\headrulewidth}{0.8pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{azul}\leaders\hrule height \headrulewidth\hfill}}
+
+% ----------------------------------------------------------------- títulos
+\titleformat{\section}
+  {\Large\bfseries\color{azul}}{\thesection.}{0.6em}{}
+  [\vspace{-0.5em}\textcolor{azul}{\rule{\linewidth}{0.8pt}}]
+\titleformat{\subsection}
+  {\large\bfseries\color{tinta}}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{azulmedio}}{}{0em}{}
+\pretocmd{\section}{\needspace{10\baselineskip}}{}{}
+\pretocmd{\subsection}{\needspace{6\baselineskip}}{}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.9em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.5em}
+
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{0.45em}
+\linespread{1.08}
+\setlist{itemsep=0.2em, topsep=0.3em}
+
+\captionsetup{font=small, labelfont={bf,color=azul}, labelsep=period}
+\captionsetup[table]{position=top, skip=6pt}
+
+% ----------------------------------------------------------------- tablas
+\newcolumntype{L}{>{\RaggedRight\arraybackslash}X}
+\newcommand{\cabecera}{\rowcolor{azul}}
+\newcommand{\h}[1]{\textcolor{white}{\textbf{#1}}}
+\renewcommand{\arraystretch}{1.25}
+
+% ----------------------------------------------------------------- recuadros
+\newtcolorbox{nota}[1]{
+  enhanced, breakable,
+  colback=azulfondo, colframe=azul,
+  boxrule=0.6pt, arc=2pt,
+  left=8pt, right=8pt, top=5pt, bottom=6pt,
+  fonttitle=\bfseries\small, coltitle=white, colbacktitle=azul,
+  title={#1}, before skip=10pt, after skip=10pt}
+
+% ----------------------------------------------------------------- código
+\lstdefinelanguage{Cypher}{
+  morekeywords={MATCH, OPTIONAL, WHERE, RETURN, WITH, ORDER, BY, LIMIT, DESC, ASC,
+    AND, OR, NOT, EXISTS, CREATE, CONSTRAINT, INDEX, IF, FOR, REQUIRE, IS, UNIQUE,
+    ON, DISTINCT, AS, CASE, WHEN, THEN, END, ELSE, IN, COUNT, DETACH, DELETE, NULL,
+    shortestPath, count, collect, size, coalesce, toLower, all, any, type, nodes,
+    relationships, length, labels},
+  sensitive=true,
+  morecomment=[l]{//},
+  morestring=[b]', morestring=[b]"
+}
+\lstdefinestyle{oscuro}{
+  basicstyle=\ttfamily\small\color{codtexto},
+  backgroundcolor=\color{codfondo},
+  keywordstyle=\bfseries\color{codclave},
+  commentstyle=\itshape\color{codcoment},
+  stringstyle=\color{codtexto2},
+  frame=single, framerule=0pt, rulecolor=\color{codfondo},
+  framexleftmargin=8pt, framexrightmargin=8pt, framextopmargin=6pt, framexbottommargin=6pt,
+  xleftmargin=8pt, xrightmargin=8pt,
+  breaklines=true, breakatwhitespace=true, columns=fullflexible, keepspaces=true,
+  showstringspaces=false, tabsize=2,
+  aboveskip=12pt, belowskip=10pt,
+  extendedchars=true, inputencoding=utf8,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+}
+\lstset{style=oscuro, language=Cypher}
+\lstdefinestyle{anexo}{style=oscuro, language=Cypher,
+  basicstyle=\ttfamily\footnotesize\color{tinta},
+  backgroundcolor=\color{azulfila}, rulecolor=\color{borde}, framerule=0.4pt,
+  keywordstyle=\bfseries\color{azulmedio}, commentstyle=\itshape\color{gris},
+  stringstyle=\color{teal!70!black}, breakatwhitespace=false}
+\lstdefinestyle{sql}{style=oscuro, language=SQL,
+  morekeywords={RECURSIVE, ARRAY, ANY, UNION, ALL, REFERENCES, PRIMARY, KEY, FOREIGN}}
+
+% ----------------------------------------------------------------- utilidades
+\newcommand{\pend}[1]{{\color{gris}\mdseries\itshape #1}}
+\newcommand{\cod}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\rel}[1]{\texttt{\textbf{\detokenize{#1}}}}
+\newcommand{\nodo}[1]{\texttt{:#1}}
+\newcommand{\falta}[1]{\colorbox{red!12}{\textcolor{red!70!black}{\textbf{Falta:} #1}}}
+\newif\ifcapturafija
+\newcommand{\captura}[4][0.99\linewidth]{%
+  \ifcapturafija\begin{figure}[H]\else\begin{figure}[htbp]\fi
+    \centering
+    {\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.6pt}%
+     \fcolorbox{borde}{white}{\includegraphics[width=#1]{img/#2}}}
+    \caption{#3}\label{fig:#4}
+  \end{figure}}
+
+% ----------------------------------------------------------------- tikz
+\tikzset{
+  ent/.style={draw=azul, fill=azulfondo, rounded corners=5pt, line width=0.9pt,
+    minimum width=2.7cm, minimum height=0.95cm, font=\bfseries\color{azul}},
+  rel/.style={-{Stealth[length=2.4mm]}, line width=0.8pt, color=azulmedio},
+  et/.style={font=\scriptsize\ttfamily\bfseries, fill=white, inner sep=1.6pt,
+    text=tinta, align=center},
+}
+
+% =============================================================================
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.12}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
+
+\begin{document}
+
+% ----------------------------------------------------------------- portada
+\begin{titlepage}
+  \newgeometry{margin=2.6cm}
+  \pagecolor{azul}
+  \color{white}
+  \setlength{\parindent}{0pt}
+  {\small\bfseries\scshape Proyecto de Investigación y Desarrollo (I+D) --- Bases de Datos}\\[0.25cm]
+  \textcolor{azulclaro}{\rule{\linewidth}{0.5pt}}
+
+  \vspace{3.2cm}
+  {\fontsize{50}{54}\selectfont\bfseries WheelsOn}\\[0.5cm]
+  {\Large Una red profesional sobre una base de datos de grafos}
+
+  \vspace{0.8cm}
+  \textcolor{azulclaro}{\rule{\linewidth}{0.5pt}}\\[0.3cm]
+  \begin{minipage}{0.8\linewidth}
+    \large\color{azulfondo}
+    Diseño e implementación de una aplicación basada en una base de datos de grafos
+    para la gestión y el análisis de relaciones en una red profesional,
+    construida con Neo4j y Django.
+  \end{minipage}
+
+  \vfill
+  \begin{tabular}{@{}l@{\hspace{1.2cm}}l@{}}
+    Dubal Antonio Aguilar Torres & 200207378 \\
+    Carlos Miguel Calabria Patiño & 200209929 \\
+    Angelo David de Leon Caneda & 200205958 \\
+    Mateo José Cisneros Galeano & 200205979 \\
+    Luis Angel Cuellar Ballesteros & 200163979 \\
+  \end{tabular}
+
+  \vspace{1.6cm}
+  \begin{center}
+    {\bfseries Docente:}\\[0.15cm]
+    Wilson Manuel Estrada Bernal\\[1.2cm]
+    Ingeniería de Sistemas\\
+    Universidad del Norte\\
+    Barranquilla, Colombia\\[0.3cm]
+    Noviembre de 2026
+  \end{center}
+  \restoregeometry
+\end{titlepage}
+\nopagecolor
+\color{tinta}
+
+\setcounter{tocdepth}{2}
+\begingroup\small\setlength{\parskip}{0.1em}\tableofcontents\endgroup
+\newpage
+
+% =============================================================================
+\section{Introducción}
+% =============================================================================
+
+Desarrollamos WheelsOn, una red profesional en la que cada persona tiene un perfil, se
+conecta con otras, declara sus habilidades, trabaja en empresas, participa en proyectos
+y se postula a ofertas de empleo. En una red así importa más cómo se
+relacionan los datos que cada dato por separado: quién conoce a quién, qué habilidades comparten dos personas o por qué
+contactos se puede llegar a una empresa.
+
+Por eso guardamos toda la información de la red en una base de datos de grafos, Neo4j,
+y construimos la aplicación web en Python con Django.
+
+En este documento explicamos primero qué es una base de datos de grafos
+(Sección~\ref{sec:grafos}) y presentamos la aplicación (Sección~\ref{sec:app}). Luego
+describimos el modelo que diseñamos para WheelsOn (Sección~\ref{sec:modelo}), los
+scripts con los que creamos la base y cargamos los datos (Sección~\ref{sec:scripts}) y
+las consultas con las que respondemos las preguntas del enunciado
+(Sección~\ref{sec:consultas}). Por último, a partir de lo que aprendimos al construir
+WheelsOn, analizamos en qué escenarios el modelo de grafos supera al relacional y en
+cuáles no (Sección~\ref{sec:investigacion}).
+
+% =============================================================================
+\section{Bases de datos de grafos}\label{sec:grafos}
+% =============================================================================
+
+\subsection{La información como una red}
+
+Una base de datos de grafos guarda la información como una red de puntos unidos por
+líneas. Los puntos se llaman \textbf{nodos} y representan cosas: una persona, una
+empresa, una habilidad. Las líneas se llaman \textbf{relaciones} y dicen cómo se
+vinculan esas cosas, por ejemplo, ``Valentina trabaja en Andina Logística''.
+
+Neo4j usa el \emph{modelo de grafo de propiedades}, que tiene cuatro piezas:
+
+\begin{table}[htbp]
+\centering
+\caption{Piezas del modelo de grafo de propiedades.}
+\rowcolors{2}{azulfila}{white}
+\begin{tabularx}{\linewidth}{@{}l L l@{}}
+\cabecera \h{Pieza} & \h{Qué es} & \h{Ejemplo en WheelsOn} \\
+Nodo      & Una entidad.                                   & Valentina Ríos \\
+Etiqueta  & El tipo de un nodo.                            & \nodo{Usuario}, \nodo{Empresa} \\
+Relación  & Un vínculo entre dos nodos, con tipo y dirección. & \rel{TRABAJA_EN} \\
+Propiedad & Un dato guardado en un nodo o en una relación. & \cod{nombre}, \cod{cargo} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A diferencia de otros modelos, aquí las relaciones también guardan datos. En
+la Figura~\ref{fig:ejemplo}, el cargo y la fecha de inicio están en la relación
+\rel{TRABAJA_EN}, porque son datos del vínculo entre Valentina y la empresa.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+  \node[ent, align=center] (u) at (0,0) {Valentina Ríos\\[-1pt]{\scriptsize\mdseries\ttfamily :Usuario}};
+  \node[ent, align=center] (e) at (8.2,0) {Andina Logística\\[-1pt]{\scriptsize\mdseries\ttfamily :Empresa}};
+  \draw[rel] (u) -- node[et, above=2pt] {TRABAJA\_EN}
+                    node[below=3pt, font=\scriptsize\ttfamily, text=gris, align=center]
+                    {cargo: "Directora de Tecnología"\\ fecha\_inicio: "2021-03-01"\\ actual: true} (e);
+\end{tikzpicture}
+\caption{Dos nodos y una relación con propiedades, tomados de los datos de demostración.}
+\label{fig:ejemplo}
+\end{figure}
+
+\subsection{Por qué recorrer un grafo es rápido}
+
+En una base relacional, los vínculos entre registros se reconstruyen en cada consulta:
+el motor busca, tabla por tabla, las filas cuyas claves coinciden (la operación
+\texttt{JOIN}). Cada nivel más de profundidad en la pregunta agrega otro \texttt{JOIN}.
+
+En Neo4j, cada nodo guarda referencias directas a sus relaciones. Pasar de un nodo a
+sus vecinos es seguir esas referencias, sin buscar en una tabla. Por eso el costo de
+un recorrido depende de cuántos nodos visita, no de cuántos datos hay en total en la
+base. Esta propiedad se conoce como \emph{adyacencia sin índice}.
+
+\subsection{Cypher, el lenguaje de consultas}
+
+Neo4j se consulta con Cypher. Una consulta describe la forma que deben tener los datos
+con un dibujo hecho de texto: los nodos van entre paréntesis y las relaciones entre
+corchetes, con una flecha que indica la dirección. Esta consulta devuelve quiénes
+trabajan en Andina Logística y con qué cargo:
+
+\begin{lstlisting}
+MATCH (u:Usuario)-[t:TRABAJA_EN]->(e:Empresa {nombre: 'Andina Logística'})
+RETURN u.nombre, t.cargo
+\end{lstlisting}
+
+\cod{MATCH} describe el patrón que se busca y \cod{RETURN} lo que se quiere obtener.
+Además, en Cypher la cantidad de saltos puede ser variable:
+\cod{-[:CONECTA_CON*..6]-} significa ``por una cadena de entre uno y seis contactos''.
+Con eso se escriben en una línea preguntas como la ruta más corta entre dos personas.
+
+% =============================================================================
+\section{La aplicación}\label{sec:app}
+% =============================================================================
+
+Construimos WheelsOn como una aplicación web en la que cada pantalla lee y escribe
+directamente en Neo4j.
+
+\begin{table}[htbp]
+\centering
+\caption{Tecnologías utilizadas.}
+\rowcolors{2}{azulfila}{white}
+\begin{tabularx}{\linewidth}{@{}l L@{}}
+\cabecera \h{Parte} & \h{Tecnología} \\
+Base de datos      & Neo4j 5.26, en un contenedor de Docker. Django usa además un archivo SQLite local solo para las sesiones de inicio de sesión; ningún dato de la red se guarda ahí. \\
+Aplicación web     & Python 3.12 y Django 6. \\
+Conexión con Neo4j & \emph{neomodel}, que convierte nodos en objetos de Python, y consultas Cypher escritas a mano para todo lo que recorre el grafo. \\
+Interfaz           & HTML con Tailwind y Alpine.js; el grafo interactivo usa vis-network y las gráficas, Chart.js. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\captura[0.78\linewidth]{inicio.png}{Pantalla de inicio de WheelsOn con la sesión de Valentina Ríos, una de las
+personas de los datos de demostración.}{inicio}
+
+En la Tabla~\ref{tab:funcionalidades} ubicamos cada funcionalidad del enunciado dentro
+de la aplicación.
+
+\begin{table}[htbp]
+\centering
+\caption{Funcionalidades pedidas y dónde se encuentran.}\label{tab:funcionalidades}
+\rowcolors{2}{azulfila}{white}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight\arraybackslash}p{5.6cm} L@{}}
+\cabecera \h{Funcionalidad} & \h{En la aplicación} \\
+CRUD de usuarios & Registro, perfil, edición y eliminación de la cuenta. \\
+Conexiones entre usuarios & Solicitudes de conexión que la otra persona acepta o rechaza. \\
+Vincular usuarios con habilidades, empresas y proyectos & Desde el perfil, con nivel, cargo o rol. Los empleos y la entrada a proyectos los aprueba la empresa o el líder. \\
+Empresas y sus ofertas & Páginas de Empresas y Empleos. \\
+Habilidades requeridas por una oferta & Requisitos de cada oferta, con nivel mínimo y prioridad. \\
+Postularse a una oferta & Botón \emph{Postularme}. La empresa mueve la postulación por etapas hasta aceptarla o rechazarla. \\
+Caminos y conexiones & Consultas Cypher: rutas entre personas, hacia empresas y hacia ofertas (Sección~\ref{sec:consultas}). \\
+Recomendaciones & Sugerencias de contactos, empleos, colaboradores para proyectos y talento para empresas. \\
+Panel de analítica & Influencia, comunidades y habilidades más demandadas (Sección~\ref{sec:analitica}). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =============================================================================
+\section{Modelo utilizado}\label{sec:modelo}
+% =============================================================================
+
+\subsection{Visión general}
+
+Nuestro modelo tiene 8 tipos de nodo y 23 tipos de relación (Figura~\ref{fig:modelo}).
+Conservamos los nombres que propone el enunciado y agregamos los nodos y relaciones que
+hicieron falta para que la aplicación funcionara como una red real: publicaciones,
+avances de proyecto, notificaciones, permisos, alianzas entre empresas y solicitudes
+pendientes.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=0.85cm, y=0.9cm, ent/.append style={minimum width=2.4cm}]
+  \node[ent] (h)  at (-4, 5.2)   {Habilidad};
+  \node[ent] (o)  at ( 4, 5.2)   {Oferta};
+  \node[ent] (n)  at (-8, 2.2)   {Notificacion};
+  \node[ent] (u)  at ( 0, 0)     {Usuario};
+  \node[ent] (e)  at ( 8, 0)     {Empresa};
+  \node[ent] (a)  at (-8,-2.8)   {Avance};
+  \node[ent] (p)  at (-4,-6)     {Proyecto};
+  \node[ent] (pb) at ( 4,-6)     {Publicacion};
+
+  \draw[rel] (o) -- node[et] {REQUIERE} (h);
+  \draw[rel] (u) -- node[et, pos=0.55] {TIENE\_HABILIDAD} (h);
+  \draw[rel] (u) -- node[et, pos=0.55] {POSTULA\_A} (o);
+  \draw[rel] (e) -- node[et] {PUBLICA} (o);
+  \draw[rel] (u) to[out=72, in=108, looseness=7] node[et, above=1pt] {CONECTA\_CON\\\pend{SOLICITA\_CONEXION}} (u);
+  \draw[rel] (u) -- node[et] {TRABAJA\_EN\\ADMINISTRA\\\pend{SOLICITA\_EMPLEO}\\\pend{INVITADO\_A\_TRABAJAR}\\\pend{INVITADO\_A\_ADMINISTRAR}} (e);
+  \draw[rel] (e) to[out=-62, in=-118, looseness=6] node[et, below=1pt] {ALIADA\_DE\\\pend{SOLICITA\_ALIANZA}} (e);
+  \draw[rel] (u) -- node[et] {RECIBE} (n);
+  \draw[rel] (u) -- node[et, pos=0.5] {REGISTRA} (a);
+  \draw[rel] (p) -- node[et] {TIENE\_AVANCE} (a);
+  \draw[rel] (u) -- node[et, pos=0.55] {PARTICIPA\_EN\\LIDERA\\\pend{SOLICITA\_UNIRSE}\\\pend{INVITADO\_A}} (p);
+  \draw[rel] (u) -- node[et, pos=0.55] {AUTOR\_DE\\REDACTA\\PERCIBE} (pb);
+  \draw[rel] (e) -- node[et, pos=0.45] {AUTOR\_DE} (pb);
+\end{tikzpicture}
+\caption{Modelo de WheelsOn: los 8 tipos de nodo y los 23 tipos de relación. En gris,
+las solicitudes e invitaciones pendientes, que se reemplazan por la relación
+definitiva cuando se aceptan (Tabla~\ref{tab:pendientes}).}
+\label{fig:modelo}
+\end{figure}
+
+\subsection{Nodos}
+
+A cada nodo le dimos un identificador propio (\cod{uid}, \cod{eid}, \cod{oid}, etc.)
+que no se repite. Es el que aparece en las direcciones de la aplicación, por ejemplo
+\cod{/usuarios/usr_valentina16/}.
+
+\begin{table}[htbp]
+\centering
+\caption{Tipos de nodo.}
+\rowcolors{2}{azulfila}{white}
+\small
+\begin{tabularx}{\linewidth}{@{}l >{\RaggedRight\arraybackslash}p{3.8cm} L@{}}
+\cabecera \h{Etiqueta} & \h{Representa} & \h{Propiedades principales} \\
+\nodo{Usuario}      & Una persona registrada.               & \cod{uid}, \cod{nombre}, \cod{apellido}, \cod{email}, \cod{titulo_profesional}, \cod{ubicacion}, \cod{rol} \\
+\nodo{Empresa}      & Una organización.                     & \cod{eid}, \cod{nombre}, \cod{industria}, \cod{tamano}, \cod{ubicacion} \\
+\nodo{Habilidad}    & Un conocimiento o competencia.        & \cod{hid}, \cod{nombre}, \cod{categoria} (técnica, blanda o idioma) \\
+\nodo{Proyecto}     & Un trabajo o iniciativa.              & \cod{pid}, \cod{nombre}, \cod{estado}, \cod{tecnologias} (lista), fechas \\
+\nodo{Oferta}       & Una vacante laboral.                  & \cod{oid}, \cod{titulo}, \cod{modalidad}, \cod{salario_min}, \cod{salario_max}, \cod{cupos}, \cod{estado} \\
+\nodo{Publicacion}  & Lo que alguien comparte en el inicio. & \cod{pubid}, \cod{texto}, \cod{fecha} \\
+\nodo{Avance}       & Una novedad de un proyecto.           & \cod{aid}, \cod{texto}, \cod{estado}, \cod{fecha} \\
+\nodo{Notificacion} & Un aviso para una persona.            & \cod{nid}, \cod{titulo}, \cod{detalle}, \cod{fecha} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+\subsection{Relaciones}
+
+{\small
+\rowcolors{2}{azulfila}{white}
+\begin{xltabular}{\linewidth}{@{}l >{\RaggedRight\arraybackslash}p{3.4cm} >{\RaggedRight\arraybackslash}p{3.4cm} L@{}}
+\caption{Relaciones del modelo.}\label{tab:relaciones}\\
+\cabecera \h{Relación} & \h{De $\rightarrow$ a} & \h{Propiedades} & \h{Significado} \\
+\endfirsthead
+\cabecera \h{Relación} & \h{De $\rightarrow$ a} & \h{Propiedades} & \h{Significado} \\
+\endhead
+\rel{CONECTA_CON}     & Usuario -- Usuario    & \cod{fecha}, \cod{mensaje}, \cod{estado} (siempre \emph{aceptada}) & Contacto confirmado por ambas personas. Hay una sola relación por pareja y las consultas la recorren sin importar la dirección. \\
+\rel{TIENE_HABILIDAD} & Usuario $\rightarrow$ Habilidad & \cod{nivel}, \cod{anios_experiencia} & La persona domina esa habilidad. \\
+\rel{TRABAJA_EN}      & Usuario $\rightarrow$ Empresa & \cod{cargo}, \cod{fecha_inicio}, \cod{fecha_fin}, \cod{actual} & Empleo actual o anterior. \\
+\rel{ADMINISTRA}      & Usuario $\rightarrow$ Empresa & --- & Quién gestiona la empresa y sus ofertas. \\
+\rel{PARTICIPA_EN}    & Usuario $\rightarrow$ Proyecto & \cod{rol}, \cod{fecha_inicio}, \cod{activo} & Miembro del equipo de un proyecto. \\
+\rel{LIDERA}          & Usuario $\rightarrow$ Proyecto & --- & Quién gestiona el proyecto y su equipo. \\
+\rel{PUBLICA}         & Empresa $\rightarrow$ Oferta & \cod{fecha_publicacion} & La empresa ofrece esa vacante. \\
+\rel{REQUIERE}        & Oferta $\rightarrow$ Habilidad & \cod{nivel_minimo}, \cod{prioridad} & Requisito de la vacante, obligatorio o deseable. \\
+\rel{POSTULA_A}       & Usuario $\rightarrow$ Oferta & \cod{estado}, \cod{fecha}, \cod{fecha_estado}, \cod{carta_presentacion} & Postulación y la etapa en que va. \\
+\rel{ALIADA_DE}       & Empresa -- Empresa & \cod{fecha} & Alianza aceptada entre dos empresas. \\
+\rel{AUTOR_DE}        & Usuario o Empresa $\rightarrow$ Publicacion & --- & A nombre de quién aparece la publicación. \\
+\rel{REDACTA}         & Usuario $\rightarrow$ Publicacion & --- & Qué persona escribió una publicación de empresa. \\
+\rel{PERCIBE}         & Usuario $\rightarrow$ Publicacion & \cod{tipo} (buena o mala), \cod{fecha} & Reacción a una publicación. \\
+\rel{TIENE_AVANCE}    & Proyecto $\rightarrow$ Avance & --- & Historial del proyecto. \\
+\rel{REGISTRA}        & Usuario $\rightarrow$ Avance & --- & Quién registró el avance. \\
+\rel{RECIBE}          & Usuario $\rightarrow$ Notificacion & --- & Avisos de la persona. \\
+\bottomrule
+\end{xltabular}
+}
+
+\begin{table}[htbp]
+\centering
+\caption{Solicitudes e invitaciones pendientes. Al aceptarse, cada una se reemplaza por la relación definitiva.}\label{tab:pendientes}
+\rowcolors{2}{azulfila}{white}
+\small
+\begin{tabularx}{\linewidth}{@{}l l L@{}}
+\cabecera \h{Pendiente} & \h{De $\rightarrow$ a} & \h{Al aceptarse se convierte en} \\
+\rel{SOLICITA_CONEXION}      & Usuario $\rightarrow$ Usuario  & \rel{CONECTA_CON} \\
+\rel{SOLICITA_EMPLEO}        & Usuario $\rightarrow$ Empresa  & \rel{TRABAJA_EN}, cuando la empresa confirma el empleo. \\
+\rel{INVITADO_A_TRABAJAR}    & Usuario $\rightarrow$ Empresa  & \rel{TRABAJA_EN}, cuando la persona acepta. \\
+\rel{INVITADO_A_ADMINISTRAR} & Usuario $\rightarrow$ Empresa  & \rel{ADMINISTRA}: la administración pasa a esa persona. \\
+\rel{SOLICITA_UNIRSE}        & Usuario $\rightarrow$ Proyecto & \rel{PARTICIPA_EN} \\
+\rel{INVITADO_A}             & Usuario $\rightarrow$ Proyecto & \rel{PARTICIPA_EN} o \rel{LIDERA}, según la invitación. \\
+\rel{SOLICITA_ALIANZA}       & Empresa $\rightarrow$ Empresa  & \rel{ALIADA_DE} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Decisiones de diseño}
+
+\subsubsection{Los datos de un vínculo van en la relación}
+Pusimos el cargo en \rel{TRABAJA_EN}, la etapa de la postulación en \rel{POSTULA_A} y
+la prioridad de un requisito en \rel{REQUIERE}. Si el cargo estuviera en el nodo de la
+persona, nadie podría tener dos empleos.
+
+\subsubsection{Lo pendiente vive en relaciones aparte}
+Guardamos una solicitud de conexión como una relación \rel{SOLICITA_CONEXION}. Si se
+acepta, la borramos y creamos \rel{CONECTA_CON}; si se rechaza, solo la borramos. Así, las rutas, las
+recomendaciones y la analítica recorren únicamente \rel{CONECTA_CON} y nunca cuentan
+como contacto a alguien que no ha respondido. Aplicamos la misma idea a empleos, proyectos,
+administración y alianzas (Tabla~\ref{tab:pendientes}).
+
+\subsubsection{Una postulación avanza por etapas}
+\rel{POSTULA_A} pasa por \emph{enviada}, \emph{en revisión} y \emph{entrevista}, hasta
+terminar en \emph{aceptada}, \emph{rechazada} o \emph{no seleccionada}. Aceptar a alguien
+crea su relación \rel{TRABAJA_EN} con el título del empleo como cargo. Cuando se llenan
+los cupos, la oferta se cierra y quienes seguían en proceso quedan como \emph{no
+seleccionada}. Los empleos terminados los conservamos con \cod{actual: false} para la
+trayectoria de la persona, pero en las rutas solo usamos los actuales.
+
+\subsubsection{Los permisos también están en el grafo}
+Decidimos quién puede editar algo con una relación. Para cambiar una oferta, por
+ejemplo, la aplicación comprueba que exista este camino (o que la persona sea
+administradora de la plataforma):
+\begin{center}\cod{(persona)-[:ADMINISTRA]->(empresa)-[:PUBLICA]->(oferta)}\end{center}
+
+\subsubsection{Las notificaciones son nodos}
+Lo que está pendiente se deduce de las relaciones de la Tabla~\ref{tab:pendientes}.
+Pero cuando alguien rechaza una solicitud, la relación se borra y ya no queda nada de
+qué avisar. Por eso guardamos cada aviso como un nodo \nodo{Notificacion} unido a la
+persona con \rel{RECIBE}.
+
+\subsubsection{Lo que dejamos como propiedad}
+Guardamos las tecnologías de un proyecto como una lista de texto (\cod{tecnologias}), no
+como relaciones con nodos \nodo{Habilidad}. Esto simplificó la creación de proyectos,
+pero nos obliga a comparar texto cuando buscamos proyectos parecidos (Sección~\ref{sec:proyectos}). Como
+mejora, proponemos una relación \cod{USA_TECNOLOGIA} hacia \nodo{Habilidad}.
+
+\captura[0.62\linewidth]{grafo.png}{Grafo interactivo de la aplicación: los datos de demostración tal como
+están en Neo4j. Círculos azules: usuarios; cuadrados turquesa: empresas; rombos: habilidades;
+hexágonos morados: proyectos; triángulos rojos: ofertas.}{grafo}
+
+\subsection{Restricciones e índices}\label{sec:restricciones}
+
+Las \textbf{restricciones de unicidad} impiden que se repita un valor. Hay once: el
+identificador de cada uno de los ocho tipos de nodo, el correo de cada usuario y los
+nombres de empresas y habilidades. Los \textbf{índices} aceleran las búsquedas
+frecuentes. Hay cinco: el nombre y apellido de los usuarios, la industria de las
+empresas, la categoría de las habilidades y el estado de las ofertas y de los
+proyectos.
+
+Neo4j no puede exigir por sí mismo el resto de las reglas del negocio, como que una oferta
+pertenezca a una sola empresa o que no se acepte a más personas que cupos. Esas las
+hicimos cumplir desde la aplicación, dentro de transacciones
+(Sección~\ref{sec:no-gana}).
+
+% =============================================================================
+\section{Scripts de inicio de la base de datos}\label{sec:scripts}
+% =============================================================================
+
+Organizamos los scripts en la carpeta \cod{scripts/} del repositorio.
+
+\begin{table}[htbp]
+\centering
+\caption{Scripts de la base de datos, en el orden en que se ejecutan.}
+\rowcolors{2}{azulfila}{white}
+\small
+\begin{tabularx}{\linewidth}{@{}l L@{}}
+\cabecera \h{Archivo} & \h{Contenido} \\
+\cod{constraints.cypher} & Las 11 restricciones y los 5 índices de la Sección~\ref{sec:restricciones}. Usa \cod{IF NOT EXISTS}, así que se puede ejecutar varias veces sin error. Va primero (completo en el Anexo~\ref{anx:inicio}). \\
+\cod{init_db.cypher}     & Lo mismo, una sentencia por línea, para pegarlo en Neo4j Browser. \\
+\cod{seed_data.cypher}   & Datos base: 15 personas, 3 empresas, 12 habilidades, 3 proyectos y 2 ofertas, con sus relaciones. \\
+\cod{datos_demo.cypher}  & La red de demostración: 25 personas, 8 empresas y 13 ofertas más, publicaciones, avances, postulaciones en todas las etapas y solicitudes pendientes. \\
+\cod{queries.cypher}     & Las consultas de la Sección~\ref{sec:consultas} (completo en el Anexo~\ref{anx:consultas}). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Carga de datos}
+
+Primero creamos los nodos y después las relaciones. Para crear una relación, buscamos
+sus dos extremos por su identificador con \cod{MATCH} y los unimos con \cod{CREATE}:
+
+\begin{lstlisting}
+CREATE (:Empresa {eid: "emp_andina04", nombre: "Andina Logística",
+                  industria: "Logística", tamano: "mediana", ...});
+
+MATCH (a:Usuario {uid: "usr_valentina16"}), (b:Empresa {eid: "emp_andina04"})
+CREATE (a)-[:TRABAJA_EN {cargo: "Directora de Tecnología",
+                         fecha_inicio: "2021-03-01", actual: true}]->(b);
+\end{lstlisting}
+
+Guardamos las fechas como texto con el formato \cod{AAAA-MM-DD}, que es como
+\emph{neomodel} las lee y escribe; con ese formato, el orden alfabético coincide con
+el cronológico. Las contraseñas las guardamos cifradas, con el mismo método que usa Django.
+
+Con los dos scripts de datos, la base queda con \textbf{175 nodos y 788 relaciones}.
+
+\subsection{Cómo se ejecutan}
+
+Incluimos en la aplicación un comando que ejecuta los tres scripts en orden:
+
+\begin{lstlisting}[language={}]
+python manage.py cargar_datos              # en una base vacía
+python manage.py cargar_datos --limpiar    # borra todo y vuelve a cargar
+\end{lstlisting}
+
+También se pueden ejecutar a mano con \cod{cypher-shell}, en el mismo orden:
+primero \cod{constraints}, luego \cod{seed_data} y al final \cod{datos_demo}.
+Los pasos completos para instalar y correr el proyecto están en el archivo
+\cod{README.md} del repositorio.
+
+% =============================================================================
+\capturafijatrue
+\section{Consultas utilizadas}\label{sec:consultas}
+% =============================================================================
+
+Reunimos en \cod{queries.cypher} 17 consultas: las que responden las seis preguntas del
+enunciado, las de caminos, las de recomendación y las que alimentan la analítica y el
+grafo interactivo. Las consultas 1 a 14 tienen la misma lógica que las que ejecuta la
+aplicación; la diferencia es que en el script devuelven columnas legibles, como nombres
+y títulos, para poder probarlas en Neo4j Browser, mientras que la aplicación pide los
+nodos completos. Las consultas 15 a 17 son de apoyo, para revisar la base. El archivo completo está en el Anexo~\ref{anx:consultas}.
+
+Las palabras que empiezan con \cod{$}, como \cod{$uid}, son parámetros: la aplicación
+pone ahí el usuario, la empresa o la oferta elegida en pantalla.
+
+\begin{table}[htbp]
+\centering
+\caption{Preguntas del enunciado y la consulta que responde cada una.}
+\rowcolors{2}{azulfila}{white}
+\small
+\begin{tabularx}{\linewidth}{@{}L c c@{}}
+\cabecera \h{Pregunta} & \h{Consulta} & \h{Sección} \\
+¿Qué usuarios tienen habilidades similares?                        & 3  & \ref{sec:similares} \\
+¿Qué contactos en común existen entre dos profesionales?           & 2  & \ref{sec:comun} \\
+¿Cuál es la ruta más corta entre un usuario y una empresa?         & 4  & \ref{sec:ruta} \\
+¿Qué candidatos podrían recomendarse para una oferta?              & 6  & \ref{sec:candidatos} \\
+¿Qué proyectos comparten tecnologías o miembros relacionados?      & 14 & \ref{sec:proyectos} \\
+¿Qué habilidades son las más demandadas en las ofertas?            & 5  & \ref{sec:demandadas} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Usuarios con habilidades similares}\label{sec:similares}
+
+Partimos de una persona, pasamos a sus habilidades y de ahí a las demás personas que
+tienen esas mismas habilidades. Cuantas más habilidades compartan, más arriba las ubicamos.
+
+\begin{lstlisting}
+MATCH (u1:Usuario {uid: $uid1})-[:TIENE_HABILIDAD]->(h:Habilidad)
+      <-[:TIENE_HABILIDAD]-(u2:Usuario)
+WHERE u1 <> u2
+WITH u2, count(h) AS total_compartidas, collect(h.nombre) AS habilidades_comunes
+ORDER BY total_compartidas DESC, u2.nombre ASC
+RETURN u2.uid AS uid, u2.nombre + ' ' + u2.apellido AS nombre_completo,
+       total_compartidas, habilidades_comunes
+LIMIT $limit;
+\end{lstlisting}
+
+\captura[0.72\linewidth]{similares.png}{Personas con habilidades parecidas a las de Valentina Ríos.}{similares}
+
+\subsection{Contactos en común}\label{sec:comun}
+
+Un contacto en común es alguien conectado con las dos personas a la vez. El patrón
+dibuja exactamente eso: una persona en el medio unida a ambas con \rel{CONECTA_CON}. Escribimos
+las relaciones sin flecha porque el contacto es mutuo.
+
+\begin{lstlisting}
+MATCH (u1:Usuario {uid: $uid1})-[:CONECTA_CON]-(comun:Usuario)
+      -[:CONECTA_CON]-(u2:Usuario {uid: $uid2})
+WHERE u1 <> u2
+RETURN DISTINCT comun.uid AS uid,
+       comun.nombre + ' ' + comun.apellido AS nombre_completo,
+       comun.titulo_profesional AS titulo
+ORDER BY nombre_completo ASC;
+\end{lstlisting}
+
+\captura[0.6\linewidth]{comun.png}{Valentina Ríos y Laura Pineda tienen un contacto en común.}{comun}
+
+\subsection{Ruta más corta entre un usuario y una empresa}\label{sec:ruta}
+
+Usamos \cod{shortestPath} para buscar la cadena más corta, de hasta seis pasos, que une
+a la persona con la empresa. Permitimos pasar por contactos (\rel{CONECTA_CON}) y por
+empleos (\rel{TRABAJA_EN}), pero solo por empleos actuales: alguien que ya no trabaja en una
+empresa no sirve como puente hacia ella.
+
+\begin{lstlisting}
+MATCH (u:Usuario {uid: $uid}), (e:Empresa {eid: $eid})
+MATCH p = shortestPath((u)-[:CONECTA_CON|TRABAJA_EN*..6]-(e))
+WHERE all(r IN relationships(p)
+          WHERE type(r) <> 'TRABAJA_EN' OR coalesce(r.actual, true))
+RETURN [n IN nodes(p) | {tipo: labels(n)[0], id: coalesce(n.uid, n.eid),
+        nombre: CASE WHEN n:Usuario THEN n.nombre + ' ' + n.apellido
+                     ELSE n.nombre END}] AS pasos_ruta,
+       length(p) AS longitud_camino;
+\end{lstlisting}
+
+\captura[0.78\linewidth]{ruta_empresa.png}{Paula Gómez llega a Andina Logística en tres
+pasos: conoce a Sofía Cárdenas, que conoce a Ricardo Salazar, que trabaja en la empresa.}{ruta-empresa}
+
+Con la misma idea escribimos la consulta~1, entre dos personas y usando solo
+\rel{CONECTA_CON}, y la consulta~13, que extiende el camino hasta una oferta con la
+relación \rel{PUBLICA}
+(Figura~\ref{fig:ruta-oferta}).
+
+\captura[0.78\linewidth]{ruta_oferta.png}{Camino de Paula Gómez hasta una oferta de Andina
+Logística: pasa por dos contactos y por la empresa, que publica la oferta.}{ruta-oferta}
+
+\subsection{Candidatos para una oferta según conexiones y competencias}\label{sec:candidatos}
+
+Para responder esta pregunta combinamos las dos cosas que pide. Primero buscamos a las
+personas que cumplen al menos un requisito de la oferta (competencias). Después contamos
+cuántos de sus contactos trabajan en la empresa que la publica (conexiones). Con eso
+calculamos un puntaje:
+
+\begin{center}
+\small
+puntaje $= 3 \times$ requisitos que cumple $+\; 2 \times$ requisitos obligatorios que cumple $+\; 2 \times$ contactos en la empresa
+\end{center}
+
+Dejamos fuera a quienes ya trabajan en esa empresa, porque no son candidatos.
+
+\begin{lstlisting}
+MATCH (o:Oferta {oid: $oid})-[r:REQUIERE]->(h:Habilidad)<-[:TIENE_HABILIDAD]-(u:Usuario)
+WHERE NOT EXISTS {
+  MATCH (u)-[t:TRABAJA_EN]->(:Empresa)-[:PUBLICA]->(o) WHERE coalesce(t.actual, true)
+}
+WITH o, u, count(DISTINCT h) AS total_coincidencias,
+     collect(DISTINCT h.nombre) AS habilidades_match,
+     count(DISTINCT CASE WHEN r.prioridad = 'obligatoria' THEN h END) AS obligatorias_cubiertas
+OPTIONAL MATCH (u)-[:CONECTA_CON]-(c:Usuario)-[t:TRABAJA_EN]->(:Empresa)-[:PUBLICA]->(o)
+WHERE coalesce(t.actual, true)
+WITH o, u, total_coincidencias, habilidades_match, obligatorias_cubiertas,
+     collect(DISTINCT c.nombre + ' ' + c.apellido) AS contactos
+RETURN u.uid AS uid, u.nombre + ' ' + u.apellido AS nombre_completo,
+       total_coincidencias, obligatorias_cubiertas, habilidades_match, contactos,
+       total_coincidencias * 3 + obligatorias_cubiertas * 2 + size(contactos) * 2 AS score,
+       EXISTS { (u)-[:POSTULA_A]->(o) } AS ya_postulado
+ORDER BY score DESC, total_coincidencias DESC, nombre_completo ASC
+LIMIT $limit;
+\end{lstlisting}
+
+\captura[0.72\linewidth]{candidatos.png}{Mejores candidatos para \emph{Ingeniero de Datos
+Logísticos}. Debajo de cada nombre aparecen las habilidades que cumple y sus contactos
+dentro de la empresa.}{candidatos}
+
+\subsection{Proyectos que comparten tecnologías o miembros relacionados}\label{sec:proyectos}
+
+Dado un proyecto, comparamos cada uno de los demás en tres aspectos y les damos un
+puntaje:
+\begin{itemize}
+  \item \textbf{tecnologías en común} (2 puntos cada una), comparando las listas sin
+        distinguir mayúsculas;
+  \item \textbf{miembros en común}, personas que están en los dos equipos (3 puntos cada una);
+  \item \textbf{miembros relacionados}, parejas de personas de cada equipo que están
+        conectadas entre sí (1 punto cada pareja).
+\end{itemize}
+
+\begin{lstlisting}
+MATCH (p:Proyecto {pid: $pid}), (otro:Proyecto)
+WHERE otro <> p
+WITH p, otro, [t IN coalesce(p.tecnologias, [])
+               WHERE toLower(t) IN [x IN coalesce(otro.tecnologias, []) | toLower(x)]]
+              AS tecnologias
+OPTIONAL MATCH (p)<-[:PARTICIPA_EN]-(m:Usuario)-[:PARTICIPA_EN]->(otro)
+WITH p, otro, tecnologias, collect(DISTINCT m) AS comunes
+OPTIONAL MATCH (p)<-[:PARTICIPA_EN]-(a:Usuario)-[:CONECTA_CON]-(b:Usuario)
+               -[:PARTICIPA_EN]->(otro)
+WHERE NOT a IN comunes AND NOT b IN comunes
+WITH otro, tecnologias, comunes,
+     collect(DISTINCT a.nombre + ' ' + a.apellido + ' - ' + b.nombre + ' ' + b.apellido)
+     AS conectados
+WITH otro, tecnologias, conectados, [m IN comunes | m.nombre + ' ' + m.apellido]
+     AS miembros_comunes,
+     size(tecnologias) * 2 + size(comunes) * 3 + size(conectados) AS score
+WHERE score > 0
+RETURN otro.pid AS pid, otro.nombre AS nombre, tecnologias, miembros_comunes,
+       conectados, score
+ORDER BY score DESC, nombre ASC
+LIMIT $limit;
+\end{lstlisting}
+
+\captura[0.8\linewidth]{proyectos.png}{Proyectos relacionados con \emph{Mapa de Rutas Andinas}.}{proyectos}
+
+\subsection{Habilidades más demandadas}\label{sec:demandadas}
+
+Contamos en cuántas ofertas abiertas aparece cada habilidad como requisito, separando
+las obligatorias de las deseables. Las ofertas cerradas no las tenemos en cuenta.
+
+\begin{lstlisting}
+MATCH (h:Habilidad)<-[r:REQUIERE]-(o:Oferta {estado: 'abierta'})
+RETURN h.hid AS hid, h.nombre AS habilidad, h.categoria AS categoria,
+       count(o) AS total_ofertas,
+       count(CASE WHEN r.prioridad = 'obligatoria' THEN 1 END) AS obligatorias,
+       count(CASE WHEN r.prioridad = 'deseable' THEN 1 END) AS deseables
+ORDER BY total_ofertas DESC, obligatorias DESC
+LIMIT $limit;
+\end{lstlisting}
+
+\captura[0.72\linewidth]{demandadas.png}{Habilidades más pedidas en las ofertas abiertas.}{demandadas}
+
+\subsection{Recomendaciones}
+
+Con las consultas 7 a 10 generamos las sugerencias de la aplicación. Todas siguen la
+misma idea: partimos de un nodo, exploramos lo que tiene cerca y sumamos puntos por cada
+vínculo encontrado.
+
+\begin{table}[htbp]
+\centering
+\caption{Consultas de recomendación y cómo puntúan.}
+\rowcolors{2}{azulfila}{white}
+\small
+\begin{tabularx}{\linewidth}{@{}l c L@{}}
+\cabecera \h{Recomienda} & \h{Consulta} & \h{Criterio} \\
+Contactos                    & 7  & Personas sin conexión directa: 4 puntos por contacto en común, 3 por empresa en común y 2 por habilidad en común. \\
+Empleos                      & 8  & Ofertas abiertas a las que la persona no se ha postulado, ordenadas por el porcentaje de requisitos que ya cumple. Muestra también los que le faltan. \\
+Colaboradores para un proyecto & 9  & 5 puntos por cada habilidad que coincide con las tecnologías del proyecto y 3 por cada contacto en el equipo. \\
+Talento para una empresa     & 10 & 4 puntos por cada habilidad pedida en sus ofertas abiertas y 3 por cada contacto que trabaja allí. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Panel de analítica}\label{sec:analitica}
+
+En el panel de analítica mostramos tres análisis de la red de contactos:
+\begin{itemize}
+  \item \textbf{Usuarios más influyentes}, con tres medidas: cuántos contactos tiene
+        cada persona (centralidad de grado), su PageRank y su papel como puente entre
+        grupos (intermediación). El PageRank considera influyente a quien está conectado
+        con personas que, a su vez, son influyentes.
+  \item \textbf{Comunidades}, detectadas con el algoritmo de Louvain, que agrupa a las
+        personas que tienen muchas conexiones entre sí y pocas hacia afuera. A cada
+        comunidad la nombramos con las habilidades más frecuentes de sus miembros.
+  \item \textbf{Habilidades más demandadas}: en cuántas ofertas abiertas se pide cada
+        habilidad, como en la consulta 5, comparado con cuántas personas de la red la
+        tienen.
+\end{itemize}
+
+Neo4j entrega la red completa con la consulta 11, y sobre ella aplicamos los algoritmos
+en Python:
+
+\begin{lstlisting}
+MATCH (a:Usuario)-[:CONECTA_CON]->(b:Usuario)
+RETURN a.uid, b.uid;
+\end{lstlisting}
+
+\begin{nota}{¿Por qué los algoritmos corren en Python y no en Neo4j?}
+Neo4j tiene una biblioteca para esto, \emph{Graph Data Science}, pero hay que instalarla
+aparte. Preferimos que el proyecto funcione con una instalación normal de Neo4j en el
+computador de cualquier integrante. Con 40 personas, el cálculo en Python tarda una
+fracción de segundo. En una red grande convendría usar esa biblioteca, que hace el
+cálculo dentro de la base sin sacar los datos.
+\end{nota}
+
+\captura[0.82\linewidth]{influencia.png}{Las siete personas más influyentes según su PageRank, comparado con su número de contactos.}{influencia}
+
+\captura[0.8\linewidth]{comunidades.png}{Las cinco comunidades que encuentra el algoritmo de Louvain en la red de demostración.}{comunidades}
+
+% =============================================================================
+\capturafijafalse
+\section{Investigación: ¿cuándo conviene un grafo y cuándo no?}\label{sec:investigacion}
+% =============================================================================
+
+\subsection{WheelsOn en un modelo relacional}
+
+Para comparar, pensamos cómo se vería WheelsOn en tablas. Cada tipo de nodo sería una tabla
+(\cod{usuario}, \cod{empresa}, \cod{oferta}…) y cada tipo de relación, una tabla
+intermedia con las claves de sus dos extremos y sus propiedades:
+
+\begin{lstlisting}[style=sql]
+CREATE TABLE conexion (
+  usuario_a TEXT REFERENCES usuario(uid),
+  usuario_b TEXT REFERENCES usuario(uid),
+  fecha     DATE,
+  PRIMARY KEY (usuario_a, usuario_b)
+);
+\end{lstlisting}
+
+Los dos modelos pueden guardar la misma información. Lo que cambia es el trabajo
+que hace cada una para responder, y eso depende del tipo de pregunta.
+
+\subsection{Dónde gana el grafo}
+
+\subsubsection{Recorridos de profundidad variable}
+La ruta más corta entre dos personas no tiene una cantidad fija de pasos: pueden ser
+dos o seis. En Cypher son dos líneas (Sección~\ref{sec:ruta}). En SQL hace falta una
+consulta recursiva que, nivel por nivel, extiende todos los caminos posibles y lleva la
+cuenta de por dónde pasó cada uno para no dar vueltas:
+
+\begin{lstlisting}[style=sql]
+WITH RECURSIVE ruta(actual, camino, saltos) AS (
+  SELECT 'usr_valentina16', ARRAY['usr_valentina16'], 0
+  UNION ALL
+  SELECT c.otro, r.camino || c.otro, r.saltos + 1
+  FROM ruta r
+  JOIN (SELECT usuario_a AS uno, usuario_b AS otro FROM conexion
+        UNION ALL
+        SELECT usuario_b, usuario_a FROM conexion) c ON c.uno = r.actual
+  WHERE r.saltos < 6 AND NOT c.otro = ANY(r.camino)
+)
+SELECT camino, saltos FROM ruta
+WHERE actual = 'usr_paula24'
+ORDER BY saltos LIMIT 1;
+\end{lstlisting}
+
+Además de ser más larga, esta consulta hace más trabajo: en cada nivel vuelve a cruzar
+la tabla de conexiones y explora todos los caminos de hasta seis pasos antes de elegir
+el más corto. \cod{shortestPath} de Neo4j, en cambio, avanza desde los dos extremos a la
+vez y se detiene en cuanto los caminos se encuentran.
+
+La diferencia crece con la profundidad. En el libro \emph{Neo4j in Action} (2014) se comparan MySQL y Neo4j
+buscando los amigos de los amigos en una red de un millón de personas con unos 50
+contactos cada una:
+
+\begin{table}[htbp]
+\centering
+\caption{Tiempo para encontrar contactos a distinta profundidad en una red de un millón de
+personas, según el libro \emph{Neo4j in Action} (2014, cap.~1).}
+\rowcolors{2}{azulfila}{white}
+\begin{tabular}{@{}c r r r@{}}
+\cabecera \h{Profundidad} & \h{MySQL (s)} & \h{Neo4j (s)} & \h{Personas encontradas} \\
+2 & 0{,}016    & 0{,}010 & 2\,500 \\
+3 & 30{,}267   & 0{,}168 & 110\,000 \\
+4 & 1\,543{,}505 & 1{,}359 & 600\,000 \\
+5 & no terminó & 2{,}132 & 800\,000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A dos pasos los dos responden al instante. Desde el tercero, cada \texttt{JOIN} más
+multiplica el trabajo de la base relacional, mientras que Neo4j solo recorre los
+contactos que encuentra. Las cifras exactas dependen del equipo y de cómo se
+configure cada base, y quienes han intentado repetir el experimento no siempre han
+obtenido una diferencia tan grande. Por eso lo tomamos como una ilustración de la
+tendencia y no como una medida exacta.
+
+\subsubsection{Preguntas que combinan varios tipos de relación}
+{\sloppy La consulta de candidatos (Sección~\ref{sec:candidatos}) recorre cinco tipos de relación:
+\rel{REQUIERE}, \rel{TIENE_HABILIDAD}, \rel{CONECTA_CON}, \rel{TRABAJA_EN} y
+\rel{PUBLICA}. En Cypher el patrón se lee casi igual que la pregunta. En SQL serían al
+menos seis tablas unidas con \texttt{JOIN}, y el sentido de la consulta se pierde entre
+las condiciones de unión.\par}
+
+\subsubsection{Un esquema que cambia}
+Durante el desarrollo agregamos dieciséis tipos de relación, como las alianzas entre
+empresas y todas las solicitudes pendientes. En Neo4j bastó con empezar a crearlas: las
+consultas que ya existían no se vieron afectadas porque solo recorren los tipos que
+nombran. En una base relacional, cada una habría sido una tabla nueva y una migración
+de la base.
+
+\subsubsection{Recomendaciones a partir de una persona}
+Las recomendaciones parten de un nodo y exploran sus alrededores. Su costo depende del
+tamaño de ese vecindario, no del tamaño de la red. Es el caso de uso más común de las
+bases de grafos: sugerencias de contactos, detección de fraude o rutas logísticas.
+
+\subsection{Dónde no gana el grafo}\label{sec:no-gana}
+
+\subsubsection{Sumas y reportes sobre todos los datos}
+``Las habilidades más demandadas'' no recorre la red: cuenta requisitos y los agrupa. En
+SQL es un \texttt{GROUP BY} igual de simple que el Cypher de la Sección~\ref{sec:demandadas}:
+
+\begin{lstlisting}[style=sql]
+SELECT h.nombre, COUNT(*) AS ofertas
+FROM requisito r
+JOIN habilidad h ON h.hid = r.hid
+JOIN oferta o    ON o.oid = r.oid
+WHERE o.estado = 'abierta'
+GROUP BY h.nombre
+ORDER BY ofertas DESC;
+\end{lstlisting}
+
+Para este tipo de preguntas el grafo no aporta nada, y las bases relacionales tienen
+décadas de optimización y herramientas de reportes alrededor.
+
+\subsubsection{Reglas de integridad}
+Una base relacional hace cumplir reglas por sí sola: claves foráneas, campos
+obligatorios (\texttt{NOT NULL}) y condiciones (\texttt{CHECK}). La edición gratuita de
+Neo4j solo garantiza que un valor no se repita. En WheelsOn, reglas como ``una oferta
+pertenece a una sola empresa'', ``cada empresa tiene un solo administrador'' o ``no se
+acepta a más personas que cupos'' tuvimos que programarlas nosotros y probarlas a
+mano para asegurarnos de que los datos siguieran siendo consistentes.
+
+\subsubsection{Datos con estructura fija y pocas relaciones}
+Facturas, inventarios o registros contables tienen siempre los mismos campos y casi no
+se recorren como red. En esos casos, las tablas son más simples, SQL es un estándar que
+casi todo el mundo conoce y la base relacional es la mejor opción.
+
+\subsubsection{Algoritmos sobre la red completa}
+PageRank o la detección de comunidades no son recorridos cortos: procesan todos los
+nodos varias veces. Ninguno de los dos modelos los resuelve con una consulta normal;
+hace falta una biblioteca especializada o, como en WheelsOn, calcularlos fuera de la
+base (Sección~\ref{sec:analitica}).
+
+\subsubsection{Estandarización}
+SQL es un estándar desde 1986 y casi todas las bases relacionales lo hablan. Los
+lenguajes de grafos apenas se están unificando: el estándar ISO GQL, basado en buena
+parte en Cypher, se publicó en 2024.
+
+\subsection{Resumen}
+
+\begin{table}[htbp]
+\centering
+\caption{Qué modelo conviene según el tipo de pregunta.}
+\rowcolors{2}{azulfila}{white}
+\small
+\begin{tabularx}{\linewidth}{@{}L l L@{}}
+\cabecera \h{Escenario} & \h{Conviene} & \h{Ejemplo en WheelsOn} \\
+Caminos de longitud desconocida                     & Grafo      & Ruta más corta hacia una empresa. \\
+Preguntas que cruzan muchos tipos de relación       & Grafo      & Candidatos por competencias y contactos. \\
+Recomendaciones desde una persona o un proyecto     & Grafo      & Contactos, empleos y colaboradores sugeridos. \\
+Esquema que cambia con frecuencia                   & Grafo      & Alianzas y solicitudes agregadas sobre la marcha. \\
+Conteos y reportes sobre todo el conjunto           & Cualquiera & Habilidades más demandadas. \\
+Reglas de integridad estrictas                      & Relacional & Cupos de una oferta y administrador único. \\
+Datos tabulares con pocas relaciones                & Relacional & No hay en WheelsOn: sería el caso de pagos o facturación. \\
+Algoritmos sobre la red completa                    & Biblioteca especializada & Influencia y comunidades. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Para elegir entre los dos hay que mirar qué tipo de preguntas se le van a hacer a los
+datos. Si recorren relaciones a una profundidad que no se conoce de antemano, conviene
+el grafo. Si suman, filtran o validan registros de
+estructura fija, la base relacional es más simple y más segura. Muchos sistemas reales
+usan las dos: una relacional para las transacciones y un grafo para las
+recomendaciones.
+
+% =============================================================================
+\section{Conclusiones}
+% =============================================================================
+
+\begin{itemize}[label=\textcolor{azul}{\rule{0.5em}{0.5em}}, leftmargin=1.4em, itemsep=0.5em]
+  \item Implementamos todas las funcionalidades del enunciado guardando la red completa
+        en Neo4j, y respondimos sus seis preguntas con consultas Cypher que también usa
+        la aplicación.
+  \item Guardar en las relaciones los datos de cada vínculo, como el cargo, la etapa de
+        una postulación o la prioridad de un requisito, fue la decisión de modelado que
+        más simplificó las consultas.
+  \item Separar lo pendiente de lo confirmado en tipos de relación distintos evitó que
+        las rutas, las recomendaciones y la analítica tuvieran que filtrar estados en
+        cada consulta.
+  \item El grafo nos dio consultas cortas y legibles para caminos y recomendaciones,
+        pero nos obligó a programar y probar a mano reglas de integridad que una base
+        relacional habría hecho cumplir por sí sola.
+  \item De la investigación concluimos que un grafo conviene cuando las
+        preguntas recorren relaciones de profundidad variable, y una base relacional
+        cuando se trata de sumar, filtrar y validar datos con estructura fija.
+\end{itemize}
+
+% =============================================================================
+\section{Referencias}
+% =============================================================================
+
+\begin{itemize}[label=\textcolor{azul}{\rule{0.5em}{0.5em}}, leftmargin=1.4em, itemsep=0.4em]
+  \item Neo4j, Inc. \emph{Cypher Manual}, versión 5. \url{https://neo4j.com/docs/cypher-manual/5/}
+  \item Neo4j, Inc. \emph{Cypher Manual}: restricciones y su disponibilidad por edición. \url{https://neo4j.com/docs/cypher-manual/5/constraints/}
+  \item ISO/IEC 39075:2024. \emph{Information technology --- Database languages --- GQL}.
+  \item Page, L., Brin, S., Motwani, R. y Winograd, T. (1999). \emph{The PageRank Citation Ranking: Bringing Order to the Web}. Stanford InfoLab.
+\end{itemize}
+
+% =============================================================================
+\appendix
+% =============================================================================
+\section{Script de inicio de la base de datos}\label{anx:inicio}
+% =============================================================================
+
+Este es el script completo con el que creamos las restricciones y los índices,
+guardado en \cod{scripts/constraints.cypher}. Los dos scripts de datos suman cerca de
+mil líneas de \cod{CREATE} con el mismo formato que mostramos en la
+Sección~\ref{sec:scripts}, y están en la misma carpeta del repositorio.
+
+\lstinputlisting[style=anexo]{../scripts/constraints.cypher}
+
+% =============================================================================
+\section{Script de consultas}\label{anx:consultas}
+% =============================================================================
+
+Este es el archivo completo con las consultas que usa la aplicación
+(\cod{scripts/queries.cypher}).
+
+\lstinputlisting[style=anexo]{../scripts/queries.cypher}
+
+\end{document}

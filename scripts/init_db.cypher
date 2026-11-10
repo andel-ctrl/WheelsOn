@@ -14,6 +14,9 @@ CREATE CONSTRAINT habilidad_hid IF NOT EXISTS FOR (h:Habilidad) REQUIRE h.hid IS
 CREATE CONSTRAINT habilidad_nombre IF NOT EXISTS FOR (h:Habilidad) REQUIRE h.nombre IS UNIQUE;
 CREATE CONSTRAINT proyecto_pid IF NOT EXISTS FOR (p:Proyecto) REQUIRE p.pid IS UNIQUE;
 CREATE CONSTRAINT oferta_oid IF NOT EXISTS FOR (o:Oferta) REQUIRE o.oid IS UNIQUE;
+CREATE CONSTRAINT publicacion_pubid IF NOT EXISTS FOR (p:Publicacion) REQUIRE p.pubid IS UNIQUE;
+CREATE CONSTRAINT avance_aid IF NOT EXISTS FOR (a:Avance) REQUIRE a.aid IS UNIQUE;
+CREATE CONSTRAINT notificacion_nid IF NOT EXISTS FOR (n:Notificacion) REQUIRE n.nid IS UNIQUE;
 
 // 3. Indices de optimizacion para consultas de grafos y filtros
 CREATE INDEX usuario_nombres IF NOT EXISTS FOR (u:Usuario) ON (u.nombre, u.apellido);
